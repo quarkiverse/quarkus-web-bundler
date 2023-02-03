@@ -1,0 +1,60 @@
+
+:summaryTableId: quarkus-web-assets
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-web-assets_configuration]]link:#quarkus-web-assets_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.preset-assets]]`link:#quarkus-web-assets_quarkus.web-assets.preset-assets[quarkus.web-assets.preset-assets]`
+
+[.description]
+--
+Configuration preset to allow defining static assets. - assets/styles for css,scss - assets/scripts for js - assets/images for images
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_ASSETS_PRESET_ASSETS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_ASSETS_PRESET_ASSETS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`assets`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.preset-components]]`link:#quarkus-web-assets_quarkus.web-assets.preset-components[quarkus.web-assets.preset-components]`
+
+[.description]
+--
+Configuration preset to allow defining components (js {plus} style {plus} html). Convention is to use /components/++[++name++]++/++[++name++]++.++{++js,css,html++}++
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_ASSETS_PRESET_COMPONENTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_ASSETS_PRESET_COMPONENTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.bundles-bundles]]`link:#quarkus-web-assets_quarkus.web-assets.bundles-bundles[quarkus.web-assets.bundles]`
+
+[.description]
+--
+Bundles of assets
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_ASSETS_BUNDLES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_ASSETS_BUNDLES+++`
+endif::add-copy-button-to-env-var[]
+--|`Map<String,BundleConfig>` 
+|
+
+|===

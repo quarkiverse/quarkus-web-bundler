@@ -1,0 +1,16 @@
+body {
+    margin: 25px;
+    background-color: rgb(240,240,240);
+    font-family: arial, sans-serif;
+    font-size: 14px;
+}
+
+h1 {
+    font-size: 35px;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.someclass { color: red; }
+
+#someid { color: green; }

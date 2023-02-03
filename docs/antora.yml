@@ -1,0 +1,5 @@
+name: quarkus-web-assets
+title: Quarkus Web Assets
+version: dev
+nav:
+  - modules/ROOT/nav.adoc
