@@ -6,7 +6,6 @@ import org.hamcrest.Matchers;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -19,6 +18,7 @@ public class SassDevModeTest {
     @RegisterExtension
     static final QuarkusDevModeTest config = new QuarkusDevModeTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                    .addAsResource(new StringAsset("quarkus.vertx.caching=false"), "application.properties")
                     .addAsManifestResource(new StringAsset("$primary-color: #333;"),
                             "resources/_base.scss")
                     .addAsManifestResource(new StringAsset("@use 'base';\n"
@@ -60,7 +60,36 @@ public class SassDevModeTest {
                         + "}"));
     }
 
-    @Disabled("https://github.com/quarkusio/quarkus/issues/30928")
+    @Test
+    public void testDependencyModification() {
+        RestAssured
+                .when()
+                .get("/styles.css").then()
+                .statusCode(200)
+                .body(Matchers.is(".something {\n"
+                        + "  color: #333;\n"
+                        + "}"));
+        // new dependency
+        config.modifyResourceFile("META-INF/resources/styles.scss", s -> s.replace("base", "newbase"));
+        config.addResourceFile("META-INF/resources/_newbase.scss", "$primary-color: #666;");
+        RestAssured
+                .when()
+                .get("/styles.css").then()
+                .statusCode(200)
+                .body(Matchers.is(".something {\n"
+                        + "  color: #666;\n"
+                        + "}"));
+        // modification of the new dependency
+        config.modifyResourceFile("META-INF/resources/_newbase.scss", s -> s.replace("666", "444"));
+        RestAssured
+                .when()
+                .get("/styles.css").then()
+                .statusCode(200)
+                .body(Matchers.is(".something {\n"
+                        + "  color: #444;\n"
+                        + "}"));
+    }
+
     @Test
     public void testCssDeletion() {
         RestAssured

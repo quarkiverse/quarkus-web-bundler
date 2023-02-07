@@ -10,14 +10,15 @@ import java.nio.file.attribute.FileTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import io.quarkus.dev.spi.HotReplacementContext;
 import io.quarkus.dev.spi.HotReplacementSetup;
 
 public class SassDevModeHandler implements HotReplacementSetup {
 
-    public Function<String[], String> devModeSassCompiler;
+    public BiFunction<String[], BiConsumer<String, String>, String> devModeSassCompiler;
 
     public static void clear() {
         SassDevModeRecorder.reverseDependencies.clear();
@@ -43,20 +44,29 @@ public class SassDevModeHandler implements HotReplacementSetup {
         Set<String> needRebuild = new HashSet<>();
         for (String change : changes) {
             List<String> affectedFiles = SassDevModeRecorder.reverseDependencies.get(change);
-            if (affectedFiles != null) {
+            if (affectedFiles != null && !affectedFiles.isEmpty()) {
                 needRebuild.addAll(affectedFiles);
             } else if (change.toLowerCase().endsWith(".scss")) {
-                // must be a new file, let's build it
-                System.err.println("New file: " + change);
-                needRebuild.add(change);
+                Path changePath = Path.of(change);
+                if (!changePath.getFileName().toString().startsWith("_")) {
+                    // must be a new file, let's build it
+                    System.err.println("New file: " + change);
+                    needRebuild.add(change);
+                } else {
+                    System.err.println("Ignoring new partial: " + change);
+                }
             }
+        }
+        // clear dependencies of files we compile before we collect them anew
+        for (String path : needRebuild) {
+            SassDevModeRecorder.resetDependencies(path);
         }
         System.err.println("Need to rebuild: " + needRebuild + " with: " + devModeSassCompiler);
         if (!needRebuild.isEmpty()) {
             if (devModeSassCompiler == null) {
                 try {
                     // TCCL is the Runtime Class Loader, but we want the build step CL
-                    devModeSassCompiler = (Function<String[], String>) cl
+                    devModeSassCompiler = (BiFunction<String[], BiConsumer<String, String>, String>) cl
                             .loadClass("io.quarkiverse.web.assets.sass.deployment.BuildTimeCompiler").getDeclaredConstructor()
                             .newInstance();
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
@@ -76,7 +86,7 @@ public class SassDevModeHandler implements HotReplacementSetup {
                                     absolutePath.toString(),
                                     relativePath,
                                     resourcesPath.toString()
-                            });
+                            }, SassDevModeRecorder::addHotReloadDependency);
                             writeResult(result, relativePath, generatedFile);
                             continue NEXT_SOURCE;
                         }

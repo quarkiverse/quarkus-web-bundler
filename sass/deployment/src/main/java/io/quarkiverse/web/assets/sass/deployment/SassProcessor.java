@@ -63,7 +63,9 @@ public class SassProcessor {
                         && !pv.getPath().getFileName().toString().startsWith("_")) {
                     watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(relativePath, false));
                     System.err.println("path visit: " + relativePath + " " + pv.getPath());
-                    String result = BuildTimeCompiler.convertScss(pv.getPath(), relativePath, pv.getRoot(), sassDependencies);
+                    String result = BuildTimeCompiler.convertScss(pv.getPath(), relativePath, pv.getRoot(),
+                            (source, affectedFile) -> sassDependencies
+                                    .produce(new SassDependencyBuildItem(source, affectedFile)));
                     // scss files depend on themselves
                     sassDependencies.produce(new SassDependencyBuildItem(relativePath, relativePath));
                     String generatedFile = relativePath.substring(0, relativePath.length() - 5) + ".css";

@@ -12,6 +12,7 @@ import io.quarkus.runtime.annotations.Recorder;
 public class SassDevModeRecorder {
 
     // source file -> depends on source files
+    // warning that hot reload might leave some values empty instead of removing them
     static volatile Map<String, List<String>> reverseDependencies = new HashMap<>();
     static volatile Path buildDir;
 
@@ -20,17 +21,29 @@ public class SassDevModeRecorder {
     }
 
     public void addDependency(String source, String affectedFile) {
-        System.err.println("source file " + source + " will affect " + affectedFile);
-        List<String> sources = reverseDependencies.get(source);
-        if (sources == null) {
-            sources = new ArrayList<>();
-            reverseDependencies.put(source, sources);
-        }
-        sources.add(affectedFile);
-        System.err.println("deps: " + reverseDependencies);
+        addHotReloadDependency(source, affectedFile);
     }
 
     public void setBuildDir(String buildDir) {
         SassDevModeRecorder.buildDir = Path.of(buildDir);
+    }
+
+    public static void resetDependencies(String affectedFile) {
+        // remove the affected file from all targets
+        reverseDependencies.replaceAll((source, affectedFiles) -> {
+            affectedFiles.remove(affectedFile);
+            return affectedFiles;
+        });
+    }
+
+    public static void addHotReloadDependency(String source, String affectedFile) {
+        System.err.println("source file " + source + " will affect " + affectedFile);
+        List<String> affectedFiles = reverseDependencies.get(source);
+        if (affectedFiles == null) {
+            affectedFiles = new ArrayList<>();
+            reverseDependencies.put(source, affectedFiles);
+        }
+        affectedFiles.add(affectedFile);
+        System.err.println("deps: " + reverseDependencies);
     }
 }
