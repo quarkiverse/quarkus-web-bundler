@@ -13,20 +13,20 @@ import io.quarkus.test.QuarkusDevModeTest;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.restassured.RestAssured;
 
-public class SassDevModeTest {
+public class ScssDevModeTest {
 
     @RegisterExtension
     static final QuarkusDevModeTest config = new QuarkusDevModeTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.vertx.caching=false"), "application.properties")
-                    .addAsManifestResource(new StringAsset("$primary-color: #333"),
-                            "resources/_base.sass")
-                    .addAsManifestResource(new StringAsset("@use 'base'\n"
+                    .addAsManifestResource(new StringAsset("$primary-color: #333;"),
+                            "resources/_base.scss")
+                    .addAsManifestResource(new StringAsset("@use 'base';\n"
                             + "\n"
-                            + ".something\n"
-                            + "  color: base.$primary-color\n"
-                            + ""),
-                            "resources/styles.sass"));
+                            + ".something {\n"
+                            + "  color: base.$primary-color;\n"
+                            + "}"),
+                            "resources/styles.scss"));
 
     @TestHTTPResource
     URL url;
@@ -41,7 +41,7 @@ public class SassDevModeTest {
                         + "  color: #333;\n"
                         + "}"));
         // direct modification
-        config.modifyResourceFile("META-INF/resources/styles.sass", s -> s.replace(".something", ".other"));
+        config.modifyResourceFile("META-INF/resources/styles.scss", s -> s.replace(".something", ".other"));
         RestAssured
                 .when()
                 .get("/styles.css").then()
@@ -50,7 +50,7 @@ public class SassDevModeTest {
                         + "  color: #333;\n"
                         + "}"));
         // modification of an imported file
-        config.modifyResourceFile("META-INF/resources/_base.sass", s -> s.replace("333", "444"));
+        config.modifyResourceFile("META-INF/resources/_base.scss", s -> s.replace("333", "444"));
         RestAssured
                 .when()
                 .get("/styles.css").then()
@@ -70,8 +70,8 @@ public class SassDevModeTest {
                         + "  color: #333;\n"
                         + "}"));
         // new dependency
-        config.modifyResourceFile("META-INF/resources/styles.sass", s -> s.replace("base", "newbase"));
-        config.addResourceFile("META-INF/resources/_newbase.sass", "$primary-color: #666");
+        config.modifyResourceFile("META-INF/resources/styles.scss", s -> s.replace("base", "newbase"));
+        config.addResourceFile("META-INF/resources/_newbase.scss", "$primary-color: #666;");
         RestAssured
                 .when()
                 .get("/styles.css").then()
@@ -80,7 +80,7 @@ public class SassDevModeTest {
                         + "  color: #666;\n"
                         + "}"));
         // modification of the new dependency
-        config.modifyResourceFile("META-INF/resources/_newbase.sass", s -> s.replace("666", "444"));
+        config.modifyResourceFile("META-INF/resources/_newbase.scss", s -> s.replace("666", "444"));
         RestAssured
                 .when()
                 .get("/styles.css").then()
@@ -99,7 +99,7 @@ public class SassDevModeTest {
                 .body(Matchers.is(".something {\n"
                         + "  color: #333;\n"
                         + "}"));
-        config.deleteResourceFile("META-INF/resources/styles.sass");
+        config.deleteResourceFile("META-INF/resources/styles.scss");
         RestAssured
                 .when()
                 .get("/styles.css").then()
@@ -112,11 +112,11 @@ public class SassDevModeTest {
                 .when()
                 .get("/newstyles.css").then()
                 .statusCode(404);
-        config.addResourceFile("META-INF/resources/newstyles.sass", "@use 'base'\n"
+        config.addResourceFile("META-INF/resources/newstyles.scss", "@use 'base';\n"
                 + "\n"
-                + ".something\n"
-                + "  color: base.$primary-color\n"
-                + "");
+                + ".something {\n"
+                + "  color: base.$primary-color;\n"
+                + "}");
         RestAssured
                 .when()
                 .get("/newstyles.css").then()

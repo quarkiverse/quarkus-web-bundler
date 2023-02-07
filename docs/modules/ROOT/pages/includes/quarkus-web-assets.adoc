@@ -23,7 +23,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_WEB_ASSETS_PRESET_ASSETS+++`
 endif::add-copy-button-to-env-var[]
 --|boolean 
-|`assets`
+|`true`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.preset-components]]`link:#quarkus-web-assets_quarkus.web-assets.preset-components[quarkus.web-assets.preset-components]`

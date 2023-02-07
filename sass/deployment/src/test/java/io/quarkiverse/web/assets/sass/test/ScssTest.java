@@ -13,26 +13,26 @@ import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.restassured.RestAssured;
 
-public class SassTest {
+public class ScssTest {
 
     @RegisterExtension
     static final QuarkusUnitTest config = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsManifestResource(new StringAsset("$font-stack: Helvetica, sans-serif\n"
-                            + "$primary-color: #333\n"
+                    .addAsManifestResource(new StringAsset("$font-stack: Helvetica, sans-serif;\n"
+                            + "$primary-color: #333;\n"
                             + "\n"
-                            + "body\n"
-                            + "  font: 100% $font-stack\n"
-                            + "  color: $primary-color\n"
-                            + ""),
-                            "resources/_base.sass")
-                    .addAsManifestResource(new StringAsset("@use 'base'\n"
+                            + "body {\n"
+                            + "  font: 100% $font-stack;\n"
+                            + "  color: $primary-color;\n"
+                            + "}"),
+                            "resources/_base.scss")
+                    .addAsManifestResource(new StringAsset("@use 'base';\n"
                             + "\n"
-                            + ".inverse\n"
-                            + "  background-color: base.$primary-color\n"
-                            + "  color: white\n"
-                            + ""),
-                            "resources/styles.sass"));
+                            + ".inverse {\n"
+                            + "  background-color: base.$primary-color;\n"
+                            + "  color: white;\n"
+                            + "}"),
+                            "resources/styles.scss"));
 
     @TestHTTPResource
     URL url;

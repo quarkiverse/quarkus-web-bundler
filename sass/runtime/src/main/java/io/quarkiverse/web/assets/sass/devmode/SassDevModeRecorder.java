@@ -37,13 +37,31 @@ public class SassDevModeRecorder {
     }
 
     public static void addHotReloadDependency(String source, String affectedFile) {
-        System.err.println("source file " + source + " will affect " + affectedFile);
         List<String> affectedFiles = reverseDependencies.get(source);
         if (affectedFiles == null) {
             affectedFiles = new ArrayList<>();
             reverseDependencies.put(source, affectedFiles);
         }
         affectedFiles.add(affectedFile);
-        System.err.println("deps: " + reverseDependencies);
+    }
+
+    /**
+     * Returns true if the given filename (not path) does not start with _
+     * and ends with either .sass or .scss case-insensitive
+     */
+    public static boolean isCompiledSassFile(String filename) {
+        if (filename.startsWith("_")) {
+            return false;
+        }
+        String lc = filename.toLowerCase();
+        return lc.endsWith(".scss") || lc.endsWith(".sass");
+    }
+
+    /**
+     * Returns true if the given filename (not path) ends with .sass case-insensitive
+     */
+    public static boolean isSassFile(String filename) {
+        String lc = filename.toLowerCase();
+        return lc.endsWith(".sass");
     }
 }

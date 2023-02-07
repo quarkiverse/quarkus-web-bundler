@@ -59,29 +59,29 @@ public class SassProcessor {
                 String relativePath = pv.getRelativePath("/");
                 // FIXME: also watch partials
                 if (relativePath.startsWith("META-INF/resources/")
-                        && pv.getPath().getFileName().toString().toLowerCase().endsWith(".scss")
-                        && !pv.getPath().getFileName().toString().startsWith("_")) {
+                        && SassDevModeRecorder.isCompiledSassFile(pv.getPath().getFileName().toString())) {
+                    // watch source file
                     watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(relativePath, false));
-                    System.err.println("path visit: " + relativePath + " " + pv.getPath());
+                    // compile
                     String result = BuildTimeCompiler.convertScss(pv.getPath(), relativePath, pv.getRoot(),
                             (source, affectedFile) -> sassDependencies
                                     .produce(new SassDependencyBuildItem(source, affectedFile)));
-                    // scss files depend on themselves
-                    sassDependencies.produce(new SassDependencyBuildItem(relativePath, relativePath));
+                    // figure out where we put it
                     String generatedFile = relativePath.substring(0, relativePath.length() - 5) + ".css";
-                    System.err.println("Result in " + generatedFile + ": " + result);
                     byte[] bytes = result.getBytes(StandardCharsets.UTF_8);
+                    // generated resource for prod
                     resources.produce(new GeneratedResourceBuildItem(generatedFile,
                             bytes, true));
+                    // for native
                     nativeImageResources.produce(new NativeImageResourceBuildItem(generatedFile));
+                    // for vertx http
                     String additionalPath = generatedFile.substring(StaticResourcesRecorder.META_INF_RESOURCES.length());
                     staticResources.produce(new AdditionalStaticResourceBuildItem(additionalPath, false));
-
+                    // for dev/test mode
                     Path targetPath = buildDir.toPath().resolve(generatedFile);
                     try {
                         Files.createDirectories(targetPath.getParent());
                         Files.write(targetPath, bytes);
-                        System.err.println("Wrote to " + targetPath + " add path: " + additionalPath);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }

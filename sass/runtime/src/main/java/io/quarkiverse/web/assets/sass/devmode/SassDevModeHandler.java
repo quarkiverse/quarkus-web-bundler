@@ -7,31 +7,29 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+import org.jboss.logging.Logger;
+
 import io.quarkus.dev.spi.HotReplacementContext;
 import io.quarkus.dev.spi.HotReplacementSetup;
 
 public class SassDevModeHandler implements HotReplacementSetup {
 
-    public BiFunction<String[], BiConsumer<String, String>, String> devModeSassCompiler;
+    private static Logger log = Logger.getLogger(SassDevModeHandler.class);
 
-    public static void clear() {
-        SassDevModeRecorder.reverseDependencies.clear();
-    }
-
+    private BiFunction<String[], BiConsumer<String, String>, String> devModeSassCompiler;
     private ClassLoader cl;
     private List<Path> resourcesPaths;
     private Path classesDir;
 
     @Override
     public void setupHotDeployment(HotReplacementContext context) {
-        System.err.println("Setting up SASS hot deploy classes: " + context.getClassesDir() + " resources dirs: "
-                + context.getResourcesDir());
         resourcesPaths = context.getResourcesDir();
         classesDir = context.getClassesDir();
         context.consumeNoRestartChanges(this::noRestartChanges);
@@ -40,28 +38,24 @@ public class SassDevModeHandler implements HotReplacementSetup {
     }
 
     public void noRestartChanges(Set<String> changes) {
-        System.err.println("No restart changes: " + changes + " dependencies: " + SassDevModeRecorder.reverseDependencies);
         Set<String> needRebuild = new HashSet<>();
         for (String change : changes) {
             List<String> affectedFiles = SassDevModeRecorder.reverseDependencies.get(change);
             if (affectedFiles != null && !affectedFiles.isEmpty()) {
                 needRebuild.addAll(affectedFiles);
-            } else if (change.toLowerCase().endsWith(".scss")) {
+            } else {
                 Path changePath = Path.of(change);
-                if (!changePath.getFileName().toString().startsWith("_")) {
+                if (SassDevModeRecorder.isCompiledSassFile(changePath.getFileName().toString())) {
                     // must be a new file, let's build it
-                    System.err.println("New file: " + change);
                     needRebuild.add(change);
-                } else {
-                    System.err.println("Ignoring new partial: " + change);
                 }
             }
         }
+        log.infof("SASS changes detected, will rebuild: %s", needRebuild);
         // clear dependencies of files we compile before we collect them anew
         for (String path : needRebuild) {
             SassDevModeRecorder.resetDependencies(path);
         }
-        System.err.println("Need to rebuild: " + needRebuild + " with: " + devModeSassCompiler);
         if (!needRebuild.isEmpty()) {
             if (devModeSassCompiler == null) {
                 try {
@@ -75,13 +69,12 @@ public class SassDevModeHandler implements HotReplacementSetup {
                 }
             }
             if (devModeSassCompiler != null) {
+                List<String> deleted = new ArrayList<>();
                 NEXT_SOURCE: for (String relativePath : needRebuild) {
                     String generatedFile = relativePath.substring(0, relativePath.length() - 5) + ".css";
-                    System.err.println("Result in " + generatedFile);
                     for (Path resourcesPath : resourcesPaths) {
                         Path absolutePath = resourcesPath.resolve(relativePath);
                         if (Files.exists(absolutePath)) {
-                            // FIXME: collect new dependencies
                             String result = devModeSassCompiler.apply(new String[] {
                                     absolutePath.toString(),
                                     relativePath,
@@ -91,18 +84,19 @@ public class SassDevModeHandler implements HotReplacementSetup {
                             continue NEXT_SOURCE;
                         }
                     }
-                    System.err.println("Could not find source file for " + relativePath + " probably a deletion");
+                    deleted.add(relativePath);
                     Path targetPath = classesDir.resolve(generatedFile);
                     if (Files.exists(targetPath)) {
-                        System.err.println("Deleting from " + targetPath);
                         deleteResourceFile(targetPath);
                     }
                     // also from build step dir
                     targetPath = SassDevModeRecorder.buildDir.resolve(generatedFile);
                     if (Files.exists(targetPath)) {
-                        System.err.println("Deleting from " + targetPath);
                         deleteResourceFile(targetPath);
                     }
+                }
+                if (!deleted.isEmpty()) {
+                    log.infof("SASS files deleted: %s", deleted);
                 }
             }
         }
@@ -177,7 +171,6 @@ public class SassDevModeHandler implements HotReplacementSetup {
         try {
             Files.createDirectories(targetPath.getParent());
             Files.write(targetPath, bytes);
-            System.err.println("Wrote to " + targetPath);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

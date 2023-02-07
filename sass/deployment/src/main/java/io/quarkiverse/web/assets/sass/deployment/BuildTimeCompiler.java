@@ -12,8 +12,10 @@ import de.larsgrefer.sass.embedded.SassCompilationFailedException;
 import de.larsgrefer.sass.embedded.SassCompiler;
 import de.larsgrefer.sass.embedded.SassCompilerFactory;
 import de.larsgrefer.sass.embedded.importer.CustomImporter;
+import io.quarkiverse.web.assets.sass.devmode.SassDevModeRecorder;
 import sass.embedded_protocol.EmbeddedSass.InboundMessage.ImportResponse.ImportSuccess;
 import sass.embedded_protocol.EmbeddedSass.OutboundMessage.CompileResponse.CompileSuccess;
+import sass.embedded_protocol.EmbeddedSass.Syntax;
 
 public class BuildTimeCompiler implements BiFunction<String[], BiConsumer<String, String>, String> {
 
@@ -22,15 +24,15 @@ public class BuildTimeCompiler implements BiFunction<String[], BiConsumer<String
         Path absolutePath = Path.of(args[0]);
         String relativePath = args[1];
         Path resourcesAbsoluteRootPath = Path.of(args[2]);
-        System.err.println("COMPILING FROM DEPLOYMENT MODULE: " + relativePath);
-        String result = convertScss(absolutePath, relativePath, resourcesAbsoluteRootPath, dependencyCollector);
-        System.err.println("Result: " + result);
-        return result;
+        return convertScss(absolutePath, relativePath, resourcesAbsoluteRootPath, dependencyCollector);
     }
 
     public static String convertScss(Path absolutePath, String relativePath,
             Path resourcesAbsoluteRootPath,
             BiConsumer<String, String> dependencyCollector) {
+        // scss files depend on themselves
+        dependencyCollector.accept(relativePath, relativePath);
+        boolean isSass = SassDevModeRecorder.isSassFile(absolutePath.getFileName().toString());
 
         try (SassCompiler sassCompiler = SassCompilerFactory.bundled()) {
             Path parent = absolutePath.getParent();
@@ -38,10 +40,10 @@ public class BuildTimeCompiler implements BiFunction<String[], BiConsumer<String
 
                 @Override
                 public String canonicalize(String url, boolean fromImport) throws Exception {
-                    System.err.println("canonicalize " + url + " fromImport: " + fromImport);
                     // add extension if missing
-                    if (!url.toLowerCase().endsWith(".scss")) {
-                        url += ".scss";
+                    String extension = isSass ? ".sass" : ".scss";
+                    if (!url.toLowerCase().endsWith(extension)) {
+                        url += extension;
                     }
                     Path resolved = parent.resolve(url);
                     // prefix with _ for partials
@@ -53,19 +55,20 @@ public class BuildTimeCompiler implements BiFunction<String[], BiConsumer<String
 
                 @Override
                 public ImportSuccess handleImport(String url) throws Exception {
-                    System.err.println("handleImport: " + url);
                     if (url.startsWith("sass:")) {
                         Path path = Path.of(url.substring(5));
                         Path relativeImport = resourcesAbsoluteRootPath.relativize(path);
                         dependencyCollector.accept(relativeImport.toString(), relativePath);
                         String contents = Files.readString(path, StandardCharsets.UTF_8);
-                        return ImportSuccess.newBuilder().setContents(contents).buildPartial();
+                        return ImportSuccess.newBuilder().setContents(contents)
+                                .setSyntax(isSass ? Syntax.INDENTED : Syntax.SCSS).buildPartial();
                     }
                     return null;
                 }
             });
             String contents = Files.readString(absolutePath, StandardCharsets.UTF_8);
-            CompileSuccess compileSuccess = sassCompiler.compileScssString(contents);
+            CompileSuccess compileSuccess = isSass ? sassCompiler.compileSassString(contents)
+                    : sassCompiler.compileScssString(contents);
 
             //get compiled css
             return compileSuccess.getCss();

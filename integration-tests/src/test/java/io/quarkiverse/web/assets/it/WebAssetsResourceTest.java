@@ -1,7 +1,8 @@
 package io.quarkiverse.web.assets.it;
 
-import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
+
+import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 public class WebAssetsResourceTest {
