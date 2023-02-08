@@ -2,7 +2,9 @@ package io.quarkiverse.web.assets.sass.devmode;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,9 +15,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.dev.ErrorPageGenerators;
 import io.quarkus.dev.spi.HotReplacementContext;
 import io.quarkus.dev.spi.HotReplacementSetup;
 
@@ -24,17 +28,43 @@ public class SassDevModeHandler implements HotReplacementSetup {
     private static Logger log = Logger.getLogger(SassDevModeHandler.class);
 
     private BiFunction<String[], BiConsumer<String, String>, String> devModeSassCompiler;
+    private Function<Throwable, String> devModeSassErrorPage;
     private ClassLoader cl;
-    private List<Path> resourcesPaths;
-    private Path classesDir;
+
+    private HotReplacementContext context;
+
+    private static final String SASS_EXCEPTION = "de.larsgrefer.sass.embedded.SassCompilationFailedException";
+    private static final String SASS_COMPILE_FAILURE = "sass.embedded_protocol.EmbeddedSass.OutboundMessage.CompileResponse.CompileFailure";
+    private static final String SASS_COMPILE_FAILURE_BUILDER = SASS_COMPILE_FAILURE + ".Builder";
 
     @Override
     public void setupHotDeployment(HotReplacementContext context) {
-        resourcesPaths = context.getResourcesDir();
-        classesDir = context.getClassesDir();
+        this.context = context;
         context.consumeNoRestartChanges(this::noRestartChanges);
+        // FIXME: due to remoteProblem not being cleared on reload
+        // see https://github.com/quarkusio/quarkus/issues/31013
+        context.addPreScanStep(this::preScan);
         // TCCL is the Augmentation Class Loader, which is the same CL as the build steps
         cl = Thread.currentThread().getContextClassLoader();
+        ErrorPageGenerators.register(SASS_EXCEPTION, this::generatePage);
+    }
+
+    String generatePage(Throwable exception) {
+        if (devModeSassErrorPage == null) {
+            try {
+                // TCCL is the Runtime Class Loader, but we want the build step CL
+                devModeSassErrorPage = (Function<Throwable, String>) cl
+                        .loadClass("io.quarkiverse.web.assets.sass.deployment.BuildTimeErrorPage").getDeclaredConstructor()
+                        .newInstance();
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                e.printStackTrace();
+            }
+        }
+        if (devModeSassErrorPage != null) {
+            return devModeSassErrorPage.apply(exception);
+        }
+        return "Failed to generate error page via reflection";
     }
 
     public void noRestartChanges(Set<String> changes) {
@@ -69,23 +99,34 @@ public class SassDevModeHandler implements HotReplacementSetup {
                 }
             }
             if (devModeSassCompiler != null) {
+                List<Throwable> errors = new ArrayList<>();
                 List<String> deleted = new ArrayList<>();
                 NEXT_SOURCE: for (String relativePath : needRebuild) {
                     String generatedFile = relativePath.substring(0, relativePath.length() - 5) + ".css";
-                    for (Path resourcesPath : resourcesPaths) {
+                    for (Path resourcesPath : context.getResourcesDir()) {
                         Path absolutePath = resourcesPath.resolve(relativePath);
                         if (Files.exists(absolutePath)) {
-                            String result = devModeSassCompiler.apply(new String[] {
-                                    absolutePath.toString(),
-                                    relativePath,
-                                    resourcesPath.toString()
-                            }, SassDevModeRecorder::addHotReloadDependency);
-                            writeResult(result, relativePath, generatedFile);
+                            try {
+                                String result = devModeSassCompiler.apply(new String[] {
+                                        absolutePath.toString(),
+                                        relativePath,
+                                        resourcesPath.toString()
+                                }, SassDevModeRecorder::addHotReloadDependency);
+                                writeResult(result, relativePath, generatedFile);
+                            } catch (RuntimeException x) {
+                                if (x.getCause() != null
+                                        && x.getCause().getClass().getName().equals(SASS_EXCEPTION)) {
+                                    // collect error
+                                    errors.add(x.getCause());
+                                } else {
+                                    throw x;
+                                }
+                            }
                             continue NEXT_SOURCE;
                         }
                     }
                     deleted.add(relativePath);
-                    Path targetPath = classesDir.resolve(generatedFile);
+                    Path targetPath = context.getClassesDir().resolve(generatedFile);
                     if (Files.exists(targetPath)) {
                         deleteResourceFile(targetPath);
                     }
@@ -98,7 +139,36 @@ public class SassDevModeHandler implements HotReplacementSetup {
                 if (!deleted.isEmpty()) {
                     log.infof("SASS files deleted: %s", deleted);
                 }
+                if (errors.size() == 1) {
+                    context.setRemoteProblem(errors.get(0));
+                } else if (errors.size() > 1) {
+                    // aggregate inside fake composite exception
+                    context.setRemoteProblem(makeAggregateSassException(errors));
+                } else {
+                    resetRemoteProblem();
+                }
             }
+        }
+    }
+
+    private Throwable makeAggregateSassException(List<Throwable> errors) {
+        ClassLoader cl = errors.get(0).getClass().getClassLoader();
+        try {
+            Class<?> compileFailureClass = cl.loadClass(SASS_COMPILE_FAILURE);
+            Method newBuilderMethod = compileFailureClass.getDeclaredMethod("newBuilder");
+            Object newBuilder = newBuilderMethod.invoke(null);
+            Class<?> compileFailureBuilderClass = cl.loadClass(SASS_COMPILE_FAILURE_BUILDER);
+            Method buildMethod = compileFailureBuilderClass.getDeclaredMethod("build");
+            Object compileFailure = buildMethod.invoke(newBuilder);
+            Class<?> exceptionClass = cl.loadClass(SASS_EXCEPTION);
+            Constructor<?> newExceptionConstructor = exceptionClass.getDeclaredConstructor(compileFailureClass);
+            Exception x = (Exception) newExceptionConstructor.newInstance(compileFailure);
+            for (Throwable error : errors) {
+                x.addSuppressed(error);
+            }
+            return x;
+        } catch (Exception x) {
+            return x;
         }
     }
 
@@ -167,12 +237,26 @@ public class SassDevModeHandler implements HotReplacementSetup {
     private void writeResult(String result, String relativePath, String generatedFile) {
         byte[] bytes = result.getBytes(StandardCharsets.UTF_8);
 
-        Path targetPath = classesDir.resolve(generatedFile);
+        Path targetPath = context.getClassesDir().resolve(generatedFile);
         try {
             Files.createDirectories(targetPath.getParent());
             Files.write(targetPath, bytes);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    private void preScan() {
+        resetRemoteProblem();
+    }
+
+    private void resetRemoteProblem() {
+        try {
+            context.setRemoteProblem(null);
+            // FIXME: this is a workaround for https://github.com/quarkusio/quarkus/issues/31013
+        } catch (NullPointerException x) {
+            // ignore
+            x.printStackTrace();
         }
     }
 }

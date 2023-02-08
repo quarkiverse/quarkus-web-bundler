@@ -6,9 +6,11 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import de.larsgrefer.sass.embedded.SassCompilationFailedException;
 import io.quarkiverse.web.assets.sass.devmode.SassDevModeRecorder;
 import io.quarkus.bootstrap.workspace.ArtifactSources;
 import io.quarkus.bootstrap.workspace.SourceDir;
@@ -29,6 +31,7 @@ import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.vertx.http.deployment.spi.AdditionalStaticResourceBuildItem;
 import io.quarkus.vertx.http.runtime.StaticResourcesRecorder;
+import sass.embedded_protocol.EmbeddedSass.OutboundMessage.CompileResponse.CompileFailure;
 
 public class SassProcessor {
 
@@ -54,6 +57,8 @@ public class SassProcessor {
             ApplicationArchivesBuildItem archives,
             CurateOutcomeBuildItem curateOutcomeBuildItem) {
         File buildDir = getBuildDirectory(curateOutcomeBuildItem);
+        // collect all errors instead of fail at the first one
+        List<SassCompilationFailedException> errors = new ArrayList<>();
         archives.getRootArchive().accept(tree -> {
             tree.walk(pv -> {
                 String relativePath = pv.getRelativePath("/");
@@ -63,31 +68,50 @@ public class SassProcessor {
                     // watch source file
                     watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(relativePath, false));
                     // compile
-                    String result = BuildTimeCompiler.convertScss(pv.getPath(), relativePath, pv.getRoot(),
-                            (source, affectedFile) -> sassDependencies
-                                    .produce(new SassDependencyBuildItem(source, affectedFile)));
-                    // figure out where we put it
-                    String generatedFile = relativePath.substring(0, relativePath.length() - 5) + ".css";
-                    byte[] bytes = result.getBytes(StandardCharsets.UTF_8);
-                    // generated resource for prod
-                    resources.produce(new GeneratedResourceBuildItem(generatedFile,
-                            bytes, true));
-                    // for native
-                    nativeImageResources.produce(new NativeImageResourceBuildItem(generatedFile));
-                    // for vertx http
-                    String additionalPath = generatedFile.substring(StaticResourcesRecorder.META_INF_RESOURCES.length());
-                    staticResources.produce(new AdditionalStaticResourceBuildItem(additionalPath, false));
-                    // for dev/test mode
-                    Path targetPath = buildDir.toPath().resolve(generatedFile);
                     try {
-                        Files.createDirectories(targetPath.getParent());
-                        Files.write(targetPath, bytes);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+                        String result = BuildTimeCompiler.convertScss(pv.getPath(), relativePath, pv.getRoot(),
+                                (source, affectedFile) -> sassDependencies
+                                        .produce(new SassDependencyBuildItem(source, affectedFile)));
+                        // figure out where we put it
+                        String generatedFile = relativePath.substring(0, relativePath.length() - 5) + ".css";
+                        byte[] bytes = result.getBytes(StandardCharsets.UTF_8);
+                        // generated resource for prod
+                        resources.produce(new GeneratedResourceBuildItem(generatedFile,
+                                bytes, true));
+                        // for native
+                        nativeImageResources.produce(new NativeImageResourceBuildItem(generatedFile));
+                        // for vertx http
+                        String additionalPath = generatedFile.substring(StaticResourcesRecorder.META_INF_RESOURCES.length());
+                        staticResources.produce(new AdditionalStaticResourceBuildItem(additionalPath, false));
+                        // for dev/test mode
+                        Path targetPath = buildDir.toPath().resolve(generatedFile);
+                        try {
+                            Files.createDirectories(targetPath.getParent());
+                            Files.write(targetPath, bytes);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    } catch (RuntimeException x) {
+                        if (x.getCause() instanceof SassCompilationFailedException) {
+                            // collect error
+                            errors.add((SassCompilationFailedException) x.getCause());
+                        } else {
+                            throw x;
+                        }
                     }
                 }
             });
         });
+        if (errors.size() == 1) {
+            throw new RuntimeException(errors.get(0));
+        } else if (errors.size() > 1) {
+            // aggregate inside fake composite exception
+            SassCompilationFailedException x = new SassCompilationFailedException(CompileFailure.newBuilder().build());
+            for (SassCompilationFailedException error : errors) {
+                x.addSuppressed(error);
+            }
+            throw new RuntimeException(x);
+        }
     }
 
     public static File getBuildDirectory(CurateOutcomeBuildItem curateOutcomeBuildItem) {

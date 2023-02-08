@@ -13,8 +13,10 @@ import de.larsgrefer.sass.embedded.SassCompiler;
 import de.larsgrefer.sass.embedded.SassCompilerFactory;
 import de.larsgrefer.sass.embedded.importer.CustomImporter;
 import io.quarkiverse.web.assets.sass.devmode.SassDevModeRecorder;
+import sass.embedded_protocol.EmbeddedSass.InboundMessage.CompileRequest;
 import sass.embedded_protocol.EmbeddedSass.InboundMessage.ImportResponse.ImportSuccess;
 import sass.embedded_protocol.EmbeddedSass.OutboundMessage.CompileResponse.CompileSuccess;
+import sass.embedded_protocol.EmbeddedSass.OutputStyle;
 import sass.embedded_protocol.EmbeddedSass.Syntax;
 
 public class BuildTimeCompiler implements BiFunction<String[], BiConsumer<String, String>, String> {
@@ -67,8 +69,12 @@ public class BuildTimeCompiler implements BiFunction<String[], BiConsumer<String
                 }
             });
             String contents = Files.readString(absolutePath, StandardCharsets.UTF_8);
-            CompileSuccess compileSuccess = isSass ? sassCompiler.compileSassString(contents)
-                    : sassCompiler.compileScssString(contents);
+            CompileRequest.StringInput stringInput = CompileRequest.StringInput.newBuilder()
+                    .setSource(contents)
+                    .setUrl(absolutePath.toString())
+                    .setSyntax(isSass ? Syntax.INDENTED : Syntax.SCSS)
+                    .build();
+            CompileSuccess compileSuccess = sassCompiler.compileString(stringInput, OutputStyle.EXPANDED);
 
             //get compiled css
             return compileSuccess.getCss();
