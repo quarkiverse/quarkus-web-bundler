@@ -50,6 +50,6 @@ public enum AssetsBundles implements WebAssetsConfig.BundleConfig {
     }
 
     public String getKey() {
-        return this.name().toLowerCase();
+        return "assets-" + this.name().toLowerCase();
     }
 }

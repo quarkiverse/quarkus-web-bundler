@@ -48,6 +48,6 @@ public enum ComponentBundles implements WebAssetsConfig.BundleConfig {
     }
 
     public String getKey() {
-        return this.name().toLowerCase();
+        return "components-" + this.name().toLowerCase();
     }
 }

@@ -3,13 +3,11 @@ package io.quarkiverse.web.assets.deployment;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +18,12 @@ import java.util.stream.Stream;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.web.assets.deployment.WebAssetsConfig.BundleConfig;
+import io.quarkiverse.web.assets.deployment.staticresources.StaticResourceBuildItem;
 import io.quarkus.deployment.ApplicationArchive;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.fs.util.ZipUtils;
 import io.quarkus.maven.dependency.Dependency;
@@ -46,12 +43,9 @@ class WebAssetsProcessor {
     @BuildStep
     void collectAssets(ApplicationArchivesBuildItem applicationArchives,
             CurateOutcomeBuildItem curateOutcome,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedPaths,
-            BuildProducer<WebAssetPathBuildItem> assetPaths,
-            BuildProducer<NativeImageResourceBuildItem> nativeImageResources,
+            BuildProducer<WebAssetBuildItem> assetPaths,
             WebAssetsConfig config)
             throws IOException {
-        Set<Path> basePaths = new HashSet<>();
         Set<ApplicationArchive> allApplicationArchives = applicationArchives.getAllApplicationArchives();
         List<ResolvedDependency> extensionArtifacts = curateOutcome.getApplicationModel().getDependencies().stream()
                 .filter(Dependency::isRuntimeExtensionArtifact).collect(Collectors.toList());
@@ -60,21 +54,34 @@ class WebAssetsProcessor {
             bundles.putAll(ComponentBundles.COMPONENT_BUNDLES);
         }
         if (config.presetAssets()) {
-            bundles.putAll(ComponentBundles.COMPONENT_BUNDLES);
+            bundles.putAll(AssetsBundles.ASSETS_BUNDLES);
         }
         for (Map.Entry<String, BundleConfig> e : bundles.entrySet()) {
-            findBundleAssets(config, e.getKey(), e.getValue(), assetPaths, nativeImageResources, watchedPaths, basePaths,
+            findBundleAssets(config, e.getKey(), e.getValue(), assetPaths,
                     allApplicationArchives,
                     extensionArtifacts);
         }
 
     }
 
-    private void findBundleAssets(WebAssetsConfig config, String name, BundleConfig bundleConfig,
-            BuildProducer<WebAssetPathBuildItem> assetPaths,
-            BuildProducer<NativeImageResourceBuildItem> nativeImageResources,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedPaths,
-            Set<Path> basePaths, Set<ApplicationArchive> allApplicationArchives,
+    @BuildStep
+    void processAssets(List<WebAssetBuildItem> webAssets,
+            BuildProducer<StaticResourceBuildItem> staticResourceProducer) {
+        for (WebAssetBuildItem webAsset : webAssets) {
+            staticResourceProducer.produce(new StaticResourceBuildItem(
+                    Set.of(new StaticResourceBuildItem.Source(webAsset.getPath(), webAsset.getFullPath())),
+                    webAsset.getPath(),
+                    webAsset.getContent(),
+                    true,
+                    true));
+        }
+    }
+
+    private void findBundleAssets(WebAssetsConfig config,
+            String bundleName,
+            BundleConfig bundleConfig,
+            BuildProducer<WebAssetBuildItem> webAssetsProducer,
+            Set<ApplicationArchive> allApplicationArchives,
             List<ResolvedDependency> extensionArtifacts) throws IOException {
         final String bundleDir = bundleConfig.dir();
         for (ResolvedDependency artifact : extensionArtifacts) {
@@ -84,24 +91,18 @@ class WebAssetsProcessor {
             }
             for (Path path : artifact.getResolvedPaths()) {
                 if (Files.isDirectory(path)) {
-                    // Try to find the templates in the root dir
-                    try (Stream<Path> paths = Files.list(path)) {
-                        Path basePath = paths.filter(p -> isWebAssetsRootPath(bundleDir, p)).findFirst().orElse(null);
-                        if (basePath != null) {
-                            LOGGER.debugf("Found extension assets dir: %s", path);
-                            scan(name, bundleConfig, basePath, bundleDir + "/", watchedPaths, assetPaths, nativeImageResources,
-                                    basePath);
-                            break;
-                        }
+                    final Path bundleDirPath = path.resolve(bundleDir);
+                    if (Files.isDirectory(bundleDirPath) && bundleDirPath.toString().endsWith(bundleDir)) {
+                        LOGGER.debugf("Found extension assets dir: %s", bundleDirPath);
+                        scan(webAssetsProducer, bundleConfig, bundleName, path, bundleDirPath);
+                        break;
                     }
                 } else {
                     try (FileSystem artifactFs = ZipUtils.newFileSystem(path)) {
-
-                        Path basePath = artifactFs.getPath(bundleDir);
-                        if (Files.exists(basePath)) {
+                        Path bundleDirPath = artifactFs.getPath(bundleDir);
+                        if (Files.exists(bundleDirPath)) {
                             LOGGER.debugf("Found extension assets in: %s", path);
-                            scan(name, bundleConfig, basePath, bundleDir + "/", watchedPaths, assetPaths, nativeImageResources,
-                                    basePath);
+                            scan(webAssetsProducer, bundleConfig, bundleName, artifactFs.getPath("/"), bundleDirPath);
                         }
                     } catch (IOException e) {
                         LOGGER.warnf(e, "Unable to create the file system from the path: %s", path);
@@ -113,14 +114,12 @@ class WebAssetsProcessor {
             archive.accept(tree -> {
                 for (Path rootDir : tree.getRoots()) {
                     // Note that we cannot use ApplicationArchive.getChildPath(String) here because we would not be able to detect
-                    // a wrong directory name on case-insensitive file systems
-                    try (Stream<Path> rootDirPaths = Files.list(rootDir)) {
-                        Path basePath = rootDirPaths.filter(p -> isWebAssetsRootPath(bundleDir, p)).findFirst().orElse(null);
-                        if (basePath != null) {
-                            LOGGER.debugf("Found assets dir: %s", basePath);
-                            basePaths.add(basePath);
-                            scan(name, bundleConfig, basePath, bundleDir + "/", watchedPaths, assetPaths, nativeImageResources,
-                                    basePath);
+                    // a wrong directory bundleName on case-insensitive file systems
+                    try {
+                        final Path bundleDirPath = rootDir.resolve(bundleDir);
+                        if (Files.isDirectory(bundleDirPath) && bundleDirPath.toString().endsWith(bundleDir)) {
+                            LOGGER.debugf("Found extension assets dir: %s", bundleDirPath);
+                            scan(webAssetsProducer, bundleConfig, bundleName, rootDir, bundleDirPath);
                             break;
                         }
                     } catch (IOException e) {
@@ -131,15 +130,18 @@ class WebAssetsProcessor {
         }
     }
 
-    private void scan(String name, BundleConfig config, Path directory, String basePath,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedPaths, BuildProducer<WebAssetPathBuildItem> webAssetPaths,
-            BuildProducer<NativeImageResourceBuildItem> nativeImageResources, Path root)
+    private void scan(BuildProducer<WebAssetBuildItem> webAssetsProducer,
+            BundleConfig config,
+            String bundleName,
+            Path root,
+            Path directory)
             throws IOException {
-        try (Stream<Path> files = Files.list(directory)) {
+        Path toScan = directory == null ? root : directory;
+        try (Stream<Path> files = Files.list(toScan)) {
             Iterator<Path> iter = files.iterator();
             while (iter.hasNext()) {
                 Path filePath = iter.next();
-                if (!directory.isAbsolute()
+                if (!toScan.isAbsolute()
                         && filePath.isAbsolute()
                         && filePath.getRoot() != null) {
                     filePath = filePath.getRoot().relativize(filePath);
@@ -147,24 +149,25 @@ class WebAssetsProcessor {
                 final PathMatcher pathMatcher = filePath.getFileSystem()
                         .getPathMatcher("glob:**/" + config.pathMatcher().orElse(config.type().pathMatcher()));
                 if (Files.isRegularFile(filePath) && pathMatcher.matches(filePath)) {
-                    LOGGER.infof("Found %s asset %s", name, filePath);
+                    LOGGER.infof("Found %s asset %s", bundleName, filePath);
                     String assetPath = root.relativize(filePath).toString();
                     if (File.separatorChar != '/') {
                         assetPath = assetPath.replace(File.separatorChar, '/');
                     }
-                    produceTemplateBuildItems(webAssetPaths, watchedPaths, nativeImageResources, basePath, assetPath,
+                    produceWebAsset(webAssetsProducer, bundleName, root.toString(), assetPath,
                             filePath, config);
                 } else if (Files.isDirectory(filePath)) {
                     LOGGER.debugf("Scan directory: %s", filePath);
-                    scan(name, config, filePath, basePath, watchedPaths, webAssetPaths, nativeImageResources, root);
+                    scan(webAssetsProducer, config, bundleName, root, filePath);
                 }
             }
         }
     }
 
-    private static void produceTemplateBuildItems(BuildProducer<WebAssetPathBuildItem> webAssetPaths,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedPaths,
-            BuildProducer<NativeImageResourceBuildItem> nativeImageResources, String basePath, String filePath,
+    private static void produceWebAsset(BuildProducer<WebAssetBuildItem> webAssetsProducer,
+            String bundleName,
+            String basePath,
+            String filePath,
             Path originalPath,
             BundleConfig config) {
         if (filePath.isEmpty()) {
@@ -173,15 +176,9 @@ class WebAssetsProcessor {
         String fullPath = basePath + filePath;
         LOGGER.debugf("Produce template build items [filePath: %s, fullPath: %s, originalPath: %s", filePath, fullPath,
                 originalPath);
-        // NOTE: we cannot just drop the template because a template param can be added
-        watchedPaths.produce(new HotDeploymentWatchedFileBuildItem(fullPath, true));
-        nativeImageResources.produce(new NativeImageResourceBuildItem(fullPath));
-        webAssetPaths.produce(
-                new WebAssetPathBuildItem(filePath, originalPath, readTemplateContent(originalPath, config.defaultCharset())));
-    }
-
-    private static boolean isWebAssetsRootPath(String bundleDir, Path path) {
-        return path.getFileName().toString().equals(bundleDir);
+        webAssetsProducer.produce(
+                new WebAssetBuildItem(bundleName, filePath, originalPath, readTemplateContent(originalPath),
+                        config.defaultCharset()));
     }
 
     private boolean isApplicationArchive(ResolvedDependency dependency, Set<ApplicationArchive> applicationArchives) {
@@ -197,9 +194,9 @@ class WebAssetsProcessor {
         return false;
     }
 
-    static String readTemplateContent(Path path, Charset defaultCharset) {
+    static byte[] readTemplateContent(Path path) {
         try {
-            return Files.readString(path, defaultCharset);
+            return Files.readAllBytes(path);
         } catch (IOException e) {
             throw new UncheckedIOException("Unable to read the template content from path: " + path, e);
         }

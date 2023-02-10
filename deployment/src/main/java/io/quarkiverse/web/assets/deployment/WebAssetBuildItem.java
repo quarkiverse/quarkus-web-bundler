@@ -1,19 +1,30 @@
 package io.quarkiverse.web.assets.deployment;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 import io.quarkus.builder.item.MultiBuildItem;
 
-public final class WebAssetPathBuildItem extends MultiBuildItem {
+public final class WebAssetBuildItem extends MultiBuildItem {
+
+    private final String bundleName;
 
     private final String path;
     private final Path fullPath;
-    private final String content;
+    private final byte[] content;
 
-    public WebAssetPathBuildItem(String path, Path fullPath, String content) {
+    private final Charset charset;
+
+    public WebAssetBuildItem(String bundleName, String path, Path fullPath, byte[] content, Charset charset) {
+        this.bundleName = bundleName;
         this.path = path;
         this.fullPath = fullPath;
         this.content = content;
+        this.charset = charset;
+    }
+
+    public String getBundleName() {
+        return bundleName;
     }
 
     /**
@@ -34,8 +45,11 @@ public final class WebAssetPathBuildItem extends MultiBuildItem {
         return fullPath;
     }
 
-    public String getContent() {
+    public byte[] getContent() {
         return content;
     }
 
+    public Charset getCharset() {
+        return charset;
+    }
 }
