@@ -257,8 +257,8 @@ public class SassDevModeHandler implements HotReplacementSetup {
         if (!reportedError)
             return;
         try {
-            context.setRemoteProblem(null);
             reportedError = false;
+            context.setRemoteProblem(null);
             // FIXME: this is a workaround for https://github.com/quarkusio/quarkus/issues/31013
         } catch (NullPointerException x) {
             // ignore
