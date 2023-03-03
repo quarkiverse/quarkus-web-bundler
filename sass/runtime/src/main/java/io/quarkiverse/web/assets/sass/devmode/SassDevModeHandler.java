@@ -30,6 +30,7 @@ public class SassDevModeHandler implements HotReplacementSetup {
     private BiFunction<String[], BiConsumer<String, String>, String> devModeSassCompiler;
     private Function<Throwable, String> devModeSassErrorPage;
     private ClassLoader cl;
+    private boolean reportedError;
 
     private HotReplacementContext context;
 
@@ -140,8 +141,10 @@ public class SassDevModeHandler implements HotReplacementSetup {
                     log.infof("SASS files deleted: %s", deleted);
                 }
                 if (errors.size() == 1) {
+                    reportedError = true;
                     context.setRemoteProblem(errors.get(0));
                 } else if (errors.size() > 1) {
+                    reportedError = true;
                     // aggregate inside fake composite exception
                     context.setRemoteProblem(makeAggregateSassException(errors));
                 } else {
@@ -251,8 +254,11 @@ public class SassDevModeHandler implements HotReplacementSetup {
     }
 
     private void resetRemoteProblem() {
+        if (!reportedError)
+            return;
         try {
             context.setRemoteProblem(null);
+            reportedError = false;
             // FIXME: this is a workaround for https://github.com/quarkusio/quarkus/issues/31013
         } catch (NullPointerException x) {
             // ignore
