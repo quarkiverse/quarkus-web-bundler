@@ -11,14 +11,11 @@ import java.util.Collection;
 import java.util.List;
 
 import de.larsgrefer.sass.embedded.SassCompilationFailedException;
+import io.quarkiverse.web.assets.sass.SassBuildTimeCompiler;
 import io.quarkiverse.web.assets.sass.devmode.SassDevModeRecorder;
 import io.quarkus.bootstrap.workspace.ArtifactSources;
 import io.quarkus.bootstrap.workspace.SourceDir;
 import io.quarkus.deployment.IsDevelopment;
-// import io.bit3.jsass.CompilationException;
-// import io.bit3.jsass.Compiler;
-// import io.bit3.jsass.Options;
-// import io.bit3.jsass.Output;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -69,7 +66,7 @@ public class SassProcessor {
                     watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(relativePath, false));
                     // compile
                     try {
-                        String result = BuildTimeCompiler.convertScss(pv.getPath(), relativePath, pv.getRoot(),
+                        String result = SassBuildTimeCompiler.convertScss(pv.getPath(), relativePath, pv.getRoot(),
                                 (source, affectedFile) -> sassDependencies
                                         .produce(new SassDependencyBuildItem(source, affectedFile)));
                         // figure out where we put it

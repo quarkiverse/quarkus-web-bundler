@@ -10,6 +10,7 @@
   <name>Quarkus Web Assets - SASS Parent</name>
   <packaging>pom</packaging>
   <modules>
+    <module>sass-compiler</module>
     <module>runtime</module>
     <module>deployment</module>
   </modules>

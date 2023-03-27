@@ -1,205 +1,238 @@
 package io.quarkiverse.web.assets.deployment;
 
-import java.io.File;
+import static io.quarkiverse.web.assets.deployment.ProjectResourcesScanner.toWebAsset;
+import static io.quarkiverse.web.assets.runtime.qute.WebAssetsQuteContextRecorder.WEB_ASSETS_ID_PREFIX;
+import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
+
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.FileSystem;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.assets.deployment.WebAssetsConfig.BundleConfig;
-import io.quarkiverse.web.assets.deployment.staticresources.StaticResourceBuildItem;
-import io.quarkus.deployment.ApplicationArchive;
+import ch.nerdin.esbuild.Bundler;
+import ch.nerdin.esbuild.modal.BundleOptionsBuilder;
+import ch.nerdin.esbuild.modal.EsBuildConfigBuilder;
+import io.quarkiverse.web.assets.deployment.items.BundleBuildItem;
+import io.quarkiverse.web.assets.deployment.items.GeneratedBundleBuildItem;
+import io.quarkiverse.web.assets.deployment.items.QuteTagsBuildItem;
+import io.quarkiverse.web.assets.deployment.items.StaticAssetsBuildItem;
+import io.quarkiverse.web.assets.deployment.items.StylesAssetsBuildItem;
+import io.quarkiverse.web.assets.deployment.items.WebAsset;
+import io.quarkiverse.web.assets.deployment.items.WebDependenciesBuildItem;
+import io.quarkiverse.web.assets.deployment.staticresources.GeneratedStaticResourceBuildItem;
+import io.quarkiverse.web.assets.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
+import io.quarkiverse.web.assets.runtime.qute.WebAssetsQuteContextRecorder;
+import io.quarkiverse.web.assets.runtime.qute.WebAssetsQuteContextRecorder.WebAssetsQuteContext;
+import io.quarkiverse.web.assets.runtime.qute.WebAssetsQuteEngineObserver;
+import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
-import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
-import io.quarkus.fs.util.ZipUtils;
-import io.quarkus.maven.dependency.Dependency;
-import io.quarkus.maven.dependency.ResolvedDependency;
+import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
+import io.quarkus.deployment.builditem.LaunchModeBuildItem;
+import io.quarkus.deployment.builditem.LiveReloadBuildItem;
+import io.quarkus.runtime.LaunchMode;
 
 class WebAssetsProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(WebAssetsProcessor.class);
 
-    private static final String FEATURE = "web-assets";
-
     @BuildStep
-    FeatureBuildItem feature() {
-        return new FeatureBuildItem(FEATURE);
-    }
-
-    @BuildStep
-    void collectAssets(ApplicationArchivesBuildItem applicationArchives,
-            CurateOutcomeBuildItem curateOutcome,
-            BuildProducer<WebAssetBuildItem> assetPaths,
-            WebAssetsConfig config)
-            throws IOException {
-        Set<ApplicationArchive> allApplicationArchives = applicationArchives.getAllApplicationArchives();
-        List<ResolvedDependency> extensionArtifacts = curateOutcome.getApplicationModel().getDependencies().stream()
-                .filter(Dependency::isRuntimeExtensionArtifact).collect(Collectors.toList());
-        Map<String, BundleConfig> bundles = new HashMap<>(config.bundles());
-        if (config.presetComponents()) {
-            bundles.putAll(ComponentBundles.COMPONENT_BUNDLES);
-        }
-        if (config.presetAssets()) {
-            bundles.putAll(AssetsBundles.ASSETS_BUNDLES);
-        }
-        for (Map.Entry<String, BundleConfig> e : bundles.entrySet()) {
-            findBundleAssets(config, e.getKey(), e.getValue(), assetPaths,
-                    allApplicationArchives,
-                    extensionArtifacts);
-        }
-
-    }
-
-    @BuildStep
-    void processAssets(List<WebAssetBuildItem> webAssets,
-            BuildProducer<StaticResourceBuildItem> staticResourceProducer) {
-        for (WebAssetBuildItem webAsset : webAssets) {
-            staticResourceProducer.produce(new StaticResourceBuildItem(
-                    Set.of(new StaticResourceBuildItem.Source(webAsset.getPath(), webAsset.getFullPath())),
-                    webAsset.getPath(),
-                    webAsset.getContent(),
-                    true,
-                    true));
-        }
-    }
-
-    private void findBundleAssets(WebAssetsConfig config,
-            String bundleName,
-            BundleConfig bundleConfig,
-            BuildProducer<WebAssetBuildItem> webAssetsProducer,
-            Set<ApplicationArchive> allApplicationArchives,
-            List<ResolvedDependency> extensionArtifacts) throws IOException {
-        final String bundleDir = bundleConfig.dir();
-        for (ResolvedDependency artifact : extensionArtifacts) {
-            if (isApplicationArchive(artifact, allApplicationArchives)) {
-                // Skip extension archives that are also application archives
-                continue;
-            }
-            for (Path path : artifact.getResolvedPaths()) {
-                if (Files.isDirectory(path)) {
-                    final Path bundleDirPath = path.resolve(bundleDir);
-                    if (Files.isDirectory(bundleDirPath) && bundleDirPath.toString().endsWith(bundleDir)) {
-                        LOGGER.debugf("Found extension assets dir: %s", bundleDirPath);
-                        scan(webAssetsProducer, bundleConfig, bundleName, path, bundleDirPath);
-                        break;
-                    }
-                } else {
-                    try (FileSystem artifactFs = ZipUtils.newFileSystem(path)) {
-                        Path bundleDirPath = artifactFs.getPath(bundleDir);
-                        if (Files.exists(bundleDirPath)) {
-                            LOGGER.debugf("Found extension assets in: %s", path);
-                            scan(webAssetsProducer, bundleConfig, bundleName, artifactFs.getPath("/"), bundleDirPath);
-                        }
-                    } catch (IOException e) {
-                        LOGGER.warnf(e, "Unable to create the file system from the path: %s", path);
-                    }
-                }
-            }
-        }
-        for (ApplicationArchive archive : allApplicationArchives) {
-            archive.accept(tree -> {
-                for (Path rootDir : tree.getRoots()) {
-                    // Note that we cannot use ApplicationArchive.getChildPath(String) here because we would not be able to detect
-                    // a wrong directory bundleName on case-insensitive file systems
-                    try {
-                        final Path bundleDirPath = rootDir.resolve(bundleDir);
-                        if (Files.isDirectory(bundleDirPath) && bundleDirPath.toString().endsWith(bundleDir)) {
-                            LOGGER.debugf("Found extension assets dir: %s", bundleDirPath);
-                            scan(webAssetsProducer, bundleConfig, bundleName, rootDir, bundleDirPath);
-                            break;
-                        }
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                }
-            });
-        }
-    }
-
-    private void scan(BuildProducer<WebAssetBuildItem> webAssetsProducer,
-            BundleConfig config,
-            String bundleName,
-            Path root,
-            Path directory)
-            throws IOException {
-        Path toScan = directory == null ? root : directory;
-        try (Stream<Path> files = Files.list(toScan)) {
-            Iterator<Path> iter = files.iterator();
-            while (iter.hasNext()) {
-                Path filePath = iter.next();
-                if (!toScan.isAbsolute()
-                        && filePath.isAbsolute()
-                        && filePath.getRoot() != null) {
-                    filePath = filePath.getRoot().relativize(filePath);
-                }
-                final PathMatcher pathMatcher = filePath.getFileSystem()
-                        .getPathMatcher("glob:**/" + config.pathMatcher().orElse(config.type().pathMatcher()));
-                if (Files.isRegularFile(filePath) && pathMatcher.matches(filePath)) {
-                    LOGGER.infof("Found %s asset %s", bundleName, filePath);
-                    String assetPath = root.relativize(filePath).toString();
-                    if (File.separatorChar != '/') {
-                        assetPath = assetPath.replace(File.separatorChar, '/');
-                    }
-                    produceWebAsset(webAssetsProducer, bundleName, root.toString(), assetPath,
-                            filePath, config);
-                } else if (Files.isDirectory(filePath)) {
-                    LOGGER.debugf("Scan directory: %s", filePath);
-                    scan(webAssetsProducer, config, bundleName, root, filePath);
-                }
-            }
-        }
-    }
-
-    private static void produceWebAsset(BuildProducer<WebAssetBuildItem> webAssetsProducer,
-            String bundleName,
-            String basePath,
-            String filePath,
-            Path originalPath,
-            BundleConfig config) {
-        if (filePath.isEmpty()) {
+    void processBundles(WebDependenciesBuildItem webDependencies,
+            List<BundleBuildItem> bundles,
+            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
+            BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
+            LiveReloadBuildItem liveReload,
+            LaunchModeBuildItem launchMode) {
+        if (bundles.isEmpty()) {
+            LOGGER.info("No bundle to process");
             return;
         }
-        String fullPath = basePath + filePath;
-        LOGGER.debugf("Produce template build items [filePath: %s, fullPath: %s, originalPath: %s", filePath, fullPath,
-                originalPath);
-        webAssetsProducer.produce(
-                new WebAssetBuildItem(bundleName, filePath, originalPath, readTemplateContent(originalPath),
-                        config.defaultCharset()));
-    }
-
-    private boolean isApplicationArchive(ResolvedDependency dependency, Set<ApplicationArchive> applicationArchives) {
-        for (ApplicationArchive archive : applicationArchives) {
-            if (archive.getKey() == null) {
-                continue;
-            }
-            if (dependency.getGroupId().equals(archive.getKey().getGroupId())
-                    && dependency.getArtifactId().equals(archive.getKey().getArtifactId())) {
-                return true;
-            }
+        final BundlesBuildContext bundlesBuildContext = liveReload.getContextObject(BundlesBuildContext.class);
+        if (liveReload.isLiveReload()
+                && bundlesBuildContext != null
+                && bundles.equals(bundlesBuildContext.getBundles())
+                && bundles.stream().map(BundleBuildItem::getWebAssets).flatMap(List::stream)
+                        .map(WebAsset::getResourceName)
+                        .noneMatch(liveReload.getChangedResources()::contains)
+                && Files.isDirectory(bundlesBuildContext.getBundleDistDir())) {
+            handleBundleDistDir(generatedBundleProducer, staticResourceProducer, bundlesBuildContext.getBundleDistDir());
+            bundles.stream().map(BundleBuildItem::getWebAssets)
+                    .flatMap(List::stream)
+                    .forEach(p -> watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(p.getResourceName(), true)));
+            return;
         }
-        return false;
-    }
+        String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString).collect(
+                Collectors.joining(", "));
+        LOGGER.infof("%s Web dependencies detected: %s", webDependencies.getType(), deps);
 
-    static byte[] readTemplateContent(Path path) {
+        final Bundler.BundleType type = Bundler.BundleType.valueOf(webDependencies.getType().toString());
+        final BundleOptionsBuilder options = new BundleOptionsBuilder()
+                .withDependencies(webDependencies.getDependencies())
+                .withEsConfig(new EsBuildConfigBuilder()
+                        .minify(launchMode.getLaunchMode().equals(LaunchMode.NORMAL)).build())
+                .withType(type);
+        for (BundleBuildItem bundle : bundles) {
+            String scripts = bundle.getWebAssets().stream().map(WebAsset::getResourceName).map(s -> String.format("  - %s", s))
+                    .collect(
+                            Collectors.joining("\n"));
+            LOGGER.infof("Bundling '%s' with:\n %s", bundle.getKey(), scripts);
+            final List<Path> scriptsPath = bundle.getWebAssets().stream().map(WebAsset::getFilePath).collect(
+                    Collectors.toList());
+            bundle.getWebAssets()
+                    .forEach(p -> watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(p.getResourceName(), true)));
+            options.addEntryPoint(bundle.getKey(), scriptsPath);
+        }
         try {
-            return Files.readAllBytes(path);
+            final Path bundleDir = Bundler.bundle(options.build());
+            handleBundleDistDir(generatedBundleProducer, staticResourceProducer, bundleDir);
+            liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext(bundles, bundleDir));
         } catch (IOException e) {
-            throw new UncheckedIOException("Unable to read the template content from path: " + path, e);
+            throw new RuntimeException(e);
         }
     }
 
+    void handleBundleDistDir(BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
+            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, Path bundleDir) {
+        try {
+            Map<String, String> bundle = new HashMap<>();
+            Files.list(bundleDir).forEach(path -> {
+                final String fileName = path.getFileName().toString();
+                final int dashIndex = fileName.lastIndexOf("-");
+                final int extIndex = fileName.indexOf(".");
+                final String key = fileName.substring(0, dashIndex) + fileName.substring(extIndex, fileName.length());
+                bundle.put(key, fileName);
+            });
+            generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));
+            makeStaticDir(staticResourceProducer, "/bundle/", bundleDir, WatchMode.DISABLED);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @BuildStep
+    void processStatic(StaticAssetsBuildItem staticAssets,
+            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            LiveReloadBuildItem liveReload) {
+        for (WebAsset webAsset : staticAssets.getWebAssets()) {
+            handleStaticResource(staticResourceProducer, webAsset,
+                    liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.getResourceName()),
+                    WatchMode.RESTART);
+        }
+    }
+
+    @BuildStep
+    void processStyles(StylesAssetsBuildItem stylesAssets,
+            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            LiveReloadBuildItem liveReload) {
+        for (WebAsset webAsset : stylesAssets.getWebAssets()) {
+            // TODO deal with scss
+            handleStaticResource(staticResourceProducer, webAsset,
+                    liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.getResourceName()),
+                    WatchMode.RESTART);
+        }
+    }
+
+    @BuildStep
+    @Record(STATIC_INIT)
+    void processQuteTags(
+            BuildProducer<AdditionalBeanBuildItem> additionalBeans,
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
+            WebAssetsQuteContextRecorder recorder,
+            QuteTagsBuildItem quteTags,
+            GeneratedBundleBuildItem generatedBundle,
+            LiveReloadBuildItem liveReload) {
+        final Map<String, String> templates = new HashMap<>();
+        final List<String> tags = new ArrayList<>();
+        for (WebAsset webAsset : quteTags.getWebAssets()) {
+            final String tag = webAsset.getFilePath().getFileName().toString();
+            final String tagName = tag.contains(".") ? tag.substring(0, tag.indexOf('.')) : tag;
+            templates.put(WEB_ASSETS_ID_PREFIX + tagName, new String(webAsset.getContent(), webAsset.getCharset()));
+            tags.add(tagName);
+        }
+        additionalBeans.produce(new AdditionalBeanBuildItem(WebAssetsQuteEngineObserver.class));
+        syntheticBeans.produce(SyntheticBeanBuildItem.configure(WebAssetsQuteContext.class)
+                .supplier(recorder.createContext(tags, templates, generatedBundle.getBundle()))
+                .done());
+
+    }
+
+    private static void makeStaticDir(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            String resourcePath,
+            Path bundleDir, WatchMode watchMode)
+            throws IOException {
+        Files.list(bundleDir)
+                .forEach(p -> makeStatic(staticResourceProducer, resourcePath + p.getFileName(), p.normalize(), watchMode));
+    }
+
+    private static void makeStatic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, String resourceName,
+            Path file, WatchMode watchMode) {
+        if (!Files.exists(file)) {
+            return;
+        }
+        handleStaticResource(staticResourceProducer, toWebAsset(resourceName, file, Charset.defaultCharset()), true, watchMode);
+    }
+
+    private void handleQuteTag(BundleBuildItem bundle,
+            WebAsset resource) {
+        LOGGER.debugf("Handling %s as a qute tag web asset", resource.getResourceName());
+    }
+
+    private void handleSassStyle(BundleBuildItem bundle, BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            WebAsset asset) {
+        LOGGER.debugf("Handling %s as a sass web asset", asset.getResourceName());
+    }
+
+    private static void handleStaticResource(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            WebAsset resource, boolean changed, WatchMode watchMode) {
+        LOGGER.debugf("%s is public", resource.getResourceName());
+        staticResourceProducer.produce(new GeneratedStaticResourceBuildItem(
+                Set.of(new GeneratedStaticResourceBuildItem.Source(resource.getResourceName(), resource.getFilePath())),
+                resource.getResourceName(),
+                resource.getContent(),
+                true,
+                watchMode,
+                changed));
+    }
+
+    /**
+     * Returns true if the given filename (not path) does not start with _
+     * and ends with either .sass or .scss case-insensitive
+     */
+    public static boolean isCompiledSassFile(String filename) {
+        if (filename.startsWith("_")) {
+            return false;
+        }
+        String lc = filename.toLowerCase();
+        return lc.endsWith(".scss") || lc.endsWith(".sass");
+    }
+
+    public static class BundlesBuildContext {
+
+        private final List<BundleBuildItem> bundles;
+        private final Path bundleDistDir;
+
+        public BundlesBuildContext(List<BundleBuildItem> bundles, Path bundleDistDir) {
+            this.bundles = bundles;
+            this.bundleDistDir = bundleDistDir;
+        }
+
+        public List<BundleBuildItem> getBundles() {
+            return bundles;
+        }
+
+        public Path getBundleDistDir() {
+            return bundleDistDir;
+        }
+    }
 }

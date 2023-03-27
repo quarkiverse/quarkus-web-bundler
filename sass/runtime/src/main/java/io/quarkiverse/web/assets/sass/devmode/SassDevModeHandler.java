@@ -92,7 +92,7 @@ public class SassDevModeHandler implements HotReplacementSetup {
                 try {
                     // TCCL is the Runtime Class Loader, but we want the build step CL
                     devModeSassCompiler = (BiFunction<String[], BiConsumer<String, String>, String>) cl
-                            .loadClass("io.quarkiverse.web.assets.sass.deployment.BuildTimeCompiler").getDeclaredConstructor()
+                            .loadClass("io.quarkiverse.web.assets.sass.SassBuildTimeCompiler").getDeclaredConstructor()
                             .newInstance();
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
                         | InvocationTargetException | NoSuchMethodException | SecurityException e) {

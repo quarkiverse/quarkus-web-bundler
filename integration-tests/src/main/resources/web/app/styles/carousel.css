@@ -1,0 +1,15 @@
+.slick-carousel {
+    margin: 40px auto;
+    width: 90%;
+}
+
+/* The width of each slide */
+.slick-slide {
+    width: 350px;
+}
+
+/* Color of the arrows */
+.slick-next:before, .slick-prev:before {
+    color: #FFCF00;
+}
+

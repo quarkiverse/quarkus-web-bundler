@@ -1,0 +1,13 @@
+body {
+    font-family: sans-serif;
+    min-height: 95vh;
+    background-color: #191919;
+    color: white;
+}
+h1, p {
+    text-align: center;
+}
+h1 {
+    margin: 30px 0;
+}
+

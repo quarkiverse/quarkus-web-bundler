@@ -13,6 +13,7 @@ public class WebAssetsTest {
     // Start unit test with your extension loaded
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .withEmptyApplication()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Test

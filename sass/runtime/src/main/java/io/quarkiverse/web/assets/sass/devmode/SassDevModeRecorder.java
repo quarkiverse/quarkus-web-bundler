@@ -57,11 +57,4 @@ public class SassDevModeRecorder {
         return lc.endsWith(".scss") || lc.endsWith(".sass");
     }
 
-    /**
-     * Returns true if the given filename (not path) ends with .sass case-insensitive
-     */
-    public static boolean isSassFile(String filename) {
-        String lc = filename.toLowerCase();
-        return lc.endsWith(".sass");
-    }
 }
