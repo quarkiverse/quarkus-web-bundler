@@ -22,7 +22,7 @@ class ScriptDependenciesScannerProcessor {
     @BuildStep
     WebDependenciesBuildItem collectDependencies(ApplicationArchivesBuildItem applicationArchives,
             CurateOutcomeBuildItem curateOutcome,
-            WebAssetsConfig config)
+            WebBundlerConfig config)
             throws IOException {
         List<Path> webDeps = curateOutcome.getApplicationModel().getDependencies().stream()
                 .filter(Dependency::isJar)

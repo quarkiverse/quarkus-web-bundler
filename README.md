@@ -1,6 +1,6 @@
-# Quarkus Web Assets
+# Quarkus Web Bundler
 
-[![Version](https://img.shields.io/maven-central/v/io.quarkiverse.web-assets/quarkus-web-assets?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.web-assets/quarkus-web-assets)
+[![Version](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.web-bundler/quarkus-web-bundler)
 
 ## Welcome to Quarkiverse!
 

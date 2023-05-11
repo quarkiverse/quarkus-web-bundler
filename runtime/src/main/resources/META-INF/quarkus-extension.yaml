@@ -1,9 +1,9 @@
-name: Web Assets
+name: Web Bundler
 #description: Do something useful.
 metadata:
 #  keywords:
-#    - web-assets
-#  guide: https://quarkiverse.github.io/quarkiverse-docs/web-assets/dev/
+#    - web-bundler
+#  guide: https://quarkiverse.github.io/quarkiverse-docs/web-bundler/dev/
 #  categories:
 #    - "miscellaneous"
 #  status: "preview"

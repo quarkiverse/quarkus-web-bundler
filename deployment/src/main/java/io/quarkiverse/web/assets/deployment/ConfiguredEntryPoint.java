@@ -3,7 +3,7 @@ package io.quarkiverse.web.assets.deployment;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ConfiguredEntryPoint implements WebAssetsConfig.EntryPointConfig {
+public class ConfiguredEntryPoint implements WebBundlerConfig.EntryPointConfig {
 
     private final String id;
     private final String entryPointKey;

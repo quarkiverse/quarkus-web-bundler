@@ -6,6 +6,8 @@ import static io.quarkiverse.web.assets.runtime.qute.WebAssetsQuteContextRecorde
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -19,6 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.quarkiverse.web.assets.sass.SassBuildTimeCompiler;
 import org.jboss.logging.Logger;
 
 import ch.nerdin.esbuild.Bundler;
@@ -50,13 +53,13 @@ import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.runtime.LaunchMode;
 
-class WebAssetsBundlerProcessor {
+class WebBundlerProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(WebAssetsBundlerProcessor.class);
-    private static final String TARGET_DIR_NAME = "web-assets";
+    private static final Logger LOGGER = Logger.getLogger(WebBundlerProcessor.class);
+    private static final String TARGET_DIR_NAME = "web-bundler";
 
     @BuildStep
-    void processBundles(WebAssetsConfig config,
+    void processBundles(WebBundlerConfig config,
             WebDependenciesBuildItem webDependencies,
             List<EntryPointBuildItem> entryPoints,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
@@ -135,7 +138,7 @@ class WebAssetsBundlerProcessor {
             //SCSS conversion
             try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
                     (p, a) -> isCompiledSassFile(p.getFileName().toString()))) {
-                stream.forEach(p -> ScssConverter.convertToScss(p, targetDir));
+                stream.forEach(p -> convertToScss(p, targetDir));
             }
 
             final Path bundleDir = Bundler.bundle(options.build());
@@ -145,6 +148,16 @@ class WebAssetsBundlerProcessor {
             liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext(entryPoints, bundleDir));
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    static void convertToScss(Path file, Path root) {
+        String content = SassBuildTimeCompiler.convertScss(file, root, (s, s2) -> {
+        });
+        try {
+            Files.write(file, content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -167,7 +180,7 @@ class WebAssetsBundlerProcessor {
     }
 
     @BuildStep
-    void processStatic(WebAssetsConfig config,
+    void processStatic(WebBundlerConfig config,
             StaticAssetsBuildItem staticAssets,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             LiveReloadBuildItem liveReload) {
@@ -177,7 +190,7 @@ class WebAssetsBundlerProcessor {
     }
 
     @BuildStep
-    void processStyles(WebAssetsConfig config,
+    void processStyles(WebBundlerConfig config,
             StylesAssetsBuildItem stylesAssets,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             LiveReloadBuildItem liveReload) {
@@ -212,7 +225,7 @@ class WebAssetsBundlerProcessor {
     }
 
     private static void makeWebAssetStatic(
-            WebAssetsConfig config,
+            WebBundlerConfig config,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             LiveReloadBuildItem liveReload,
             WebAsset webAsset) {

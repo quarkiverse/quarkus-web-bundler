@@ -3,7 +3,7 @@ package io.quarkiverse.web.assets.deployment.items;
 import java.nio.file.Path;
 import java.util.List;
 
-import io.quarkiverse.web.assets.deployment.WebAssetsConfig.WebDependencyType;
+import io.quarkiverse.web.assets.deployment.WebBundlerConfig.WebDependencyType;
 import io.quarkus.builder.item.SimpleBuildItem;
 
 public final class WebDependenciesBuildItem extends SimpleBuildItem {

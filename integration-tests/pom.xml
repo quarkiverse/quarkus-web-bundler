@@ -4,12 +4,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.quarkiverse.web-assets</groupId>
-        <artifactId>quarkus-web-assets-parent</artifactId>
+        <groupId>io.quarkiverse.web-bundler</groupId>
+        <artifactId>quarkus-web-bundler-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-web-assets-integration-tests</artifactId>
-    <name>Quarkus Web Assets - Integration Tests</name>
+    <artifactId>quarkus-web-bundler-integration-tests</artifactId>
+    <name>Quarkus Web Bundler - Integration Tests</name>
     <repositories>
         <repository>
             <id>mvnpm.org</id>
@@ -26,8 +26,8 @@
             <artifactId>quarkus-resteasy-reactive</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkiverse.web-assets</groupId>
-            <artifactId>quarkus-web-assets</artifactId>
+            <groupId>io.quarkiverse.web-bundler</groupId>
+            <artifactId>quarkus-web-bundler</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

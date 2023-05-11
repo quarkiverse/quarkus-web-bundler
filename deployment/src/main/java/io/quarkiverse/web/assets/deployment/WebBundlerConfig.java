@@ -14,9 +14,9 @@ import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
-@ConfigMapping(prefix = "quarkus.web-assets")
+@ConfigMapping(prefix = "quarkus.web-bundler")
 @ConfigRoot(phase = ConfigPhase.BUILD_TIME)
-public interface WebAssetsConfig {
+public interface WebBundlerConfig {
 
     /**
      * The directory in the resources which serves as root for the web assets

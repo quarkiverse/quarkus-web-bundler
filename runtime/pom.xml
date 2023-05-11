@@ -3,12 +3,12 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.quarkiverse.web-assets</groupId>
-    <artifactId>quarkus-web-assets-parent</artifactId>
+    <groupId>io.quarkiverse.web-bundler</groupId>
+    <artifactId>quarkus-web-bundler-parent</artifactId>
     <version>999-SNAPSHOT</version>
   </parent>
-  <artifactId>quarkus-web-assets</artifactId>
-  <name>Quarkus Web Assets - Runtime</name>
+  <artifactId>quarkus-web-bundler</artifactId>
+  <name>Quarkus Web Bundler - Runtime</name>
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>

@@ -4,20 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.quarkiverse.web-assets</groupId>
-        <artifactId>quarkus-web-assets-parent</artifactId>
+        <groupId>io.quarkiverse.web-bundler</groupId>
+        <artifactId>quarkus-web-bundler-parent</artifactId>
         <version>999-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>quarkus-web-assets-docs</artifactId>
-    <name>Quarkus Web Assets - Documentation</name>
+    <artifactId>quarkus-web-bundler-docs</artifactId>
+    <name>Quarkus Web Bundler - Documentation</name>
 
     <dependencies>
         <!-- Make sure the doc is built after the other artifacts -->
         <dependency>
-            <groupId>io.quarkiverse.web-assets</groupId>
-            <artifactId>quarkus-web-assets-deployment</artifactId>
+            <groupId>io.quarkiverse.web-bundler</groupId>
+            <artifactId>quarkus-web-bundler-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -67,7 +67,7 @@
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/../target/asciidoc/generated/config/</directory>
-                                    <include>quarkus-web-assets.adoc</include>
+                                    <include>quarkus-web-bundler.adoc</include>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>

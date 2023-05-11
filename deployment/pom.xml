@@ -3,25 +3,25 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.quarkiverse.web-assets</groupId>
-    <artifactId>quarkus-web-assets-parent</artifactId>
+    <groupId>io.quarkiverse.web-bundler</groupId>
+    <artifactId>quarkus-web-bundler-parent</artifactId>
     <version>999-SNAPSHOT</version>
   </parent>
-  <artifactId>quarkus-web-assets-deployment</artifactId>
-  <name>Quarkus Web Assets - Deployment</name>
+  <artifactId>quarkus-web-bundler-deployment</artifactId>
+  <name>Quarkus Web Bundler - Deployment</name>
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc-deployment</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkiverse.web-assets</groupId>
-      <artifactId>quarkus-web-assets</artifactId>
+      <groupId>io.quarkiverse.web-bundler</groupId>
+      <artifactId>quarkus-web-bundler</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.quarkiverse.web-assets</groupId>
-      <artifactId>quarkus-web-assets-sass-compiler</artifactId>
+      <groupId>io.quarkiverse.web-bundler</groupId>
+      <artifactId>quarkus-web-bundler-sass-compiler</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -33,8 +33,8 @@
       <artifactId>quarkus-qute-deployment</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkiverse.web-assets</groupId>
-      <artifactId>quarkus-web-assets-sass-compiler</artifactId>
+      <groupId>io.quarkiverse.web-bundler</groupId>
+      <artifactId>quarkus-web-bundler-sass-compiler</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

@@ -1,16 +1,16 @@
 
-:summaryTableId: quarkus-web-assets
+:summaryTableId: quarkus-web-bundler
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
 |===
 
-h|[[quarkus-web-assets_configuration]]link:#quarkus-web-assets_configuration[Configuration property]
+h|[[quarkus-web-bundler_configuration]]link:#quarkus-web-bundler_configuration[Configuration property]
 
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.web-root]]`link:#quarkus-web-assets_quarkus.web-assets.web-root[quarkus.web-assets.web-root]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.web-root]]`link:#quarkus-web-bundler_quarkus.web-bundler.web-root[quarkus.web-bundler.web-root]`
 
 [.description]
 --
@@ -26,7 +26,7 @@ endif::add-copy-button-to-env-var[]
 |`web`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.styles]]`link:#quarkus-web-assets_quarkus.web-assets.styles[quarkus.web-assets.styles]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles[quarkus.web-bundler.styles]`
 
 [.description]
 --
@@ -42,7 +42,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.styles.dir]]`link:#quarkus-web-assets_quarkus.web-assets.styles.dir[quarkus.web-assets.styles.dir]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles.dir[quarkus.web-bundler.styles.dir]`
 
 [.description]
 --
@@ -58,7 +58,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.styles.glob]]`link:#quarkus-web-assets_quarkus.web-assets.styles.glob[quarkus.web-assets.styles.glob]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles.glob]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles.glob[quarkus.web-bundler.styles.glob]`
 
 [.description]
 --
@@ -74,7 +74,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.static]]`link:#quarkus-web-assets_quarkus.web-assets.static[quarkus.web-assets.static]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static]]`link:#quarkus-web-bundler_quarkus.web-bundler.static[quarkus.web-bundler.static]`
 
 [.description]
 --
@@ -90,7 +90,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.static.dir]]`link:#quarkus-web-assets_quarkus.web-assets.static.dir[quarkus.web-assets.static.dir]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.static.dir[quarkus.web-bundler.static.dir]`
 
 [.description]
 --
@@ -106,7 +106,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.static.glob]]`link:#quarkus-web-assets_quarkus.web-assets.static.glob[quarkus.web-assets.static.glob]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static.glob]]`link:#quarkus-web-bundler_quarkus.web-bundler.static.glob[quarkus.web-bundler.static.glob]`
 
 [.description]
 --
@@ -122,7 +122,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.presets.app]]`link:#quarkus-web-assets_quarkus.web-assets.presets.app[quarkus.web-assets.presets.app]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app[quarkus.web-bundler.presets.app]`
 
 [.description]
 --
@@ -138,7 +138,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.presets.app.entry-point-key]]`link:#quarkus-web-assets_quarkus.web-assets.presets.app.entry-point-key[quarkus.web-assets.presets.app.entry-point-key]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app.entry-point-key[quarkus.web-bundler.presets.app.entry-point-key]`
 
 [.description]
 --
@@ -154,7 +154,7 @@ endif::add-copy-button-to-env-var[]
 |`main`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.presets.components]]`link:#quarkus-web-assets_quarkus.web-assets.presets.components[quarkus.web-assets.presets.components]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.components]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.components[quarkus.web-bundler.presets.components]`
 
 [.description]
 --
@@ -170,7 +170,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.presets.components.entry-point-key]]`link:#quarkus-web-assets_quarkus.web-assets.presets.components.entry-point-key[quarkus.web-assets.presets.components.entry-point-key]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.components.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.components.entry-point-key[quarkus.web-bundler.presets.components.entry-point-key]`
 
 [.description]
 --
@@ -186,7 +186,7 @@ endif::add-copy-button-to-env-var[]
 |`main`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.dependencies.type]]`link:#quarkus-web-assets_quarkus.web-assets.dependencies.type[quarkus.web-assets.dependencies.type]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.type]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.type[quarkus.web-bundler.dependencies.type]`
 
 [.description]
 --
@@ -203,7 +203,7 @@ endif::add-copy-button-to-env-var[]
 |`mvnpm`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.charset]]`link:#quarkus-web-assets_quarkus.web-assets.charset[quarkus.web-assets.charset]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.charset]]`link:#quarkus-web-bundler_quarkus.web-bundler.charset[quarkus.web-bundler.charset]`
 
 [.description]
 --
@@ -220,7 +220,7 @@ endif::add-copy-button-to-env-var[]
 |`UTF-8`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.bundle.-bundle-.dir]]`link:#quarkus-web-assets_quarkus.web-assets.bundle.-bundle-.dir[quarkus.web-assets.bundle."bundle".dir]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir[quarkus.web-bundler.bundle."bundle".dir]`
 
 [.description]
 --
@@ -236,7 +236,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-assets_quarkus.web-assets.bundle.-bundle-.entry-point-key]]`link:#quarkus-web-assets_quarkus.web-assets.bundle.-bundle-.entry-point-key[quarkus.web-assets.bundle."bundle".entry-point-key]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.entry-point-key[quarkus.web-bundler.bundle."bundle".entry-point-key]`
 
 [.description]
 --

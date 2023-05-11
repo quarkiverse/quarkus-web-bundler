@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.web.assets.deployment.ProjectResourcesScanner.Scanner;
-import io.quarkiverse.web.assets.deployment.WebAssetsConfig.EntryPointConfig;
+import io.quarkiverse.web.assets.deployment.WebBundlerConfig.EntryPointConfig;
 import io.quarkiverse.web.assets.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.assets.deployment.items.BundleWebAsset.BundleType;
 import io.quarkiverse.web.assets.deployment.items.EntryPointBuildItem;
@@ -39,7 +39,7 @@ class WebAssetsScannerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(WebAssetsScannerProcessor.class);
 
-    private static final String FEATURE = "web-assets";
+    private static final String FEATURE = "web-bundler";
     public static final String MAIN_ENTRYPOINT_KEY = "main";
 
     @BuildStep
@@ -55,7 +55,7 @@ class WebAssetsScannerProcessor {
             BuildProducer<StylesAssetsBuildItem> styleAssets,
             BuildProducer<QuteTagsBuildItem> quteTagsAssets,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
-            WebAssetsConfig config,
+            WebBundlerConfig config,
             LiveReloadBuildItem liveReload)
             throws IOException {
         /**
@@ -129,7 +129,7 @@ class WebAssetsScannerProcessor {
         liveReload.setContextObject(WebAssetsLookupDevContext.class, context);
     }
 
-    private static boolean hasNewWebResources(WebAssetsConfig config, LiveReloadBuildItem liveReload,
+    private static boolean hasNewWebResources(WebBundlerConfig config, LiveReloadBuildItem liveReload,
             WebAssetsLookupDevContext devContext) {
         final Set<String> webAssets = devContext.allWebAssets().stream()
                 .map(WebAsset::getResourceName)

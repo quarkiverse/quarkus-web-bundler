@@ -16,7 +16,7 @@ env:
   # Repo specific setting #
   #########################
 
-  ECOSYSTEM_CI_REPO_PATH: quarkiverse-web-assets
+  ECOSYSTEM_CI_REPO_PATH: quarkiverse-web-bundler
 
 jobs:
   build:

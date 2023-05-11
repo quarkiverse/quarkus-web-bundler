@@ -7,11 +7,11 @@
     <artifactId>quarkiverse-parent</artifactId>
     <version>10</version>
   </parent>
-  <groupId>io.quarkiverse.web-assets</groupId>
-  <artifactId>quarkus-web-assets-parent</artifactId>
+  <groupId>io.quarkiverse.web-bundler</groupId>
+  <artifactId>quarkus-web-bundler-parent</artifactId>
   <version>999-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>Quarkus Web Assets - Parent</name>
+  <name>Quarkus Web Bundler - Parent</name>
   <modules>
     <module>sass-compiler</module>
     <module>runtime</module>

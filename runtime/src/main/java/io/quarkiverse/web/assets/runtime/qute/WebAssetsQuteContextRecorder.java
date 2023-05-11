@@ -9,7 +9,7 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class WebAssetsQuteContextRecorder {
 
-    public static final String WEB_ASSETS_ID_PREFIX = "web-assets/";
+    public static final String WEB_ASSETS_ID_PREFIX = "web-bundler/";
 
     public Supplier<Object> createContext(List<String> tags, Map<String, String> templates, Map<String, String> bundle) {
         return new Supplier<Object>() {

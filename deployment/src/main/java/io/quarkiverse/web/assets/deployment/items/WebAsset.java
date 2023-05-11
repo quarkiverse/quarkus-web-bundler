@@ -39,7 +39,7 @@ public class WebAsset {
 
     public String pathFromWebRoot(String root) {
         if (!getResourceName().startsWith(root)) {
-            throw new IllegalStateException("Web Assets must be located under the root: " + root);
+            throw new IllegalStateException("Web Bundler must be located under the root: " + root);
         }
         return getResourceName().substring(root.endsWith("/") ? root.length() : root.length() + 1);
     }
