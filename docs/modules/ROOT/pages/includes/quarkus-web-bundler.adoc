@@ -1,0 +1,254 @@
+
+:summaryTableId: quarkus-web-bundler
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-web-bundler_configuration]]link:#quarkus-web-bundler_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.web-root]]`link:#quarkus-web-bundler_quarkus.web-bundler.web-root[quarkus.web-bundler.web-root]`
+
+[.description]
+--
+The directory in the resources which serves as root for the web assets
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_WEB_ROOT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_WEB_ROOT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`web`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles[quarkus.web-bundler.styles]`
+
+[.description]
+--
+Enable this option
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STYLES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_STYLES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles.dir[quarkus.web-bundler.styles.dir]`
+
+[.description]
+--
+The directory containing those assets under the root.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STYLES_DIR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_STYLES_DIR+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles.glob]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles.glob[quarkus.web-bundler.styles.glob]`
+
+[.description]
+--
+The glob path matcher for this All is matched when empty
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STYLES_GLOB+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_STYLES_GLOB+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static]]`link:#quarkus-web-bundler_quarkus.web-bundler.static[quarkus.web-bundler.static]`
+
+[.description]
+--
+Enable this option
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.static.dir[quarkus.web-bundler.static.dir]`
+
+[.description]
+--
+The directory containing those assets under the root.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC_DIR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC_DIR+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static.glob]]`link:#quarkus-web-bundler_quarkus.web-bundler.static.glob[quarkus.web-bundler.static.glob]`
+
+[.description]
+--
+The glob path matcher for this All is matched when empty
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC_GLOB+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC_GLOB+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app[quarkus.web-bundler.presets.app]`
+
+[.description]
+--
+Enable or disable this preset
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_PRESETS_APP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_PRESETS_APP+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app.entry-point-key[quarkus.web-bundler.presets.app.entry-point-key]`
+
+[.description]
+--
+The entry point key used for this preset (used in the output)
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_PRESETS_APP_ENTRY_POINT_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_PRESETS_APP_ENTRY_POINT_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`main`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.components]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.components[quarkus.web-bundler.presets.components]`
+
+[.description]
+--
+Enable or disable this preset
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_PRESETS_COMPONENTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_PRESETS_COMPONENTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.components.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.components.entry-point-key[quarkus.web-bundler.presets.components.entry-point-key]`
+
+[.description]
+--
+The entry point key used for this preset (used in the output)
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_PRESETS_COMPONENTS_ENTRY_POINT_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_PRESETS_COMPONENTS_ENTRY_POINT_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`main`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.type]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.type[quarkus.web-bundler.dependencies.type]`
+
+[.description]
+--
+The type used to collect web dependencies: web-jar or mvnpm
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_TYPE+++`
+endif::add-copy-button-to-env-var[]
+-- a|
+`webjars`, `mvnpm` 
+|`mvnpm`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.charset]]`link:#quarkus-web-bundler_quarkus.web-bundler.charset[quarkus.web-bundler.charset]`
+
+[.description]
+--
+The default charset
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_CHARSET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_CHARSET+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/nio/charset/Charset.html[Charset]
+ 
+|`UTF-8`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir[quarkus.web-bundler.bundle."bundle".dir]`
+
+[.description]
+--
+The directory for this entrypoint under the web root. By default, it will use the bundle map key.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__DIR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__DIR+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.entry-point-key[quarkus.web-bundler.bundle."bundle".entry-point-key]`
+
+[.description]
+--
+The key for this entrypoint By default, it will use the bundle map key.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__ENTRY_POINT_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__ENTRY_POINT_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+|===
