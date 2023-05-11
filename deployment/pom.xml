@@ -50,7 +50,7 @@
     <dependency>
       <groupId>ch.nerdin</groupId>
       <artifactId>esbuild-java</artifactId>
-      <version>1.0.0-alpha10</version>
+      <version>1.0.0-alpha11</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
