@@ -41,6 +41,8 @@ public class GeneratedStaticResourcesProcessor {
         if (liveReload.isLiveReload() && staticResourcesDevContext != null) {
             staticResourcesDevContext.getGeneratedStaticResourceNames().forEach(r -> {
                 // Check that this resource is still generated (delete if not)
+                // In some cases (like deleting a file without restarting),
+                // a build tool clean might be necessary to make sure the static resources are clean
                 if (staticResources.stream().map(GeneratedStaticResourceBuildItem::getResourceName).noneMatch(r::equals)) {
                     try {
                         Files.deleteIfExists(buildDir.toPath().resolve(r));
@@ -48,7 +50,6 @@ public class GeneratedStaticResourcesProcessor {
                         throw new RuntimeException(e);
                     }
                 }
-
             });
         }
         final Set<String> generatedStaticFiles = new HashSet<>();

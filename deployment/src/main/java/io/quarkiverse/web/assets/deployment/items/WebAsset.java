@@ -1,24 +1,30 @@
 package io.quarkiverse.web.assets.deployment.items;
 
+import static io.quarkiverse.web.assets.deployment.ProjectResourcesScanner.readTemplateContent;
 import static java.util.Objects.requireNonNull;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
-public final class WebAsset {
+public class WebAsset {
 
     private final String resourcePath;
-    private final Path filePath;
+    private final Optional<Path> filePath;
     private final byte[] content;
 
     private final Charset charset;
 
-    public WebAsset(String resourcePath, Path filePath, byte[] content, Charset charset) {
+    public WebAsset(String resourcePath, Path filePath, Charset charset) {
+        this(resourcePath, Optional.of(filePath), null, charset);
+    }
+
+    public WebAsset(String resourcePath, Optional<Path> filePath, byte[] content, Charset charset) {
         this.resourcePath = requireNonNull(resourcePath, "resourcePath is required");
         this.filePath = requireNonNull(filePath, "filePath is required");
-        this.content = requireNonNull(content, "content is required");
+        this.content = content;
         this.charset = requireNonNull(charset, "charset is required");
     }
 
@@ -31,17 +37,32 @@ public final class WebAsset {
         return resourcePath;
     }
 
+    public String pathFromWebRoot(String root) {
+        if (!getResourceName().startsWith(root)) {
+            throw new IllegalStateException("Web Assets must be located under the root: " + root);
+        }
+        return getResourceName().substring(root.endsWith("/") ? root.length() : root.length() + 1);
+    }
+
     /**
      * Uses the system-dependent path separator.
      *
      * @return the full path of the asset
      */
-    public Path getFilePath() {
+    public Optional<Path> getFilePath() {
         return filePath;
     }
 
     public byte[] getContent() {
-        return content;
+        return this.content;
+    }
+
+    public byte[] readContentFromFile() {
+        return readTemplateContent(filePath.orElseThrow());
+    }
+
+    public boolean hasContent() {
+        return this.content != null;
     }
 
     public Charset getCharset() {
@@ -49,7 +70,10 @@ public final class WebAsset {
     }
 
     public boolean matches(String glob) {
-        return getFilePath().getFileSystem().getPathMatcher(glob).matches(getFilePath());
+        if (!getFilePath().isPresent()) {
+            return false;
+        }
+        return getFilePath().get().getFileSystem().getPathMatcher(glob).matches(getFilePath().get());
     }
 
     @Override
@@ -59,10 +83,8 @@ public final class WebAsset {
         if (o == null || getClass() != o.getClass())
             return false;
         WebAsset webAsset = (WebAsset) o;
-        return Objects.equals(resourcePath, webAsset.resourcePath) && Objects.equals(filePath,
-                webAsset.filePath) && Arrays.equals(content, webAsset.content)
-                && Objects.equals(charset,
-                        webAsset.charset);
+        return resourcePath.equals(webAsset.resourcePath) && filePath.equals(webAsset.filePath) && Arrays.equals(content,
+                webAsset.content) && charset.equals(webAsset.charset);
     }
 
     @Override

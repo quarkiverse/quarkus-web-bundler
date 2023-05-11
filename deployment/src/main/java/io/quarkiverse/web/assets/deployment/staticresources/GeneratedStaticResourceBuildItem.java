@@ -3,6 +3,7 @@ package io.quarkiverse.web.assets.deployment.staticresources;
 import static io.quarkus.vertx.http.runtime.StaticResourcesRecorder.META_INF_RESOURCES;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 
 import io.quarkus.builder.item.MultiBuildItem;
@@ -64,9 +65,9 @@ public final class GeneratedStaticResourceBuildItem extends MultiBuildItem {
 
     public static class Source {
         private final String resourceName;
-        private final Path path;
+        private final Optional<Path> path;
 
-        public Source(String resourceName, Path path) {
+        public Source(String resourceName, Optional<Path> path) {
             this.resourceName = resourceName;
             this.path = path;
         }
@@ -75,7 +76,7 @@ public final class GeneratedStaticResourceBuildItem extends MultiBuildItem {
             return resourceName;
         }
 
-        public Path getPath() {
+        public Optional<Path> getPath() {
             return path;
         }
     }

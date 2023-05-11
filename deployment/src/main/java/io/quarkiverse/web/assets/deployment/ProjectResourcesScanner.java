@@ -11,6 +11,7 @@ import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -62,14 +63,16 @@ public class ProjectResourcesScanner {
                 if (Files.isDirectory(rootDir)) {
                     final Path dirPath = rootDir.resolve(scanner.dir());
                     if (Files.isDirectory(dirPath) && dirPath.toString().endsWith(scanner.dir())) {
-                        scan(rootDir, dirPath, scanner.glob(), scanner.charset, webAssetConsumer);
+                        scan(rootDir, dirPath, scanner.glob(), scanner.charset, webAssetConsumer, true);
                         break;
                     }
                 } else {
                     try (FileSystem artifactFs = ZipUtils.newFileSystem(rootDir)) {
+                        Path rootDirFs = artifactFs.getPath("/");
                         Path dirPath = artifactFs.getPath(scanner.dir());
                         if (Files.exists(dirPath)) {
-                            scan(rootDir, artifactFs.getPath("/"), scanner.glob(), scanner.charset(), webAssetConsumer);
+                            scan(rootDirFs, artifactFs.getPath("/"), scanner.glob(), scanner.charset(), webAssetConsumer,
+                                    false);
                         }
                     } catch (IOException e) {
                         LOGGER.warnf(e, "Unable to create the file system from the rootDir: %s", rootDir);
@@ -85,7 +88,7 @@ public class ProjectResourcesScanner {
                     try {
                         final Path dirPath = rootDir.resolve(scanner.dir());
                         if (Files.isDirectory(dirPath) && dirPath.toString().endsWith(scanner.dir())) {
-                            scan(rootDir, dirPath, scanner.glob(), scanner.charset, webAssetConsumer);
+                            scan(rootDir, dirPath, scanner.glob(), scanner.charset, webAssetConsumer, true);
                             break;
                         }
                     } catch (IOException e) {
@@ -101,7 +104,8 @@ public class ProjectResourcesScanner {
             Path directory,
             String glob,
             Charset charset,
-            Consumer<WebAsset> webAssetConsumer)
+            Consumer<WebAsset> webAssetConsumer,
+            boolean canReadLater)
             throws IOException {
         Path toScan = directory == null ? root : directory;
         try (Stream<Path> files = Files.list(toScan)) {
@@ -123,18 +127,18 @@ public class ProjectResourcesScanner {
                     }
                     if (!assetPath.isEmpty()) {
                         webAssetConsumer.accept(toWebAsset(assetPath,
-                                filePath.normalize(), charset));
+                                filePath.normalize(), charset, canReadLater));
                     }
                 } else if (Files.isDirectory(filePath)) {
                     LOGGER.debugf("Scan directory: %s", filePath);
-                    scan(root, filePath, glob, charset, webAssetConsumer);
+                    scan(root, filePath, glob, charset, webAssetConsumer, canReadLater);
                 }
             }
         }
     }
 
-    static WebAsset toWebAsset(String resourcePath, Path filePath, Charset charset) {
-        return new WebAsset(resourcePath, filePath, readTemplateContent(filePath),
+    static WebAsset toWebAsset(String resourcePath, Path filePath, Charset charset, boolean canReadLater) {
+        return new WebAsset(resourcePath, Optional.of(filePath), canReadLater ? null : readTemplateContent(filePath),
                 charset);
     }
 
@@ -151,11 +155,11 @@ public class ProjectResourcesScanner {
         return false;
     }
 
-    static byte[] readTemplateContent(Path path) {
+    public static byte[] readTemplateContent(Path path) {
         try {
             return Files.readAllBytes(path);
         } catch (IOException e) {
-            throw new UncheckedIOException("Unable to read the template content from path: " + path, e);
+            throw new UncheckedIOException("Unable to read the content from path: " + path, e);
         }
     }
 
