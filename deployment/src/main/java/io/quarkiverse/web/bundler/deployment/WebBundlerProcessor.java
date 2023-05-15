@@ -149,7 +149,7 @@ class WebBundlerProcessor {
 
                 final Path bundleDir = Bundler.bundle(options.build());
 
-                if(!Files.isDirectory(bundleDir)) {
+                if (!Files.isDirectory(bundleDir)) {
                     liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext(List.of(), null));
                     LOGGER.error("It seems bundling didn't go well");
                     return;
