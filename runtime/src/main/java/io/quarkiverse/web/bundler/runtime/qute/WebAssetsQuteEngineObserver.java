@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Singleton;
+
 import org.jboss.logging.Logger;
 
 import io.quarkus.qute.EngineBuilder;
@@ -14,8 +17,6 @@ import io.quarkus.qute.TemplateLocator;
 import io.quarkus.qute.UserTagSectionHelper;
 import io.quarkus.qute.ValueResolver;
 import io.quarkus.qute.Variant;
-import jakarta.enterprise.event.Observes;
-import jakarta.inject.Singleton;
 
 @Singleton
 public class WebAssetsQuteEngineObserver {
