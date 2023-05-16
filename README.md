@@ -6,3 +6,4 @@
 - It supports dev mode and all
 - It also deals with web dependencies (mvnpm and webjars). They can be used by just adding deps to the pom.
 - It features a preset to create server side web components (Qute + Script + Style)
+![quarkus-web-bundler.png](./quarkus-web-bundler.png?raw=true)
