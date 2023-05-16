@@ -5,7 +5,7 @@ public enum Globs {
     SCRIPTS("*.{js,jsx,ts,tsx,css,scss,sass,json,svg,gif,png,jpg,woff,woff2,eot,ttf}"),
     STYLES("*.{css,scss,sass}"),
     QUTE_TAGS("*.html"),
-    ALL("*.");
+    ALL("*");
 
     private final String fileGlob;
     private final String glob;

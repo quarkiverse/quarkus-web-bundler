@@ -24,9 +24,8 @@ class ScriptDependenciesScannerProcessor {
             CurateOutcomeBuildItem curateOutcome,
             WebBundlerConfig config)
             throws IOException {
-        List<Path> webDeps = curateOutcome.getApplicationModel().getDependencies().stream()
+        List<Path> webDeps = curateOutcome.getApplicationModel().getRuntimeDependencies().stream()
                 .filter(Dependency::isJar)
-                .filter(d -> Dependency.SCOPE_COMPILE.equals(d.getScope()))
                 .filter(config.dependencies().type()::matches)
                 .map(ResolvedDependency::getResolvedPaths)
                 .flatMap(PathCollection::stream)
