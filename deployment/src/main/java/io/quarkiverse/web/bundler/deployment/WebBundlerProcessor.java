@@ -273,11 +273,6 @@ class WebBundlerProcessor {
                 watchMode);
     }
 
-    private void handleQuteTag(EntryPointBuildItem bundle,
-            WebAsset resource) {
-        LOGGER.debugf("Handling %s as a qute tag web asset", resource.getResourceName());
-    }
-
     private void handleSassStyle(EntryPointBuildItem bundle,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             WebAsset asset) {
