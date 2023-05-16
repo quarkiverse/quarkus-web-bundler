@@ -8,7 +8,7 @@
   </parent>
   <groupId>io.quarkiverse.web-bundler</groupId>
   <artifactId>quarkus-web-bundler-parent</artifactId>
-  <version>0.0.1-alpha2</version>
+  <version>999-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Quarkus Web Bundler - Parent</name>
   <modules>
@@ -69,8 +69,4 @@
       </modules>
     </profile>
   </profiles>
-
-  <scm>
-    <tag>0.0.1-alpha2</tag>
-  </scm>
 </project>
