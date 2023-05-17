@@ -123,7 +123,7 @@ class WebBundlerProcessor {
                     } else {
                         Files.copy(webAsset.getFilePath().orElseThrow(), scriptPath, StandardCopyOption.REPLACE_EXISTING);
                     }
-                    if (!webAsset.type().equals(MANUAL)) {
+                    if (!webAsset.type().equals(MANUAL) && !isImportSassFile(scriptPath.getFileName().toString())) {
                         scriptsPath.add(scriptPath);
                     }
                 }
@@ -141,12 +141,22 @@ class WebBundlerProcessor {
                 }
             }
             if (addedEntryPoints > 0) {
-                //SCSS conversion
+                // SCSS conversion
                 try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
                         (p, a) -> isCompiledSassFile(p.getFileName().toString()))) {
                     stream.forEach(p -> convertToScss(p, targetDir));
                 }
-
+                // Remove files starting with _
+                try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
+                        (p, a) -> isImportSassFile(p.getFileName().toString()))) {
+                    stream.forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
+                }
                 final Path bundleDir = Bundler.bundle(options.build());
 
                 if (!Files.isDirectory(bundleDir)) {
@@ -301,9 +311,14 @@ class WebBundlerProcessor {
      * and ends with either .sass or .scss case-insensitive
      */
     public static boolean isCompiledSassFile(String filename) {
-        if (filename.startsWith("_")) {
-            return false;
-        }
+        return !filename.startsWith("_") && isSassFile(filename);
+    }
+
+    public static boolean isImportSassFile(String filename) {
+        return filename.startsWith("_") && isSassFile(filename);
+    }
+
+    public static boolean isSassFile(String filename) {
         String lc = filename.toLowerCase();
         return lc.endsWith(".scss") || lc.endsWith(".sass");
     }
