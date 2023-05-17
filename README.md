@@ -34,7 +34,7 @@ components/: server side web-components
 static/: static files served under http://localhost:8080/static/...
 ```
 
-- https://github.com/ia3andy/quarkus-bundler-react (quarkus, web-bundler, react)
+- https://github.com/ia3andy/quarkus-bundler-react (quarkus, web-bundler, react, react-bootstrap)
 - https://github.com/ia3andy/renotes (quarkus, web-bundler, renarde, htmx)
 - https://github.com/ia3andy/web-bundler-jquery (quarkus, web-bundler, jquery, bootstrap, bootstrap-icons)
 - https://github.com/ia3andy/bundler-gradle-jquery (quarkus, web-bundler, gradle, jquery, bootstrap, bootstrap-icons)
