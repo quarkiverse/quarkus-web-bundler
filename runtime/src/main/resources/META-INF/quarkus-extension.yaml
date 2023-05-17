@@ -1,9 +1,27 @@
 name: Web Bundler
-#description: Do something useful.
+description: Creating full-stack Web Apps is fast and simple with this extension. Zero config bundling for your web-app scripts (js, jsx, ts, tsx), dependencies (jquery, react, htmx, ...) and styles (css, scss, sass).
 metadata:
-#  keywords:
-#    - web-bundler
-#  guide: https://quarkiverse.github.io/quarkiverse-docs/web-bundler/dev/
-#  categories:
-#    - "miscellaneous"
-#  status: "preview"
+  keywords:
+    - web-bundler
+    - bundler
+    - frontend
+    - web
+    - full-stack
+    - js 
+    - ts
+    - react
+    - jquery
+    - htmx
+    - scss
+    - sass
+    - bundle
+    - esbuild
+    - mvnpm
+    - webjars
+    - typescript
+    - javascript
+    - assets
+  guide: https://quarkiverse.github.io/quarkiverse-docs/web-bundler/dev/
+  categories:
+    - "web"
+  status: "experimental"
