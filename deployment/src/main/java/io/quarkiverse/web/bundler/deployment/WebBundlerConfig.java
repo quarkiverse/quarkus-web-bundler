@@ -162,7 +162,7 @@ public interface WebBundlerConfig {
     }
 
     enum WebDependencyType {
-        WEBJARS("org.webjars"::equals),
+        WEBJARS("org.webjars.npm"::equals),
         MVNPM(s -> s.startsWith("org.mvnpm"));
 
         private final Predicate<String> groupMatcher;

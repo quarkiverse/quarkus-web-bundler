@@ -58,10 +58,9 @@ class WebAssetsScannerProcessor {
             WebBundlerConfig config,
             LiveReloadBuildItem liveReload)
             throws IOException {
-        /**
-         * watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
-         * .setLocationPredicate(s -> s.startsWith(config.webRoot())).setRestartNeeded(true).build());
-         **/
+        watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
+                .setLocationPredicate(s -> s.startsWith(config.webRoot())).setRestartNeeded(true).build());
+
         final WebAssetsLookupDevContext devContext = liveReload.getContextObject(WebAssetsLookupDevContext.class);
         if (liveReload.isLiveReload()
                 && devContext != null
@@ -112,7 +111,7 @@ class WebAssetsScannerProcessor {
             final String dirFromWebRoot = config.fromWebRoot(e.getValue().effectiveDir(e.getKey()));
             final List<WebAsset> assets = resourcesScanner.scan(dirFromWebRoot, SCRIPTS.glob(), config.charset());
             final Optional<WebAsset> entryPoint = assets.stream()
-                    .filter(w -> w.getResourceName().startsWith(join(dirFromWebRoot, "index.")))
+                    .filter(w -> w.resourceName().startsWith(join(dirFromWebRoot, "index.")))
                     .findAny();
             for (WebAsset webAsset : assets) {
                 BundleType bundleType = entryPoint
@@ -132,7 +131,7 @@ class WebAssetsScannerProcessor {
     private static boolean hasNewWebResources(WebBundlerConfig config, LiveReloadBuildItem liveReload,
             WebAssetsLookupDevContext devContext) {
         final Set<String> webAssets = devContext.allWebAssets().stream()
-                .map(WebAsset::getResourceName)
+                .map(WebAsset::resourceName)
                 .collect(Collectors.toSet());
         // Check that all the changed resource are already in the web assets
         // If one is not then it's a new file
@@ -143,57 +142,28 @@ class WebAssetsScannerProcessor {
     void produceWebAssets(BuildProducer<EntryPointBuildItem> bundles, BuildProducer<StaticAssetsBuildItem> staticAssets,
             BuildProducer<StylesAssetsBuildItem> styleAssets, BuildProducer<QuteTagsBuildItem> quteTagsAssets,
             WebAssetsLookupDevContext context, boolean checkIfExists) {
-        for (Map.Entry<String, List<BundleWebAsset>> e : context.getBundleAssets().entrySet()) {
+        for (Map.Entry<String, List<BundleWebAsset>> e : context.bundleAssets().entrySet()) {
             bundles.produce(new EntryPointBuildItem(e.getKey(), checkIfExists ? checkWebAssets(e.getValue()) : e.getValue()));
         }
         staticAssets.produce(new StaticAssetsBuildItem(
-                checkIfExists ? checkWebAssets(context.getStaticWebAssets()) : context.getStaticWebAssets()));
+                checkIfExists ? checkWebAssets(context.staticWebAssets()) : context.staticWebAssets()));
 
         styleAssets.produce(new StylesAssetsBuildItem(
-                checkIfExists ? checkWebAssets(context.getStylesWebAssets()) : context.getStylesWebAssets()));
+                checkIfExists ? checkWebAssets(context.stylesWebAssets()) : context.stylesWebAssets()));
 
         quteTagsAssets.produce(new QuteTagsBuildItem(
-                checkIfExists ? checkWebAssets(context.getQuteWebAssets()) : context.getQuteWebAssets()));
+                checkIfExists ? checkWebAssets(context.quteWebAssets()) : context.quteWebAssets()));
 
     }
 
     private static <T extends WebAsset> List<T> checkWebAssets(List<T> webAssets) {
-        return webAssets.stream().filter(w -> w.getFilePath().isPresent() && Files.isRegularFile(w.getFilePath().get()))
+        return webAssets.stream().filter(w -> w.filePath().isPresent() && Files.isRegularFile(w.filePath().get()))
                 .collect(
                         Collectors.toList());
     }
 
-    static class WebAssetsLookupDevContext {
-
-        private final Map<String, List<BundleWebAsset>> bundleAssets;
-        private final List<WebAsset> staticWebAssets;
-        private final List<WebAsset> stylesWebAssets;
-
-        private final List<WebAsset> quteWebAssets;
-
-        WebAssetsLookupDevContext(Map<String, List<BundleWebAsset>> bundleAssets, List<WebAsset> staticWebAssets,
-                List<WebAsset> stylesWebAssets, List<WebAsset> quteWebAssets) {
-            this.bundleAssets = bundleAssets;
-            this.staticWebAssets = staticWebAssets;
-            this.stylesWebAssets = stylesWebAssets;
-            this.quteWebAssets = quteWebAssets;
-        }
-
-        public Map<String, List<BundleWebAsset>> getBundleAssets() {
-            return bundleAssets;
-        }
-
-        public List<WebAsset> getStaticWebAssets() {
-            return staticWebAssets;
-        }
-
-        public List<WebAsset> getStylesWebAssets() {
-            return stylesWebAssets;
-        }
-
-        public List<WebAsset> getQuteWebAssets() {
-            return quteWebAssets;
-        }
+    record WebAssetsLookupDevContext(Map<String, List<BundleWebAsset>> bundleAssets, List<WebAsset> staticWebAssets,
+            List<WebAsset> stylesWebAssets, List<WebAsset> quteWebAssets) {
 
         public List<WebAsset> allWebAssets() {
             final ArrayList<WebAsset> all = new ArrayList<>();

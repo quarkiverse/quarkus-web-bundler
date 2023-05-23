@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.web.bundler.deployment.items.DefaultWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkus.deployment.ApplicationArchive;
 import io.quarkus.fs.util.ZipUtils;
@@ -138,7 +139,7 @@ public class ProjectResourcesScanner {
     }
 
     static WebAsset toWebAsset(String resourcePath, Path filePath, Charset charset, boolean canReadLater) {
-        return new WebAsset(resourcePath, Optional.of(filePath), canReadLater ? null : readTemplateContent(filePath),
+        return new DefaultWebAsset(resourcePath, Optional.of(filePath), canReadLater ? null : readTemplateContent(filePath),
                 charset);
     }
 

@@ -1,8 +1,10 @@
 package io.quarkiverse.web.bundler.deployment.items;
 
-import java.util.Objects;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.util.Optional;
 
-public class BundleWebAsset extends WebAsset {
+public record BundleWebAsset(WebAsset webAsset, BundleType type) implements WebAsset {
 
     public enum BundleType {
         ENTRYPOINT, // index.js, index.ts, index.jsx, index.tsx
@@ -10,31 +12,23 @@ public class BundleWebAsset extends WebAsset {
         AUTO // Add this to the working directory and index it automatically as part of the bundle
     }
 
-    private final BundleType bundleType;
-
-    public BundleWebAsset(WebAsset webAsset, BundleType bundleType) {
-        super(webAsset.getResourceName(), webAsset.getFilePath(), webAsset.getContent(), webAsset.getCharset());
-        this.bundleType = bundleType;
-    }
-
-    public BundleType type() {
-        return bundleType;
+    @Override
+    public String resourceName() {
+        return webAsset.resourceName();
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        if (!super.equals(o))
-            return false;
-        BundleWebAsset that = (BundleWebAsset) o;
-        return bundleType == that.bundleType;
+    public Optional<Path> filePath() {
+        return webAsset.filePath();
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), bundleType);
+    public byte[] content() {
+        return webAsset.content();
+    }
+
+    @Override
+    public Charset charset() {
+        return webAsset.charset();
     }
 }

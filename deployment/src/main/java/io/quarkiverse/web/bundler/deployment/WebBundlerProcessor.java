@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,31 +74,28 @@ class WebBundlerProcessor {
             return;
         }
         final BundlesBuildContext bundlesBuildContext = liveReload.getContextObject(BundlesBuildContext.class);
-        if (liveReload.isLiveReload()
+        final boolean isLiveReload = liveReload.isLiveReload()
                 && bundlesBuildContext != null
-                && bundlesBuildContext.getBundleDistDir() != null
-                && entryPoints.equals(bundlesBuildContext.getEntryPoints())
+                && bundlesBuildContext.bundleDistDir() != null;
+        if (isLiveReload
+                && webDependencies.getDependencies().equals(bundlesBuildContext.webDependencies())
+                && entryPoints.equals(bundlesBuildContext.entryPoints())
                 && entryPoints.stream().map(EntryPointBuildItem::getWebAssets).flatMap(List::stream)
-                        .map(WebAsset::getResourceName)
+                        .map(WebAsset::resourceName)
                         .noneMatch(liveReload.getChangedResources()::contains)
-                && Files.isDirectory(bundlesBuildContext.getBundleDistDir())) {
+                && Files.isDirectory(bundlesBuildContext.bundleDistDir())) {
             LOGGER.debug("Bundling not needed for live reload");
-            handleBundleDistDir(generatedBundleProducer, staticResourceProducer, bundlesBuildContext.getBundleDistDir(), false);
-            //TODO remove for HotDeploymentWatchedFileBuildItem.builder()
-            entryPoints.stream().map(EntryPointBuildItem::getWebAssets)
-                    .flatMap(List::stream)
-                    .forEach(p -> watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(p.getResourceName(), true)));
-
+            handleBundleDistDir(generatedBundleProducer, staticResourceProducer, bundlesBuildContext.bundleDistDir(), false);
             return;
         }
-        String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString).collect(
-                Collectors.joining(", "));
-        LOGGER.infof("%s Web dependencies detected: %s", webDependencies.getType(), deps);
-
+        boolean hasScssChange = isLiveReload
+                && liveReload.getChangedResources().stream().anyMatch(WebBundlerProcessor::isSassFile);
         final Bundler.BundleType type = Bundler.BundleType.valueOf(webDependencies.getType().toString());
         final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
         try {
-            FileUtil.deleteDirectory(targetDir);
+            if (!isLiveReload) {
+                FileUtil.deleteDirectory(targetDir);
+            }
             Files.createDirectories(targetDir);
             LOGGER.debugf("Preparing bundle in %s", targetDir);
             final Map<String, EsBuildConfig.Loader> loaders = EsBuildConfigBuilder.getDefaultLoadersMap();
@@ -115,13 +113,20 @@ class WebBundlerProcessor {
                 for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
                     String destination = webAsset.pathFromWebRoot(config.webRoot());
                     final Path scriptPath = targetDir.resolve(destination);
-                    Files.createDirectories(scriptPath.getParent());
-                    // TODO convert scss to css
-                    // and replace the imports
-                    if (webAsset.hasContent()) {
-                        Files.write(scriptPath, webAsset.getContent(), StandardOpenOption.CREATE);
-                    } else {
-                        Files.copy(webAsset.getFilePath().orElseThrow(), scriptPath, StandardCopyOption.REPLACE_EXISTING);
+                    if (hasScssChange && isSassFile(scriptPath.getFileName().toString())) {
+                        // This scss has been converted to css in the last cycle
+                        Files.deleteIfExists(scriptPath);
+                    }
+                    if (!isLiveReload
+                            || liveReload.getChangedResources().contains(webAsset.resourceName())
+                            || !Files.exists(scriptPath)) {
+                        Files.createDirectories(scriptPath.getParent());
+                        if (webAsset.hasContent()) {
+                            Files.write(scriptPath, webAsset.content(), StandardOpenOption.CREATE,
+                                    StandardOpenOption.TRUNCATE_EXISTING);
+                        } else {
+                            Files.copy(webAsset.filePath().orElseThrow(), scriptPath, StandardCopyOption.REPLACE_EXISTING);
+                        }
                     }
                     if (!webAsset.type().equals(MANUAL) && !isImportSassFile(scriptPath.getFileName().toString())) {
                         scriptsPath.add(scriptPath);
@@ -134,7 +139,7 @@ class WebBundlerProcessor {
 
                 LOGGER.infof("Bundling '%s' with:\n%s", entryPoint.getEntryPointKey(), scripts);
                 entryPoint.getWebAssets()
-                        .forEach(p -> watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(p.getResourceName(), true)));
+                        .forEach(p -> watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(p.resourceName(), true)));
                 if (scriptsPath.size() > 0) {
                     options.addEntryPoint(entryPoint.getEntryPointKey(), scriptsPath);
                     addedEntryPoints++;
@@ -142,34 +147,41 @@ class WebBundlerProcessor {
             }
             if (addedEntryPoints > 0) {
                 // SCSS conversion
-                try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
-                        (p, a) -> isCompiledSassFile(p.getFileName().toString()))) {
-                    stream.forEach(p -> convertToScss(p, targetDir));
+                if (!isLiveReload || hasScssChange) {
+                    try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
+                            (p, a) -> !p.toString().contains("node_modules")
+                                    && isCompiledSassFile(p.getFileName().toString()))) {
+                        stream.forEach(p -> convertToScss(p, targetDir));
+                    }
                 }
-                // Remove files starting with _
-                try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
-                        (p, a) -> isImportSassFile(p.getFileName().toString()))) {
-                    stream.forEach(p -> {
-                        try {
-                            Files.delete(p);
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+                if (isLiveReload
+                        && !Objects.equals(webDependencies.getDependencies(), bundlesBuildContext.webDependencies())) {
+                    Bundler.install(targetDir, webDependencies.getDependencies(), type);
+                    String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString).collect(
+                            Collectors.joining(", "));
+                    LOGGER.infof("%s Web dependencies changed: %s", webDependencies.getType(), deps);
+                } else {
+                    if (!isLiveReload) {
+                        String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString)
+                                .collect(
+                                        Collectors.joining(", "));
+                        LOGGER.infof("%s Web dependencies detected: %s", webDependencies.getType(), deps);
+                    }
                 }
                 final Path bundleDir = Bundler.bundle(options.build());
 
                 if (!Files.isDirectory(bundleDir)) {
-                    liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext(List.of(), null));
+                    liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
                     LOGGER.error("It seems bundling didn't go well");
                     return;
                 }
 
                 LOGGER.debugf("Bundle generated in %s", bundleDir);
                 handleBundleDistDir(generatedBundleProducer, staticResourceProducer, bundleDir, true);
-                liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext(entryPoints, bundleDir));
+                liveReload.setContextObject(BundlesBuildContext.class,
+                        new BundlesBuildContext(webDependencies.getDependencies(), entryPoints, bundleDir));
             } else {
-                liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext(List.of(), null));
+                liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
                 LOGGER.debugf("No entrypoint found, no bundle generated");
             }
 
@@ -179,10 +191,12 @@ class WebBundlerProcessor {
     }
 
     static void convertToScss(Path file, Path root) {
+        LOGGER.debugf("Converting %s to css", file);
         String content = SassBuildTimeCompiler.convertScss(file, root, (s, s2) -> {
         });
         try {
-            Files.write(file, content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+            Files.write(file, content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -239,9 +253,9 @@ class WebBundlerProcessor {
         final Map<String, String> templates = new HashMap<>();
         final List<String> tags = new ArrayList<>();
         for (WebAsset webAsset : quteTags.getWebAssets()) {
-            final String tag = webAsset.getFilePath().get().getFileName().toString();
+            final String tag = webAsset.filePath().get().getFileName().toString();
             final String tagName = tag.contains(".") ? tag.substring(0, tag.indexOf('.')) : tag;
-            templates.put(WEB_ASSETS_ID_PREFIX + tagName, new String(webAsset.readContentFromFile(), webAsset.getCharset()));
+            templates.put(WEB_ASSETS_ID_PREFIX + tagName, new String(webAsset.readContentFromFile(), webAsset.charset()));
             tags.add(tagName);
         }
         additionalBeans.produce(new AdditionalBeanBuildItem(WebAssetsQuteEngineObserver.class));
@@ -258,10 +272,10 @@ class WebBundlerProcessor {
             LiveReloadBuildItem liveReload,
             WebAsset webAsset) {
         handleStaticResource(staticResourceProducer,
-                Set.of(new GeneratedStaticResourceBuildItem.Source(webAsset.getResourceName(), webAsset.getFilePath())),
+                Set.of(new GeneratedStaticResourceBuildItem.Source(webAsset.resourceName(), webAsset.filePath())),
                 webAsset.pathFromWebRoot(config.webRoot()),
                 webAsset.readContentFromFile(),
-                liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.getResourceName()),
+                liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.resourceName()),
                 WatchMode.RESTART);
     }
 
@@ -286,7 +300,7 @@ class WebBundlerProcessor {
     private void handleSassStyle(EntryPointBuildItem bundle,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             WebAsset asset) {
-        LOGGER.debugf("Handling %s as a sass web asset", asset.getResourceName());
+        LOGGER.debugf("Handling %s as a sass web asset", asset.resourceName());
     }
 
     private static void handleStaticResource(
@@ -323,22 +337,11 @@ class WebBundlerProcessor {
         return lc.endsWith(".scss") || lc.endsWith(".sass");
     }
 
-    public static class BundlesBuildContext {
+    public record BundlesBuildContext(List<Path> webDependencies, List<EntryPointBuildItem> entryPoints,
+            Path bundleDistDir) {
 
-        private final List<EntryPointBuildItem> bundles;
-        private final Path bundleDistDir;
-
-        public BundlesBuildContext(List<EntryPointBuildItem> bundles, Path bundleDistDir) {
-            this.bundles = bundles;
-            this.bundleDistDir = bundleDistDir;
-        }
-
-        public List<EntryPointBuildItem> getEntryPoints() {
-            return bundles;
-        }
-
-        public Path getBundleDistDir() {
-            return bundleDistDir;
+        public BundlesBuildContext() {
+            this(List.of(), List.of(), null);
         }
     }
 }
