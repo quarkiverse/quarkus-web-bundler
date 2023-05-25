@@ -12,13 +12,6 @@ Create full-stack web apps quickly and easily with this Quarkus extension. It of
 - It features a preset to create server side web components (Qute template + Script + Style)
 
 
-### Bye bye package.json
-
-![bye bye](https://media4.giphy.com/media/w89ak63KNl0nJl80ig/giphy.gif?cid=ecf05e47e4m3b8izbl3oc7yzpnjulxge9nnpmgwsobqg8vlk&ep=v1_gifs_search&rid=giphy.gif&ct=g)
-
-The pom.xml contains the web dependencies through mvnpm or webjars (jquery, htmx, react, ...).
-
-
 ### How it works
 
 ![quarkus-web-bundler.png](./quarkus-web-bundler.png?raw=true)
