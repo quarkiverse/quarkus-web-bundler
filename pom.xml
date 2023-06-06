@@ -18,7 +18,7 @@
     <module>docs</module>
   </modules>
   <scm>
-    <connection>:git:git@github.com:quarkiverse/quarkus-web-bundler.git</connection>
+    <connection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</connection>
     <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</developerConnection>
     <url>https://github.com/quarkiverse/quarkus-web-bundler</url>
   </scm>
