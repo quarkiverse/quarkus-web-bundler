@@ -1,4 +1,4 @@
 release:
-  current-version: "0.0.1-alpha4"
+  current-version: "1.0.0-RC1"
   next-version: "999-SNAPSHOT"
 
