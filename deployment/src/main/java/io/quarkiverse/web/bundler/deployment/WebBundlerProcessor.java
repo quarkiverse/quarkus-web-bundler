@@ -33,7 +33,6 @@ import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.StylesAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
@@ -138,8 +137,6 @@ class WebBundlerProcessor {
                                 Collectors.joining("\n"));
 
                 LOGGER.infof("Bundling '%s' with:\n%s", entryPoint.getEntryPointKey(), scripts);
-                entryPoint.getWebAssets()
-                        .forEach(p -> watchedFiles.produce(new HotDeploymentWatchedFileBuildItem(p.resourceName(), true)));
                 if (scriptsPath.size() > 0) {
                     options.addEntryPoint(entryPoint.getEntryPointKey(), scriptsPath);
                     addedEntryPoints++;
@@ -231,17 +228,6 @@ class WebBundlerProcessor {
     }
 
     @BuildStep
-    void processStyles(WebBundlerConfig config,
-            StylesAssetsBuildItem stylesAssets,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            LiveReloadBuildItem liveReload) {
-        for (WebAsset webAsset : stylesAssets.getWebAssets()) {
-            // TODO deal with scss
-            makeWebAssetStatic(config, staticResourceProducer, liveReload, webAsset);
-        }
-    }
-
-    @BuildStep
     @Record(STATIC_INIT)
     void processQuteTags(
             BuildProducer<AdditionalBeanBuildItem> additionalBeans,
@@ -273,7 +259,7 @@ class WebBundlerProcessor {
             WebAsset webAsset) {
         handleStaticResource(staticResourceProducer,
                 Set.of(new GeneratedStaticResourceBuildItem.Source(webAsset.resourceName(), webAsset.filePath())),
-                webAsset.pathFromWebRoot(config.webRoot()),
+                "/" + webAsset.pathFromWebRoot(config.webRoot()),
                 webAsset.readContentFromFile(),
                 liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.resourceName()),
                 WatchMode.RESTART);
