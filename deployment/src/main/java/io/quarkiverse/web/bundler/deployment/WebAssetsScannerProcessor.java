@@ -22,7 +22,6 @@ import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.StylesAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkus.deployment.ApplicationArchive;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -52,7 +51,6 @@ class WebAssetsScannerProcessor {
             CurateOutcomeBuildItem curateOutcome,
             BuildProducer<EntryPointBuildItem> bundles,
             BuildProducer<StaticAssetsBuildItem> staticAssets,
-            BuildProducer<StylesAssetsBuildItem> styleAssets,
             BuildProducer<QuteTagsBuildItem> quteTagsAssets,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             WebBundlerConfig config,
@@ -68,7 +66,7 @@ class WebAssetsScannerProcessor {
             // Project WebAssets shouldn't be changed even if the file is changed as content is not stored
             // WebAsset from dependencies means we should do a new scan
             LOGGER.debug("Web bundler scan not needed for live reload");
-            produceWebAssets(bundles, staticAssets, styleAssets, quteTagsAssets, devContext, true);
+            produceWebAssets(bundles, staticAssets, quteTagsAssets, devContext, true);
             return;
         }
         LOGGER.debug("Web bundler scan started");
@@ -99,10 +97,6 @@ class WebAssetsScannerProcessor {
             staticAssetsScanners.add(new Scanner(config.fromWebRoot(config.staticAssets().dir().orElse("static")),
                     config.staticAssets().glob().orElse(Globs.ALL.glob()), config.charset()));
         }
-        if (config.styles().enabled()) {
-            stylesAssetsScanners.add(new Scanner(config.fromWebRoot(config.staticAssets().dir().orElse("styles")),
-                    config.staticAssets().glob().orElse(Globs.STYLES.glob()), config.charset()));
-        }
 
         final Map<String, List<BundleWebAsset>> bundleAssets = new HashMap<>();
         for (Map.Entry<String, EntryPointConfig> e : entryPointsConfig.entrySet()) {
@@ -122,9 +116,8 @@ class WebAssetsScannerProcessor {
         }
         final WebAssetsLookupDevContext context = new WebAssetsLookupDevContext(
                 bundleAssets,
-                resourcesScanner.scan(staticAssetsScanners),
-                resourcesScanner.scan(stylesAssetsScanners), resourcesScanner.scan(quteTagsAssetsScanners));
-        produceWebAssets(bundles, staticAssets, styleAssets, quteTagsAssets, context, false);
+                resourcesScanner.scan(staticAssetsScanners), resourcesScanner.scan(quteTagsAssetsScanners));
+        produceWebAssets(bundles, staticAssets, quteTagsAssets, context, false);
         liveReload.setContextObject(WebAssetsLookupDevContext.class, context);
     }
 
@@ -140,16 +133,13 @@ class WebAssetsScannerProcessor {
     }
 
     void produceWebAssets(BuildProducer<EntryPointBuildItem> bundles, BuildProducer<StaticAssetsBuildItem> staticAssets,
-            BuildProducer<StylesAssetsBuildItem> styleAssets, BuildProducer<QuteTagsBuildItem> quteTagsAssets,
+            BuildProducer<QuteTagsBuildItem> quteTagsAssets,
             WebAssetsLookupDevContext context, boolean checkIfExists) {
         for (Map.Entry<String, List<BundleWebAsset>> e : context.bundleAssets().entrySet()) {
             bundles.produce(new EntryPointBuildItem(e.getKey(), checkIfExists ? checkWebAssets(e.getValue()) : e.getValue()));
         }
         staticAssets.produce(new StaticAssetsBuildItem(
                 checkIfExists ? checkWebAssets(context.staticWebAssets()) : context.staticWebAssets()));
-
-        styleAssets.produce(new StylesAssetsBuildItem(
-                checkIfExists ? checkWebAssets(context.stylesWebAssets()) : context.stylesWebAssets()));
 
         quteTagsAssets.produce(new QuteTagsBuildItem(
                 checkIfExists ? checkWebAssets(context.quteWebAssets()) : context.quteWebAssets()));
@@ -163,13 +153,12 @@ class WebAssetsScannerProcessor {
     }
 
     record WebAssetsLookupDevContext(Map<String, List<BundleWebAsset>> bundleAssets, List<WebAsset> staticWebAssets,
-            List<WebAsset> stylesWebAssets, List<WebAsset> quteWebAssets) {
+            List<WebAsset> quteWebAssets) {
 
         public List<WebAsset> allWebAssets() {
             final ArrayList<WebAsset> all = new ArrayList<>();
             all.addAll(staticWebAssets);
             all.addAll(quteWebAssets);
-            all.addAll(stylesWebAssets);
             bundleAssets.values().forEach(all::addAll);
             return all;
         }
