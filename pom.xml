@@ -17,6 +17,11 @@
     <module>deployment</module>
     <module>docs</module>
   </modules>
+  <scm>
+    <connection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</connection>
+    <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</developerConnection>
+    <url>https://github.com/quarkiverse/quarkus-web-bundler</url>
+  </scm>
   <properties>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <maven.compiler.release>17</maven.compiler.release>
