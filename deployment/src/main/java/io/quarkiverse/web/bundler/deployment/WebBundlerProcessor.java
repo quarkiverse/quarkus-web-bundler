@@ -2,6 +2,7 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
+import static io.quarkiverse.web.bundler.deployment.util.ResourcePaths.prefixWithSlash;
 import static io.quarkiverse.web.bundler.runtime.qute.WebAssetsQuteContextRecorder.WEB_ASSETS_ID_PREFIX;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
@@ -31,8 +32,8 @@ import ch.nerdin.esbuild.modal.EsBuildConfigBuilder;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.PublicAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
@@ -211,19 +212,20 @@ class WebBundlerProcessor {
                 bundle.put(key, fileName);
             });
             generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));
-            makeStaticDir(staticResourceProducer, "/static/", bundleDir, WatchMode.DISABLED, changed);
+            makeDirPublic(staticResourceProducer, "/static/", bundleDir, WatchMode.DISABLED, changed);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @BuildStep
-    void processStatic(WebBundlerConfig config,
-            StaticAssetsBuildItem staticAssets,
+    void processPublic(WebBundlerConfig config,
+            PublicAssetsBuildItem staticAssets,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             LiveReloadBuildItem liveReload) {
         for (WebAsset webAsset : staticAssets.getWebAssets()) {
-            makeWebAssetStatic(config, staticResourceProducer, liveReload, webAsset);
+            final String publicPath = webAsset.pathFromWebRoot(config.webRoot()).substring(config.publicDir().length());
+            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(publicPath), liveReload, webAsset);
         }
     }
 
@@ -252,29 +254,30 @@ class WebBundlerProcessor {
 
     }
 
-    private static void makeWebAssetStatic(
-            WebBundlerConfig config,
+    private static void makeWebAssetPublic(
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            String publicPath,
             LiveReloadBuildItem liveReload,
             WebAsset webAsset) {
-        handleStaticResource(staticResourceProducer,
+        handleStaticResource(
+                staticResourceProducer,
                 Set.of(new GeneratedStaticResourceBuildItem.Source(webAsset.resourceName(), webAsset.filePath())),
-                "/" + webAsset.pathFromWebRoot(config.webRoot()),
+                publicPath,
                 webAsset.readContentFromFile(),
                 liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.resourceName()),
                 WatchMode.RESTART);
     }
 
-    private static void makeStaticDir(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+    private static void makeDirPublic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             String publicPath,
             Path bundleDir, WatchMode watchMode, boolean changed)
             throws IOException {
         Files.list(bundleDir)
-                .forEach(p -> makeStatic(staticResourceProducer, publicPath + p.getFileName(), p.normalize(), watchMode,
+                .forEach(p -> makePublic(staticResourceProducer, publicPath + p.getFileName(), p.normalize(), watchMode,
                         changed));
     }
 
-    private static void makeStatic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, String publicPath,
+    private static void makePublic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, String publicPath,
             Path file, WatchMode watchMode, boolean changed) {
         if (!Files.exists(file)) {
             return;

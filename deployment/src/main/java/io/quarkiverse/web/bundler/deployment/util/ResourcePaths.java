@@ -13,4 +13,8 @@ public final class ResourcePaths {
                 + "/"
                 + (dir2.startsWith("/") ? dir2.substring(1) : dir2);
     }
+
+    public static String prefixWithSlash(String path) {
+        return path.startsWith("/") ? path : "/" + path;
+    }
 }
