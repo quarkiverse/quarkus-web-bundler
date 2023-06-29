@@ -1,5 +1,7 @@
 package io.quarkiverse.web.bundler.deployment;
 
+import static java.util.function.Predicate.not;
+
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Optional;
@@ -34,17 +36,12 @@ public interface WebBundlerConfig {
     Map<String, EntryPointConfig> bundle();
 
     /**
-     * The config for resources to process with the SCSS compiler if needed and serve statically (non bundled).
-     * Default to all files in the "/{web-root}/styles" directory
+     * The public resources.
+     * Default to all files in the "/{web-root}/public" directory.
      */
-    AssetsConfig styles();
-
-    /**
-     * The static resources.
-     * Default to all files in the "/{web-root}/static" directory.
-     */
-    @WithName("static")
-    AssetsConfig staticAssets();
+    @WithName("public")
+    @WithDefault("public")
+    String publicDir();
 
     /**
      * The config for presets
@@ -61,27 +58,6 @@ public interface WebBundlerConfig {
      */
     @WithDefault("UTF-8")
     Charset charset();
-
-    interface AssetsConfig {
-
-        /**
-         * Enable this option
-         */
-        @WithParentName
-        @WithDefault("true")
-        boolean enabled();
-
-        /**
-         * The directory containing those assets under the root.
-         */
-        Optional<String> dir();
-
-        /**
-         * The glob path matcher for this
-         * All is matched when empty
-         */
-        Optional<String> glob();
-    }
 
     interface PresetsConfig {
 
@@ -152,11 +128,11 @@ public interface WebBundlerConfig {
         Optional<String> entryPointKey();
 
         default String effectiveDir(String mapKey) {
-            return dir().orElse(effectiveEntryPointKey(mapKey));
+            return dir().filter(not(String::isBlank)).orElse(effectiveEntryPointKey(mapKey));
         }
 
         default String effectiveEntryPointKey(String mapKey) {
-            return entryPointKey().orElse(mapKey);
+            return entryPointKey().filter(not(String::isBlank)).orElse(mapKey);
         }
 
     }

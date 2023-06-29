@@ -26,100 +26,20 @@ endif::add-copy-button-to-env-var[]
 |`web`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles[quarkus.web-bundler.styles]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.public]]`link:#quarkus-web-bundler_quarkus.web-bundler.public[quarkus.web-bundler.public]`
 
 [.description]
 --
-Enable this option
+The public resources. Default to all files in the "/++{++web-root++}++/public" directory.
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STYLES+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_PUBLIC+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_STYLES+++`
-endif::add-copy-button-to-env-var[]
---|boolean 
-|`true`
-
-
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles.dir[quarkus.web-bundler.styles.dir]`
-
-[.description]
---
-The directory containing those assets under the root.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STYLES_DIR+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_STYLES_DIR+++`
+Environment variable: `+++QUARKUS_WEB_BUNDLER_PUBLIC+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|
-
-
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.styles.glob]]`link:#quarkus-web-bundler_quarkus.web-bundler.styles.glob[quarkus.web-bundler.styles.glob]`
-
-[.description]
---
-The glob path matcher for this All is matched when empty
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STYLES_GLOB+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_STYLES_GLOB+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|
-
-
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static]]`link:#quarkus-web-bundler_quarkus.web-bundler.static[quarkus.web-bundler.static]`
-
-[.description]
---
-Enable this option
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC+++`
-endif::add-copy-button-to-env-var[]
---|boolean 
-|`true`
-
-
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.static.dir[quarkus.web-bundler.static.dir]`
-
-[.description]
---
-The directory containing those assets under the root.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC_DIR+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC_DIR+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|
-
-
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static.glob]]`link:#quarkus-web-bundler_quarkus.web-bundler.static.glob[quarkus.web-bundler.static.glob]`
-
-[.description]
---
-The glob path matcher for this All is matched when empty
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC_GLOB+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC_GLOB+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|
+|`public`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app[quarkus.web-bundler.presets.app]`
