@@ -22,9 +22,9 @@ Create full-stack web apps quickly and easily with this Quarkus extension. It of
 
 Look in `src/main/resources/web` for the web-app
 ```
-app/: app scripts and styles)
-components/: server side web-components
-static/: static files served under http://localhost:8080/static/...
+app/: app scripts and styles
+components/[my-comp]/[my-com].js/ts/css/scss/html: Server side qute web-components (qute tag + script + style)
+public/...: public files served under http://localhost:8080/...
 ```
 
 - https://github.com/ia3andy/quarkus-bundler-react (quarkus, web-bundler, react, react-bootstrap)
