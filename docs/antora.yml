@@ -1,5 +1,5 @@
 name: quarkus-web-bundler
-title: Quarkus Web Bundler
+title: Web Bundler
 version: dev
 nav:
   - modules/ROOT/nav.adoc
