@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import io.quarkus.bootstrap.model.ApplicationModel;
 import io.quarkus.bootstrap.workspace.ArtifactSources;
 import io.quarkus.bootstrap.workspace.SourceDir;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -22,9 +23,12 @@ import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
+import io.quarkus.maven.dependency.ResolvedDependency;
 import io.quarkus.vertx.http.deployment.spi.AdditionalStaticResourceBuildItem;
 
 public class GeneratedStaticResourcesProcessor {
+
+    private static final String BUILD_DIR_SYSTEM_PROPERTY = "quarkus.web.bundler.buildDir";
 
     @BuildStep
     public void processStaticFiles(
@@ -91,7 +95,10 @@ public class GeneratedStaticResourcesProcessor {
 
     public static File getBuildDirectory(CurateOutcomeBuildItem curateOutcomeBuildItem) {
         File buildDir = null;
+        ApplicationModel appModel = curateOutcomeBuildItem.getApplicationModel();
+        ResolvedDependency appArtifact = appModel.getAppArtifact();
         ArtifactSources src = curateOutcomeBuildItem.getApplicationModel().getAppArtifact().getSources();
+
         if (src != null) { // shouldn't be null in dev mode
             Collection<SourceDir> srcDirs = src.getResourceDirs();
             if (srcDirs.isEmpty()) {
@@ -105,10 +112,23 @@ public class GeneratedStaticResourcesProcessor {
             }
         }
         if (buildDir == null) {
-            // the module doesn't have any sources nor resources, stick to the build dir
-            buildDir = new File(
-                    curateOutcomeBuildItem.getApplicationModel().getAppArtifact().getWorkspaceModule().getBuildDir(),
-                    "classes");
+            // in multi-module projects thew workspace module might be null so we need to investigate
+            // a little which is appropriate
+            if (appArtifact.getWorkspaceModule() != null && appArtifact.getWorkspaceModule().getBuildDir() != null) {
+                // the module doesn't have any sources nor resources, stick to the build dir
+                buildDir = new File(
+                        appArtifact.getWorkspaceModule().getBuildDir(),
+                        "classes");
+            } else if (appModel.getApplicationModule() != null && appModel.getApplicationModule().getBuildDir() != null) {
+                buildDir = new File(
+                        appModel.getApplicationModule().getBuildDir(),
+                        "classes");
+            }
+        }
+
+        // if still null, try and get the system property as a last resort
+        if (buildDir == null && System.getProperties().containsKey(BUILD_DIR_SYSTEM_PROPERTY)) {
+            buildDir = new File(System.getProperty(BUILD_DIR_SYSTEM_PROPERTY));
         }
 
         return buildDir;
