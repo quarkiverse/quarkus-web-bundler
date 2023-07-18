@@ -19,6 +19,7 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
+import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
@@ -34,8 +35,9 @@ public class GeneratedStaticResourcesProcessor {
             BuildProducer<AdditionalStaticResourceBuildItem> vertxStaticResourcesProducer,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             CurateOutcomeBuildItem curateOutcome,
-            LiveReloadBuildItem liveReload) {
-        final File buildDir = getBuildDirectory(curateOutcome);
+            LiveReloadBuildItem liveReload,
+            LaunchModeBuildItem launchModeBuildItem) {
+        final File buildDir = launchModeBuildItem.getLaunchMode().isDevOrTest() ? getBuildDirectory(curateOutcome) : null;
         final StaticResourcesDevContext staticResourcesDevContext = liveReload
                 .getContextObject(StaticResourcesDevContext.class);
         if (liveReload.isLiveReload() && staticResourcesDevContext != null) {
@@ -73,15 +75,17 @@ public class GeneratedStaticResourcesProcessor {
             // for vertx http
             vertxStaticResourcesProducer.produce(new AdditionalStaticResourceBuildItem(staticResource.getPublicPath(), false));
             // for dev/test mode
-            Path targetPath = buildDir.toPath().resolve(staticResource.getResourceName());
-            // TODO: Change detection could also be done automatically by comparing the content (might be slow) or a hash of it using dev context
-            if (!Files.exists(targetPath) || staticResource.isChanged()) {
-                try {
-                    Files.deleteIfExists(targetPath);
-                    Files.createDirectories(targetPath.getParent());
-                    Files.write(targetPath, staticResource.getContent());
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
+            if (launchModeBuildItem.getLaunchMode().isDevOrTest()) {
+                Path targetPath = buildDir.toPath().resolve(staticResource.getResourceName());
+                // TODO: Change detection could also be done automatically by comparing the content (might be slow) or a hash of it using dev context
+                if (!Files.exists(targetPath) || staticResource.isChanged()) {
+                    try {
+                        Files.deleteIfExists(targetPath);
+                        Files.createDirectories(targetPath.getParent());
+                        Files.write(targetPath, staticResource.getContent());
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
                 }
             }
             generatedStaticFiles.add(staticResource.getResourceName());
