@@ -1,0 +1,15 @@
+= Quarkus image:logo.svg[width=25em] Web Bundler - Main Concepts
+
+include::./includes/attributes.adoc[]
+
+== How it works
+
+It's really simple, the web bundler:
+
+1. takes/watches your web resources and web dependencies.footnote:[Integrated with NPM dependencies through https://mvnpm.org[mvnpm] or https://www.webjars.org/[webjars]]
+
+2. bundles it with the really fast esbuild compiler (scss are compiled if needed).
+
+3. create a mapping of the bundle public path by entrypoint key.footnote:[By default, it is `main.js` and `main.css`, but it can be configured to have different entrypoint]
+
+NOTE: The bundle mapping is available thought injection in the Java code or in Qute

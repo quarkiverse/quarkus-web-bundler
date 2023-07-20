@@ -1,0 +1,29 @@
+= Quarkus image:logo.svg[width=25em] Web Bundler - Advanced Guides
+
+include::./includes/attributes.adoc[]
+
+== Bundling
+
+== What is bundled
+
+The Web Bundler will automatically generate an entrypoint index from all the scripts and styles found in the directory.
+
+You can provide an `index.js,ts,jsx,tsx` and manually import what's needed. Example:
+
+.index.js
+[source,javascript]
+----
+import './my-script.js'
+import './my-style.scss'
+----
+
+NOTE: The Web Bundler will take care of the fonts and images imported in your script (serve and load).
+
+== Multiple entrypoints
+
+The web-bundler can be configured to bundle multiple entrypoints. Let's say you want an app with different pages with different scripts and styles, you can split the bundle in named output and a common for all your pages.
+
+[#server-side-web-components]
+== Server Side Web (Qute) Components
+
+

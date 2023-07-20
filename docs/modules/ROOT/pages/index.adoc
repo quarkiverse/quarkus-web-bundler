@@ -1,8 +1,15 @@
-= Quarkus Web Bundler
+= Quarkus image:logo.svg[width=25em] Web Bundler - Getting Started
 
 include::./includes/attributes.adoc[]
 
-TIP: Describe what the extension does here.
+Create full-stack web apps and components with this Quarkus extension. It offers zero-configuration bundling and minification (with source-map) for your web app scripts (JS, JSX, TS, TSX), dependencies (jQuery, htmx, Bootstrap, Lit etc.), and styles (CSS, SCSS, SASS).
+
+No need to install NodeJs, it relies on a Java wrapped version of https://esbuild.github.io/[esbuild] to bundle scripts (js, ts, jsx, tsx) and styles (css, scss, sass) and make them easily available in the templates.
+
+* [*] Production build
+* [*] Awesome Dev experience
+* [*] Integrated with NPM dependencies through https://mvnpm.org[mvnpm] or https://www.webjars.org/[webjars].
+* [*] Server Side Web Components (Qute template + Script + Style)
 
 == Installation
 
@@ -19,9 +26,38 @@ For instance, with Maven, add the following dependency to your POM file:
 </dependency>
 ----
 
-[[extension-configuration-reference]]
-== Extension Configuration Reference
+== Usage
 
-TIP: Remove this section if you don't have Quarkus configuration properties in your extension.
+Add you web resources in `src/main/resources/web`:
 
-include::includes/quarkus-web-bundler.adoc[leveloffset=+1, opts=optional]
+* `app/**/*.js,ts,jsx,tsx,css,scss,sass`: app scripts, styles and assets
+* `components/[my-comp]/[my-comp].js,ts,css,scss,html`: server side web-component
+* `public/`: public static files
+
+Install the bundle in your index.html template:
+
+[source,html]
+----
+<html>
+<head>
+  ...
+  {#bundle /}
+</head>
+</html>
+----
+Will compile into something looking like this:
+
+[source,html]
+----
+<html>
+<head>
+      ...
+      <script type="text/javascript" src="/static/main-XKHKUJNQ.js"></script>
+      <link rel="stylesheet" media="screen" href="/static/main-TLNDARM3.css">
+</head>
+</html>
+----
+
+You are all set, enjoy!
+
+NOTE: Have a look to the `{#bundle /}` tag documentation for custom setups.

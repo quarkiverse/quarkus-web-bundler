@@ -7,15 +7,15 @@ import java.util.function.Supplier;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
-public class WebAssetsQuteContextRecorder {
+public class WebBundlerQuteContextRecorder {
 
-    public static final String WEB_ASSETS_ID_PREFIX = "web-bundler/";
+    public static final String WEB_BUNDLER_ID_PREFIX = "web-bundler/";
 
-    public Supplier<Object> createContext(List<String> tags, Map<String, String> templates, Map<String, String> bundle) {
+    public Supplier<?> createContext(List<String> tags, Map<String, String> templates) {
         return new Supplier<Object>() {
             @Override
-            public Object get() {
-                return new WebAssetsQuteContext() {
+            public WebBundlerQuteContext get() {
+                return new WebBundlerQuteContext() {
                     @Override
                     public List<String> tags() {
                         return tags;
@@ -26,20 +26,14 @@ public class WebAssetsQuteContextRecorder {
                         return templates;
                     }
 
-                    @Override
-                    public Map<String, String> bundle() {
-                        return bundle;
-                    }
                 };
             }
         };
     }
 
-    public interface WebAssetsQuteContext {
+    public interface WebBundlerQuteContext {
         List<String> tags();
 
         Map<String, String> templates();
-
-        Map<String, String> bundle();
     }
 }

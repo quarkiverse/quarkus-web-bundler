@@ -1,0 +1,14 @@
+{@io.quarkiverse.web.bundler.runtime.qute.BundleTag type}
+
+{#let name?="main" tag?=BundleTag:BOTH}
+  {#if tag is BundleTag:SCRIPT or tag is BundleTag:BOTH}
+    {#let key = str:fmt('%s.js', name)}
+      <script type="text/javascript" src="{WEB_BUNDLER_BUILD_MAPPING.get(key)}"></script>
+    {/let}
+  {/if}
+  {#if tag is BundleTag:STYLE or tag is BundleTag:BOTH}
+    {#let key = str:fmt('%s.css', name)}
+      <link rel="stylesheet" media="screen" href="{WEB_BUNDLER_BUILD_MAPPING.get(key)}" />
+    {/let}
+  {/if}
+{/let}
