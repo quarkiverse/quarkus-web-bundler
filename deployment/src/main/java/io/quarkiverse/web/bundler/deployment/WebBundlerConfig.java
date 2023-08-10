@@ -65,10 +65,10 @@ public interface WebBundlerConfig {
          * Configuration preset to allow defining the web app with scripts and styles to bundle.
          * - {web-root}/app/**\/*
          *
-         * If an index.js/ts is detected, it will be used as entrypoint for your app.
-         * If not found the entrypoint will be auto-generated with all the files in the app directory.
+         * If an index.js/ts is detected, it will be used as entry point for your app.
+         * If not found the entry point will be auto-generated with all the files in the app directory.
          *
-         * => processed and added to bundled/[key].js and bundled/[key].css (key is "main" by default)
+         * => processed and added to static/[key].js and static/[key].css (key is "main" by default)
          */
         PresetConfig app();
 
@@ -79,7 +79,7 @@ public interface WebBundlerConfig {
          * - /{web-root}/components/[name]/[name].scss/css
          * - /{web-root}/components/[name]/[name].html (Qute tag)
          *
-         * => processed and added to bundled/[key].js and bundled/[key].css (key is "main" by default)
+         * => processed and added to static/[key].js and static/[key].css (key is "main" by default)
          */
         PresetConfig components();
 
@@ -115,24 +115,33 @@ public interface WebBundlerConfig {
     }
 
     interface EntryPointConfig {
+
         /**
-         * The directory for this entrypoint under the web root.
+         * Enable or disable this entry point.
+         * You can use this to use the map key as key and dir for this entry point.
+         */
+        @WithParentName
+        @WithDefault("true")
+        boolean enabled();
+
+        /**
+         * The directory for this entry point under the web root.
          * By default, it will use the bundle map key.
          */
         Optional<String> dir();
 
         /**
-         * The key for this entrypoint
+         * The key for this entry point
          * By default, it will use the bundle map key.
          */
-        Optional<String> entryPointKey();
+        Optional<String> key();
 
         default String effectiveDir(String mapKey) {
-            return dir().filter(not(String::isBlank)).orElse(effectiveEntryPointKey(mapKey));
+            return dir().filter(not(String::isBlank)).orElse(effectiveKey(mapKey));
         }
 
-        default String effectiveEntryPointKey(String mapKey) {
-            return entryPointKey().filter(not(String::isBlank)).orElse(mapKey);
+        default String effectiveKey(String mapKey) {
+            return key().filter(not(String::isBlank)).orElse(mapKey);
         }
 
     }

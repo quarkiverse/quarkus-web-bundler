@@ -1,0 +1,9 @@
+= Quarkus image:logo.svg[width=25em] Web Bundler - Examples
+
+include::./includes/attributes.adoc[]
+
+- https://github.com/ia3andy/quarkus-blast[Quarkus Blast]: Web Bundler, Renarde, htmx, hyperscript, Bootstrap
+- https://github.com/ia3andy/quarkus-bundler-react[React]: Web Bundler, React, React Bootstrap
+- https://github.com/ia3andy/renotes[Renotes]: Web Bundler, Renarde, htmx, Bootstrap
+- https://github.com/ia3andy/web-bundler-jquery[jQuery]: Web Bundler, jQuery, Bootstrap
+- https://github.com/ia3andy/bundler-gradle-jquery[Gradle jQuery]: Gradle, Web Bundler, jQuery, Bootstrap

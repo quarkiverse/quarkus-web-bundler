@@ -1,0 +1,134 @@
+= Quarkus image:logo.svg[width=25em] Web Bundler - Advanced Guides
+
+include::./includes/attributes.adoc[]
+
+== Web Root
+
+The Web Root is `src/main/resources/web`, this is where the Web Bundler will look for stuff to bundle and serve.
+
+== Public
+
+Files in `src/main/resources/web/public` will be served statically.
+
+== Bundling
+
+=== Presets
+
+The Web Bundler is pre-configured with presets to make it easy to use out of the box.
+
+==== App
+
+Directory `src/main/resources/web/app` is destined to contain the scripts and styles for your app.
+
+[#server-side-web-components]
+==== Server Side Web Components (Qute)
+
+This is not always needed but if you need to add specific script and/or style to your {quarkus-guides-url}/qute-reference#user_tags[Qute tags] (Server Side Web Components). This preset will help you do it elegantly.
+
+By convention, your component will be defined in `src/main/resources/web/components/[name]/[name].js,ts,css,scss,html`. The scripts and styles will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
+
+This way all your components scripts/styles will be bundled and you tags will be available in your templates.
+
+=== What is bundled
+
+The Web Bundler will automatically generate an index from all the scripts and styles found in the bundle directory.
+
+You can provide an `index.js,ts,jsx,tsx` and manually import what's needed. Example:
+
+.index.js
+[source,javascript]
+----
+import './my-script.js'
+import './my-style.scss'
+----
+
+NOTE: The Web Bundler will take care of the fonts and images imported in your script (serve and load).
+
+=== Split the bundle
+
+The Web Bundler can be configured to split the resulting bundle. This is perfect if you create an app with different pages using different scripts, libraries and styles.
+
+Shared code is split off into a separate file. That way if the user first browses to one page and then to another page, they don't have to download all of the JavaScript for the second page from scratch if the shared part has already been downloaded and cached by their browser. The name of the shared code is `chunk`.
+
+By default the Web Bundler will **NOT** split the code and bundle all into `main`. You can configure splitting in the configuration:
+
+.application.properties
+[source,properties]
+----
+quarkus.web-bundler.bundle.page-1=true // <1>
+quarkus.web-bundler.bundle.page-2=true // <2>
+----
+<1> Bundle `src/main/resources/web/page-1/...`
+<2> Bundle `src/main/resources/web/page-2/...`
+
+You may also split the bundle for the `app` and the `component` presets (by default they will be bundled together in `main`):
+.application.properties
+[source,properties]
+----
+quarkus.web-bundler.presets.app.key=app // <1>
+quarkus.web-bundler.presets.components.key=components // <2>
+----
+<1> The app will be bundled in `app-[hash].js`
+<2> The components will be bundled in `components-[hash].js`
+
+== Bundled Files
+
+In production, it is a good practise to have a hash inserted in the scripts and styles file names (E.g.: `main-XKHKUJNQ.js`) to differentiate builds. This way they can be cached without a risk of missing the most recent builds.
+
+In the Web Bundler, we also do it in dev mode, this way the app is as close as possible to production. You won't have surprise when deploying a new version of your application.
+
+To make it easy there are several ways to resolve the bundled files from the templates and the code.
+
+[#bundle-tag]
+=== {#bundle /} tag
+
+From any Qute template you can use the `{#bundle /}` tag. examples:
+
+[source,html]
+----
+{#bundle /}
+Output:
+<script type="text/javascript" src="/static/main-[hash].js"></script>
+<link rel="stylesheet" media="screen" href="/static/main-[hash].css">
+
+{#bundle key="components"/}
+Output:
+<script type="text/javascript" src="/static/components-[hash].js"></script>
+<link rel="stylesheet" media="screen" href="/static/components-[hash].css">
+
+{#bundle tag="script"/}
+Output:
+<script type="text/javascript" src="/static/main-[hash].js"></script>
+
+{#bundle tag="style"/}
+Output:
+<link rel="stylesheet" media="screen" href="/static/main-[hash].css">
+
+{#bundle key="components" tag="script"/}
+Output:
+<script type="text/javascript" src="/static/components-[hash].js"></script>
+
+----
+
+=== Inject `Bundled` bean
+
+This bean can be injected in the code:
+
+[source,java]
+----
+@Inject
+Bundled bundled;
+
+...
+
+System.out.println(bundled.script("main"));
+System.out.println(bundled.style("main"));
+----
+
+
+or in a Qute template:
+[source,html]
+----
+{inject:bundled.script("main")}
+{inject:bundled.style("main")}
+----

@@ -16,8 +16,6 @@
 */
 package io.quarkiverse.web.bundler.it;
 
-import java.time.Instant;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -32,23 +30,23 @@ import io.quarkus.qute.TemplateInstance;
 public class WebResource {
     @CheckedTemplate
     public static class Templates {
-        public static native TemplateInstance index(Bundle bundle);
+        public static native TemplateInstance index();
+
+        public static native TemplateInstance page1();
+
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance index() {
-        final long now = Instant.now().toEpochMilli();
-        return Templates.index(new Bundle("/bundle/main.js?time=" + now, "/bundle/main.css?time=" + now));
+        return Templates.index();
     }
 
-    public static class Bundle {
-        public String js;
-        public String css;
-
-        public Bundle(String js, String css) {
-            this.js = js;
-            this.css = css;
-        }
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("page1")
+    public TemplateInstance page1() {
+        return Templates.page1();
     }
+
 }

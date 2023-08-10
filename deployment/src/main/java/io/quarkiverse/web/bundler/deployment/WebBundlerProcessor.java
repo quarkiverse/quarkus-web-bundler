@@ -3,7 +3,7 @@ package io.quarkiverse.web.bundler.deployment;
 import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.ResourcePaths.prefixWithSlash;
-import static io.quarkiverse.web.bundler.runtime.qute.WebAssetsQuteContextRecorder.WEB_ASSETS_ID_PREFIX;
+import static io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
 import java.io.IOException;
@@ -38,9 +38,11 @@ import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
-import io.quarkiverse.web.bundler.runtime.qute.WebAssetsQuteContextRecorder;
-import io.quarkiverse.web.bundler.runtime.qute.WebAssetsQuteContextRecorder.WebAssetsQuteContext;
-import io.quarkiverse.web.bundler.runtime.qute.WebAssetsQuteEngineObserver;
+import io.quarkiverse.web.bundler.runtime.Bundled;
+import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
+import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder;
+import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
+import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteEngineObserver;
 import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -209,7 +211,7 @@ class WebBundlerProcessor {
                 final int dashIndex = fileName.lastIndexOf("-");
                 final int extIndex = fileName.indexOf(".");
                 final String key = fileName.substring(0, dashIndex) + fileName.substring(extIndex, fileName.length());
-                bundle.put(key, fileName);
+                bundle.put(key, "/static/" + fileName);
             });
             generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));
             makeDirPublic(staticResourceProducer, "/static/", bundleDir, WatchMode.DISABLED, changed);
@@ -231,27 +233,37 @@ class WebBundlerProcessor {
 
     @BuildStep
     @Record(STATIC_INIT)
-    void processQuteTags(
+    void initQuteTags(
             BuildProducer<AdditionalBeanBuildItem> additionalBeans,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            WebAssetsQuteContextRecorder recorder,
-            QuteTagsBuildItem quteTags,
-            GeneratedBundleBuildItem generatedBundle,
-            LiveReloadBuildItem liveReload) {
+            WebBundlerQuteContextRecorder recorder,
+            QuteTagsBuildItem quteTags) {
         final Map<String, String> templates = new HashMap<>();
         final List<String> tags = new ArrayList<>();
         for (WebAsset webAsset : quteTags.getWebAssets()) {
             final String tag = webAsset.filePath().get().getFileName().toString();
             final String tagName = tag.contains(".") ? tag.substring(0, tag.indexOf('.')) : tag;
-            templates.put(WEB_ASSETS_ID_PREFIX + tagName, new String(webAsset.readContentFromFile(), webAsset.charset()));
+            templates.put(WEB_BUNDLER_ID_PREFIX + tagName, new String(webAsset.readContentFromFile(), webAsset.charset()));
             tags.add(tagName);
         }
-        additionalBeans.produce(new AdditionalBeanBuildItem(WebAssetsQuteEngineObserver.class));
-        final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
-        syntheticBeans.produce(SyntheticBeanBuildItem.configure(WebAssetsQuteContext.class)
-                .supplier(recorder.createContext(tags, templates, bundle))
+        additionalBeans.produce(new AdditionalBeanBuildItem(WebBundlerQuteEngineObserver.class));
+        syntheticBeans.produce(SyntheticBeanBuildItem.configure(WebBundlerQuteContext.class)
+                .supplier(recorder.createContext(tags, templates))
                 .done());
+    }
 
+    @BuildStep
+    @Record(STATIC_INIT)
+    void initBundler(
+            BuildProducer<AdditionalBeanBuildItem> additionalBeans,
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
+            GeneratedBundleBuildItem generatedBundle,
+            WebBundlerBuildRecorder recorder) {
+        final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
+        syntheticBeans.produce(SyntheticBeanBuildItem.configure(Bundled.Mapping.class)
+                .supplier(recorder.createContext(bundle))
+                .done());
+        additionalBeans.produce(new AdditionalBeanBuildItem(Bundled.class));
     }
 
     private static void makeWebAssetPublic(
