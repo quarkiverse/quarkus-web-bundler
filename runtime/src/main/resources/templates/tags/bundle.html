@@ -1,14 +1,19 @@
-{@io.quarkiverse.web.bundler.runtime.qute.BundleTag type}
-
-{#let name?="main" tag?=BundleTag:BOTH}
-  {#if tag is BundleTag:SCRIPT or tag is BundleTag:BOTH}
-    {#let key = str:fmt('%s.js', name)}
-      <script type="text/javascript" src="{WEB_BUNDLER_BUILD_MAPPING.get(key)}"></script>
-    {/let}
+{#let key?="main" tag?="both"}
+{#if tag is "script" or tag is "both"}
+  {#let src=inject:bundled.script(key)}
+  {#if src}
+    <script type="module" src="{src}"></script>
+  {#else}
+    <!-- no value found for key '{key}' in Bundler mapping !-->
   {/if}
-  {#if tag is BundleTag:STYLE or tag is BundleTag:BOTH}
-    {#let key = str:fmt('%s.css', name)}
-      <link rel="stylesheet" media="screen" href="{WEB_BUNDLER_BUILD_MAPPING.get(key)}" />
-    {/let}
+{/if}
+{#if key != "chunk"}
+  {#if tag is "style" or tag is "both"}
+    {#let href=inject:bundled.style(key)}
+    {#if href}
+      <link rel="stylesheet" media="screen" href="{href}" />
+    {#else}
+      <!-- no value found for key '{key}' in Bundler mapping !-->
+    {/if}
   {/if}
-{/let}
+{/if}

@@ -9,10 +9,10 @@ import io.quarkus.runtime.annotations.Recorder;
 public class WebBundlerBuildRecorder {
 
     public Supplier<?> createContext(Map<String, String> bundle) {
-        return new Supplier<WebBundlerBuild>() {
+        return new Supplier<Bundled.Mapping>() {
             @Override
-            public WebBundlerBuild get() {
-                return () -> bundle;
+            public Bundled.Mapping get() {
+                return bundle::get;
             }
         };
     }

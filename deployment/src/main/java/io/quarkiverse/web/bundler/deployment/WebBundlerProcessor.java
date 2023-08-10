@@ -38,9 +38,8 @@ import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
-import io.quarkiverse.web.bundler.runtime.WebBundlerBuild;
+import io.quarkiverse.web.bundler.runtime.Bundled;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
-import io.quarkiverse.web.bundler.runtime.qute.BundleTag;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteEngineObserver;
@@ -251,18 +250,20 @@ class WebBundlerProcessor {
         syntheticBeans.produce(SyntheticBeanBuildItem.configure(WebBundlerQuteContext.class)
                 .supplier(recorder.createContext(tags, templates))
                 .done());
-        additionalBeans.produce(new AdditionalBeanBuildItem(BundleTag.class));
     }
 
     @BuildStep
     @Record(STATIC_INIT)
-    void initBundlerBuild(BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
+    void initBundler(
+            BuildProducer<AdditionalBeanBuildItem> additionalBeans,
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
             GeneratedBundleBuildItem generatedBundle,
             WebBundlerBuildRecorder recorder) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
-        syntheticBeans.produce(SyntheticBeanBuildItem.configure(WebBundlerBuild.class)
+        syntheticBeans.produce(SyntheticBeanBuildItem.configure(Bundled.Mapping.class)
                 .supplier(recorder.createContext(bundle))
                 .done());
+        additionalBeans.produce(new AdditionalBeanBuildItem(Bundled.class));
     }
 
     private static void makeWebAssetPublic(

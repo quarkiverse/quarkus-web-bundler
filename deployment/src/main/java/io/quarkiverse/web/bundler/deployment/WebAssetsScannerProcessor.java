@@ -97,18 +97,20 @@ class WebAssetsScannerProcessor {
 
         final Map<String, List<BundleWebAsset>> bundleAssets = new HashMap<>();
         for (Map.Entry<String, EntryPointConfig> e : entryPointsConfig.entrySet()) {
-            final String entryPointKey = e.getValue().effectiveEntryPointKey(e.getKey());
-            bundleAssets.putIfAbsent(entryPointKey, new ArrayList<>());
-            final String dirFromWebRoot = config.fromWebRoot(e.getValue().effectiveDir(e.getKey()));
-            final List<WebAsset> assets = resourcesScanner.scan(dirFromWebRoot, SCRIPTS.glob(), config.charset());
-            final Optional<WebAsset> entryPoint = assets.stream()
-                    .filter(w -> w.resourceName().startsWith(join(dirFromWebRoot, "index.")))
-                    .findAny();
-            for (WebAsset webAsset : assets) {
-                BundleType bundleType = entryPoint
-                        .map(ep -> webAsset.equals(ep) ? BundleType.ENTRYPOINT : BundleType.MANUAL)
-                        .orElse(BundleType.AUTO);
-                bundleAssets.get(entryPointKey).add(new BundleWebAsset(webAsset, bundleType));
+            if (e.getValue().enabled()) {
+                final String entryPointKey = e.getValue().effectiveKey(e.getKey());
+                bundleAssets.putIfAbsent(entryPointKey, new ArrayList<>());
+                final String dirFromWebRoot = config.fromWebRoot(e.getValue().effectiveDir(e.getKey()));
+                final List<WebAsset> assets = resourcesScanner.scan(dirFromWebRoot, SCRIPTS.glob(), config.charset());
+                final Optional<WebAsset> entryPoint = assets.stream()
+                        .filter(w -> w.resourceName().startsWith(join(dirFromWebRoot, "index.")))
+                        .findAny();
+                for (WebAsset webAsset : assets) {
+                    BundleType bundleType = entryPoint
+                            .map(ep -> webAsset.equals(ep) ? BundleType.ENTRYPOINT : BundleType.MANUAL)
+                            .orElse(BundleType.AUTO);
+                    bundleAssets.get(entryPointKey).add(new BundleWebAsset(webAsset, bundleType));
+                }
             }
         }
         final WebAssetsLookupDevContext context = new WebAssetsLookupDevContext(

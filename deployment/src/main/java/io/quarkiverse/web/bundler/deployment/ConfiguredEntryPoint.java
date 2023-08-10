@@ -6,13 +6,18 @@ import java.util.Optional;
 public class ConfiguredEntryPoint implements WebBundlerConfig.EntryPointConfig {
 
     private final String id;
-    private final String entryPointKey;
+    private final String key;
     private final String dir;
 
-    public ConfiguredEntryPoint(String dir, String id, String entryPointKey) {
+    public ConfiguredEntryPoint(String dir, String id, String key) {
         this.dir = dir;
         this.id = id;
-        this.entryPointKey = entryPointKey;
+        this.key = key;
+    }
+
+    @Override
+    public boolean enabled() {
+        return true;
     }
 
     @Override
@@ -21,8 +26,8 @@ public class ConfiguredEntryPoint implements WebBundlerConfig.EntryPointConfig {
     }
 
     @Override
-    public Optional<String> entryPointKey() {
-        return Optional.of(entryPointKey);
+    public Optional<String> key() {
+        return Optional.of(key);
     }
 
     public String id() {
@@ -36,12 +41,12 @@ public class ConfiguredEntryPoint implements WebBundlerConfig.EntryPointConfig {
         if (o == null || getClass() != o.getClass())
             return false;
         ConfiguredEntryPoint that = (ConfiguredEntryPoint) o;
-        return Objects.equals(id, that.id) && Objects.equals(entryPointKey, that.entryPointKey)
+        return Objects.equals(id, that.id) && Objects.equals(key, that.key)
                 && Objects.equals(dir, that.dir);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, entryPointKey, dir);
+        return Objects.hash(id, key, dir);
     }
 }

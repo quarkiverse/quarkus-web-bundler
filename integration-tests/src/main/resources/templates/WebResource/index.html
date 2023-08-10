@@ -2,7 +2,8 @@
 <html>
 <head>
     <title>QWA</title>
-    {#bundle tag=BundleTag:STYLE /}
+    {#bundle key="chunk"/}
+    {#bundle tag="style" /}
 </head>
 <body>
 
@@ -18,9 +19,10 @@
         <div><img src="https://picsum.photos/300/200?random=5"></div>
         <div><img src="https://picsum.photos/300/200?random=6"></div>
     </div>
+
     {#calendar /}
 
-  {#bundle tag=BundleTag:SCRIPT/}
+  {#bundle tag="script"/}
 </div>
 </body>
 </html>

@@ -140,11 +140,27 @@ endif::add-copy-button-to-env-var[]
 |`UTF-8`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle[quarkus.web-bundler.bundle."bundle"]`
+
+[.description]
+--
+Enable or disable this entry point. You can use this to use the map key as key and dir for this entry point.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE_+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir[quarkus.web-bundler.bundle."bundle".dir]`
 
 [.description]
 --
-The directory for this entrypoint under the web root. By default, it will use the bundle map key.
+The directory for this entry point under the web root. By default, it will use the bundle map key.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__DIR+++[]
@@ -156,17 +172,17 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.entry-point-key[quarkus.web-bundler.bundle."bundle".entry-point-key]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.key]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.key[quarkus.web-bundler.bundle."bundle".key]`
 
 [.description]
 --
-The key for this entrypoint By default, it will use the bundle map key.
+The key for this entry point By default, it will use the bundle map key.
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__ENTRY_POINT_KEY+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__KEY+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__ENTRY_POINT_KEY+++`
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE__BUNDLE__KEY+++`
 endif::add-copy-button-to-env-var[]
 --|string 
 |
