@@ -5,5 +5,5 @@ $(document).ready(() => {
     setTimeout(() => {
         $message.html("This is page 1").css("font-weight", "bold");
         console.log("Message has been defined with Jquery");
-    }, 2000);
+    }, 200);
 });

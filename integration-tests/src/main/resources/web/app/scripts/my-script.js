@@ -5,6 +5,6 @@ $(document).ready(() => {
     setTimeout(() => {
         $message.html("Unleash the script!!!!").css("font-weight", "bold");
         console.log("Message has been defined with Jquery");
-    }, 2000);
+    }, 200);
 
 });

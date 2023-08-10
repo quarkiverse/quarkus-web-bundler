@@ -1,5 +1,7 @@
 package io.quarkiverse.web.bundler.runtime;
 
+import java.util.Set;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
@@ -27,6 +29,10 @@ public class Bundled {
         return mapping.get(key + ".js");
     }
 
+    public String resolve(String name) {
+        return mapping.get(name);
+    }
+
     /**
      * Resolve the style file public path including the hash and extension from the entry point key.
      *
@@ -39,5 +45,7 @@ public class Bundled {
 
     public interface Mapping {
         String get(String name);
+
+        Set<String> names();
     }
 }
