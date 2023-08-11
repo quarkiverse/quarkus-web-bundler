@@ -34,7 +34,16 @@ Add you web resources in `src/main/resources/web`:
 * `components/[my-comp]/[my-comp].js,ts,css,scss,html`: server side web-component
 * `public/`: public static files
 
-Add xref:advanced-guides.adoc#[Web Dependencies] and import them from your scripts and styles.
+Add xref:advanced-guides.adoc#web-dependencies[Web Dependencies] and import them from your scripts and styles:
+
+.web/app/script.js
+[source,javascript]
+----
+import $ from 'jquery';
+import 'bootstrap/dist/css/bootstrap.css';
+
+$('.hello').innerText('Hello');
+----
 
 Install the bundle in your index.html template:
 
