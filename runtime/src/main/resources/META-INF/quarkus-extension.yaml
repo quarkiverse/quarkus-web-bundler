@@ -21,7 +21,7 @@ metadata:
     - typescript
     - javascript
     - assets
-  guide: https://quarkiverse.github.io/quarkiverse-docs/web-bundler/dev/
+  guide: https://docs.quarkiverse.io/quarkus-web-bundler/dev/
   categories:
     - "web"
   status: "experimental"
