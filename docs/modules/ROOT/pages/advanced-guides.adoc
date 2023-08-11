@@ -20,20 +20,36 @@ The Web Bundler is pre-configured with presets to make it easy to use out of the
 
 Directory `src/main/resources/web/app` is destined to contain the scripts and styles for your app.
 
-[#server-side-web-components]
-==== Server Side Web Components (Qute)
+==== Importing
 
-This is not always needed but if you need to add specific script and/or style to your {quarkus-guides-url}/qute-reference#user_tags[Qute tags] (Server Side Web Components). This preset will help you do it elegantly.
+Once added in the pom.xml, the web dependencies can be imported and used with the ES import syntax, they will automatically be bundled.
 
-By convention, your component will be defined in `src/main/resources/web/components/[name]/[name].js,ts,css,scss,html`. The scripts and styles will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
+NOTE: Currently Web Dependencies need to be imported in order to be bundled.
 
-This way all your components scripts/styles will be bundled and you tags will be available in your templates.
+.web/app/script.js
+[source,javascript]
+----
+import $ from 'jquery';
+import 'bootstrap/dist/css/bootstrap.css';
+
+$('.hello').innerText('Hello');
+----
+
+Styles can be also be imported from a scss file:
+
+.web/app/style.scss
+[source,scss]
+----
+@import "bootstrap/dist/css/bootstrap.css";
+----
+
+WARNING: It is currently not possible to import `scss` from the dependencies (https://github.com/quarkiverse/quarkus-web-bundler/issues/58[more info]).
 
 === What is bundled
 
 The Web Bundler will automatically generate an index from all the scripts and styles found in the bundle directory.
 
-You can provide an `index.js,ts,jsx,tsx` and manually import what's needed. Example:
+Alternatively, you can provide an index `index.js,ts,jsx,tsx` and manually import what's needed. Example:
 
 .index.js
 [source,javascript]
@@ -42,7 +58,7 @@ import './my-script.js'
 import './my-style.scss'
 ----
 
-NOTE: The Web Bundler will take care of the fonts and images imported in your script (serve and load).
+NOTE: You can import and use fonts and images from your scripts and styles (svg, gif, png, jpg, woff, woff2, ttf, eot).
 
 === Split the bundle
 
@@ -71,13 +87,87 @@ quarkus.web-bundler.presets.components.key=components // <2>
 <1> The app will be bundled in `app-[hash].js`
 <2> The components will be bundled in `components-[hash].js`
 
-== Bundled Files
+=== SCSS, SASS
+
+You can use scss or sass files out of the box. Local import are supported. Importing partials is also supported begin with `_` (as in `_code.scss` imported with `@import 'code';`).
+
+WARNING: It is currently not possible to import `scss` from the dependencies (https://github.com/quarkiverse/quarkus-web-bundler/issues/58[more info]).
+
+[#web-dependencies]
+== Web Dependencies
+
+The Web Bundler is integrated with NPM dependencies through <<mvnpm>> (default) or <<webjars>>.
+Once added in the pom.xml the dependencies are directly available through import from the scripts and styles.
+
+[#mvnpm]
+=== MVNPM (default)
+
+mvnpm (Maven NPM) is a maven repository facade on top of the NPM Registry. When requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency.
+
+Add the repository and web dependencies to your pom.xml:
+
+.pom.xml
+[source,xml]
+----
+...
+<repositories>
+    <repository>
+      <id>central</id>
+      <name>central</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository> // <1>
+      <id>mvnpm.org</id>
+      <name>mvnpm</name>
+      <url>https://repo.mvnpm.org/maven2</url>
+    </repository>
+</repositories>
+<dependencies>
+    ...
+    <dependency>
+        <groupId>org.mvnpm</groupId> // <2>
+        <artifactId>jquery</artifactId> // <3>
+        <version>3.7.0</version> // <4>
+    </dependency>
+</dependencies>
+----
+
+<1> Add mvnpm repository (Maven Central is also added for priority)
+<2> use `org.mvnpm` or `org.mvnpm.at.something` for `@something/dep`
+<3> All dependencies published on NPM are available
+<4> Any https://www.npmjs.com/package/jquery?activeTab=versions[published NPM version] for your dependency
+
+[#webjars]
+=== WebJars
+
+NOTE: Adding new dependencies or recent versions has to be done manually from their website.
+
+WebJars are client-side web libraries (e.g. jQuery & Bootstrap) packaged into JAR (Java Archive) files. You can browse the repository from https://www.webjars.org/[the website, window="_blank"].
+
+.application.properties
+[source,properties]
+----
+quarkus.web-bundler.dependencies.type=webjars
+----
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>org.webjars.npm</groupId>
+    <artifactId>jquery</artifactId>
+    <version>3.7.0</version>
+</dependency>
+----
+
+[#bundled-paths]
+== Bundled Paths
 
 In production, it is a good practise to have a hash inserted in the scripts and styles file names (E.g.: `main-XKHKUJNQ.js`) to differentiate builds. This way they can be cached without a risk of missing the most recent builds.
 
 In the Web Bundler, we also do it in dev mode, this way the app is as close as possible to production. You won't have surprise when deploying a new version of your application.
 
-To make it easy there are several ways to resolve the bundled files from the templates and the code.
+To make it easy there are several ways to resolve the bundled public paths from the templates and the code.
 
 [#bundle-tag]
 === {#bundle /} tag
@@ -132,3 +222,12 @@ or in a Qute template:
 {inject:bundled.script("main")}
 {inject:bundled.style("main")}
 ----
+
+[#server-side-web-components]
+==== Server Side Web Components (Qute)
+
+This is not always needed but if you need to add specific script and/or style to your {quarkus-guides-url}/qute-reference#user_tags[Qute tags] (Server Side Web Components). This preset will help you do it elegantly.
+
+By convention, your component will be defined in `src/main/resources/web/components/[name]/[name].js,ts,css,scss,html`. The scripts and styles will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
+
+This way all your components scripts/styles will be bundled and you tags will be available in your templates.
