@@ -6,10 +6,23 @@ include::./includes/attributes.adoc[]
 
 It's really simple, the web bundler:
 
-1. takes/watches your web resources and web dependencies.footnote:[Integrated with NPM dependencies through https://mvnpm.org[mvnpm] or https://www.webjars.org/[webjars]]
+1. Takes/watches your web resources and <<web-dependencies>>.
 
-2. bundles it with the really fast esbuild compiler (scss are compiled if needed).
+2. Bundles it with the supersonic esbuild compiler (scss are compiled if needed) and serves them.
 
-3. create a mapping of the bundle public path by entrypoint key.footnote:[By default, it is `main.js` and `main.css`, but it can be configured to have different entrypoint]
+3. Make it easy to import the bundled scripts and styles xref:advanced-guides.adoc#bundled-paths[from Qute or any other template engine].
 
-NOTE: The bundle mapping is available thought injection in the Java code or in Qute
+[#web-dependencies]
+== Web Dependencies
+
+Once xref:advanced-guides.adoc#web-dependencies[added in the pom.xml] the dependencies are directly available through import from the scripts and styles:
+
+.app.js
+[source,javascript]
+----
+import $ from 'jquery';
+
+$('.hello').innerText('Hello');
+----
+
+Imported dependencies scripts and styles will be bundled.

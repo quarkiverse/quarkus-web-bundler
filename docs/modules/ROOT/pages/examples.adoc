@@ -2,8 +2,8 @@
 
 include::./includes/attributes.adoc[]
 
-- https://github.com/ia3andy/quarkus-blast[Quarkus Blast]: Web Bundler, Renarde, htmx, hyperscript, Bootstrap
-- https://github.com/ia3andy/quarkus-bundler-react[React]: Web Bundler, React, React Bootstrap
-- https://github.com/ia3andy/renotes[Renotes]: Web Bundler, Renarde, htmx, Bootstrap
-- https://github.com/ia3andy/web-bundler-jquery[jQuery]: Web Bundler, jQuery, Bootstrap
-- https://github.com/ia3andy/bundler-gradle-jquery[Gradle jQuery]: Gradle, Web Bundler, jQuery, Bootstrap
+- https://github.com/ia3andy/quarkus-blast[Quarkus Blast, window="_blank"]: Web Bundler, Renarde, htmx, hyperscript, Bootstrap
+- https://github.com/ia3andy/quarkus-bundler-react[React, window="_blank"]: Web Bundler, React, React Bootstrap
+- https://github.com/ia3andy/renotes[Renotes, window="_blank"]: Web Bundler, Renarde, htmx, Bootstrap
+- https://github.com/ia3andy/web-bundler-jquery[jQuery, window="_blank"]: Web Bundler, jQuery, Bootstrap
+- https://github.com/ia3andy/bundler-gradle-jquery[Gradle jQuery, window="_blank"]: Gradle, Web Bundler, jQuery, Bootstrap

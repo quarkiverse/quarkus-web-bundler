@@ -4,11 +4,11 @@ include::./includes/attributes.adoc[]
 
 Create full-stack web apps and components with this Quarkus extension. It offers zero-configuration bundling and minification (with source-map) for your web app scripts (JS, JSX, TS, TSX), dependencies (jQuery, htmx, Bootstrap, Lit etc.), and styles (CSS, SCSS, SASS).
 
-No need to install NodeJs, it relies on a Java wrapped version of https://esbuild.github.io/[esbuild] to bundle scripts (js, ts, jsx, tsx) and styles (css, scss, sass) and make them easily available in the templates.
+No need to install NodeJs, it relies on a Java wrapped version of https://esbuild.github.io/[esbuild, window="_blank"] to bundle scripts (js, ts, jsx, tsx) and styles (css, scss, sass) and make them easily available in the templates.
 
 * [*] Production build
 * [*] Awesome Dev experience
-* [*] Integrated with NPM dependencies through https://mvnpm.org[mvnpm] or https://www.webjars.org/[webjars].
+* [*] Integrated with NPM dependencies through https://mvnpm.org[mvnpm, window="_blank"] or https://www.webjars.org/[webjars, window="_blank"].
 * [*] Server Side Web Components (Qute template + Script + Style)
 
 == Installation
@@ -33,6 +33,8 @@ Add you web resources in `src/main/resources/web`:
 * `app/**/*.js,ts,jsx,tsx,css,scss,sass`: app scripts, styles and assets
 * `components/[my-comp]/[my-comp].js,ts,css,scss,html`: server side web-component
 * `public/`: public static files
+
+Add xref:advanced-guides.adoc#[Web Dependencies] and import them from your scripts and styles.
 
 Install the bundle in your index.html template:
 
@@ -60,4 +62,4 @@ Will compile into something looking like this:
 
 You are all set, enjoy!
 
-NOTE: Have a look to the `{#bundle /}` tag documentation for custom setups.
+NOTE: By default `{#bundle /}` inserts both script and style tags for `main`, this is xref:advanced-guides.adoc#bundle-tag[configurable].
