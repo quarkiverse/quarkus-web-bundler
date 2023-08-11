@@ -20,7 +20,16 @@ The Web Bundler is pre-configured with presets to make it easy to use out of the
 
 Directory `src/main/resources/web/app` is destined to contain the scripts and styles for your app.
 
-==== Importing
+[#server-side-web-components]
+==== Server Side Web Components (Qute)
+
+This is not always needed but if you need to add specific script and/or style to your {quarkus-guides-url}/qute-reference#user_tags[Qute tags] (Server Side Web Components). This preset will help you do it elegantly.
+
+By convention, your component will be defined in `src/main/resources/web/components/[name]/[name].js,ts,css,scss,html`. The scripts and styles will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
+
+This way all your components scripts/styles will be bundled and you tags will be available in your templates.
+
+=== Importing Web Dependencies
 
 Once added in the pom.xml, the web dependencies can be imported and used with the ES import syntax, they will automatically be bundled.
 
@@ -64,7 +73,7 @@ NOTE: You can import and use fonts and images from your scripts and styles (svg,
 
 The Web Bundler can be configured to split the resulting bundle. This is perfect if you create an app with different pages using different scripts, libraries and styles.
 
-Shared code is split off into a separate file. That way if the user first browses to one page and then to another page, they don't have to download all of the JavaScript for the second page from scratch if the shared part has already been downloaded and cached by their browser. The name of the shared code is `chunk`.
+Shared code is split off into a separate file. That way if the user first browses to one page and then to another page, they don't have to download all the JavaScript for the second page from scratch if the shared part has already been downloaded and cached by their browser. The name of the shared code is `chunk`.
 
 By default the Web Bundler will **NOT** split the code and bundle all into `main`. You can configure splitting in the configuration:
 
@@ -222,12 +231,3 @@ or in a Qute template:
 {inject:bundled.script("main")}
 {inject:bundled.style("main")}
 ----
-
-[#server-side-web-components]
-==== Server Side Web Components (Qute)
-
-This is not always needed but if you need to add specific script and/or style to your {quarkus-guides-url}/qute-reference#user_tags[Qute tags] (Server Side Web Components). This preset will help you do it elegantly.
-
-By convention, your component will be defined in `src/main/resources/web/components/[name]/[name].js,ts,css,scss,html`. The scripts and styles will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
-
-This way all your components scripts/styles will be bundled and you tags will be available in your templates.
