@@ -25,10 +25,12 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
+import ch.nerdin.esbuild.BundleException;
 import ch.nerdin.esbuild.Bundler;
-import ch.nerdin.esbuild.modal.BundleOptionsBuilder;
-import ch.nerdin.esbuild.modal.EsBuildConfig;
-import ch.nerdin.esbuild.modal.EsBuildConfigBuilder;
+import ch.nerdin.esbuild.model.BundleOptionsBuilder;
+import ch.nerdin.esbuild.model.BundleResult;
+import ch.nerdin.esbuild.model.EsBuildConfig;
+import ch.nerdin.esbuild.model.EsBuildConfigBuilder;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
@@ -46,10 +48,10 @@ import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteEngineObserver;
 import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.builder.BuildException;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
-import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
@@ -66,11 +68,10 @@ class WebBundlerProcessor {
             WebDependenciesBuildItem webDependencies,
             List<EntryPointBuildItem> entryPoints,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
-            OutputTargetBuildItem outputTarget) {
+            OutputTargetBuildItem outputTarget) throws BuildException {
         if (entryPoints.isEmpty()) {
             LOGGER.info("No bundle to process");
             return;
@@ -111,7 +112,7 @@ class WebBundlerProcessor {
                     .withType(type);
             int addedEntryPoints = 0;
             for (EntryPointBuildItem entryPoint : entryPoints) {
-                final List<Path> scriptsPath = new ArrayList<>();
+                final List<String> scripts = new ArrayList<>();
                 for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
                     String destination = webAsset.pathFromWebRoot(config.webRoot());
                     final Path scriptPath = targetDir.resolve(destination);
@@ -131,17 +132,17 @@ class WebBundlerProcessor {
                         }
                     }
                     if (!webAsset.type().equals(MANUAL) && !isImportSassFile(scriptPath.getFileName().toString())) {
-                        scriptsPath.add(scriptPath);
+                        scripts.add(destination);
                     }
                 }
-                String scripts = scriptsPath.stream()
-                        .map(s -> String.format("  - %s", targetDir.relativize(s)))
+                String scriptsLog = scripts.stream()
+                        .map(s -> String.format("  - %s", s))
                         .collect(
                                 Collectors.joining("\n"));
 
-                LOGGER.infof("Bundling '%s' with:\n%s", entryPoint.getEntryPointKey(), scripts);
-                if (scriptsPath.size() > 0) {
-                    options.addEntryPoint(entryPoint.getEntryPointKey(), scriptsPath);
+                LOGGER.infof("Bundling '%s' with:\n%s", entryPoint.getEntryPointKey(), scriptsLog);
+                if (scripts.size() > 0) {
+                    options.addAutoEntryPoint(targetDir, entryPoint.getEntryPointKey(), scripts);
                     addedEntryPoints++;
                 }
             }
@@ -168,25 +169,24 @@ class WebBundlerProcessor {
                         LOGGER.infof("%s Web dependencies detected: %s", webDependencies.getType(), deps);
                     }
                 }
-                final Path bundleDir = Bundler.bundle(options.build());
-
-                if (!Files.isDirectory(bundleDir)) {
-                    liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
-                    LOGGER.error("It seems bundling didn't go well");
-                    return;
+                final BundleResult result = Bundler.bundle(options.build());
+                if (!result.result().output().isBlank()) {
+                    LOGGER.debugf(result.result().output());
                 }
-
-                LOGGER.debugf("Bundle generated in %s", bundleDir);
-                handleBundleDistDir(generatedBundleProducer, staticResourceProducer, bundleDir, true);
+                LOGGER.debugf("Bundle generated in %s", result.dist());
+                handleBundleDistDir(generatedBundleProducer, staticResourceProducer, result.dist(), true);
                 liveReload.setContextObject(BundlesBuildContext.class,
-                        new BundlesBuildContext(webDependencies.getDependencies(), entryPoints, bundleDir));
+                        new BundlesBuildContext(webDependencies.getDependencies(), entryPoints, result.dist()));
             } else {
                 liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
                 LOGGER.debugf("No entrypoint found, no bundle generated");
             }
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
+        } catch (BundleException e) {
+            liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
+            throw e;
         }
     }
 
