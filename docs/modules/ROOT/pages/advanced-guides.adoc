@@ -111,40 +111,47 @@ Once added in the pom.xml the dependencies are directly available through import
 [#mvnpm]
 === MVNPM (default)
 
-mvnpm (Maven NPM) is a maven repository facade on top of the NPM Registry. When requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency.
+mvnpm (Maven NPM) is a maven repository facade on top of the NPM Registry.
 
-Add the repository and web dependencies to your pom.xml:
+If configured with the mvnpm repository, when requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency and publish it to Maven Central.
+
+NOTE: You can also use the mvnpm.org website to synchronize new versions with Maven Central and avoid the need to add the mvnpm repository to the pom.xml.
+
+WARNING: **Synchronisation with Maven Central is temporarily disabled**. It will be up again soon. Until then use the mvnpm repo.
+
+Add web dependencies (and optionally the mvnpm repo) to your pom.xml:
 
 .pom.xml
 [source,xml]
 ----
 ...
+<dependencies>
+    ...
+    <dependency>
+        <groupId>org.mvnpm</groupId> // <1>
+        <artifactId>jquery</artifactId> // <2>
+        <version>3.7.0</version> // <3>
+    </dependency>
+</dependencies>
 <repositories>
     <repository>
       <id>central</id>
       <name>central</name>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
-    <repository> // <1>
+    <repository> // <4>
       <id>mvnpm.org</id>
       <name>mvnpm</name>
       <url>https://repo.mvnpm.org/maven2</url>
     </repository>
 </repositories>
-<dependencies>
-    ...
-    <dependency>
-        <groupId>org.mvnpm</groupId> // <2>
-        <artifactId>jquery</artifactId> // <3>
-        <version>3.7.0</version> // <4>
-    </dependency>
-</dependencies>
+...
 ----
 
-<1> Add mvnpm repository (Maven Central is also added for priority)
-<2> use `org.mvnpm` or `org.mvnpm.at.something` for `@something/dep`
-<3> All dependencies published on NPM are available
-<4> Any https://www.npmjs.com/package/jquery?activeTab=versions[published NPM version] for your dependency
+<1> use `org.mvnpm` or `org.mvnpm.at.something` for `@something/dep`
+<2> All dependencies published on NPM are available
+<3> Any https://www.npmjs.com/package/jquery?activeTab=versions[published NPM version] for your dependency
+<4> Add mvnpm repository (Maven Central is also added for priority)
 
 [#webjars]
 === WebJars
