@@ -25,12 +25,12 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
-import ch.nerdin.esbuild.BundleException;
-import ch.nerdin.esbuild.Bundler;
-import ch.nerdin.esbuild.model.BundleOptionsBuilder;
-import ch.nerdin.esbuild.model.BundleResult;
-import ch.nerdin.esbuild.model.EsBuildConfig;
-import ch.nerdin.esbuild.model.EsBuildConfigBuilder;
+import io.mvnpm.esbuild.BundleException;
+import io.mvnpm.esbuild.Bundler;
+import io.mvnpm.esbuild.model.BundleOptionsBuilder;
+import io.mvnpm.esbuild.model.BundleResult;
+import io.mvnpm.esbuild.model.EsBuildConfig;
+import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;

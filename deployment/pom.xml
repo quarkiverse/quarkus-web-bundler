@@ -42,7 +42,7 @@
       <version>${scrimage-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>ch.nerdin</groupId>
+      <groupId>io.mvnpm</groupId>
       <artifactId>esbuild-java</artifactId>
       <version>${esbuild-java.version}</version>
     </dependency>
