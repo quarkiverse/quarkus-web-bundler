@@ -37,8 +37,8 @@ public class ProjectResourcesScanner {
         this.extensionArtifacts = extensionArtifacts;
     }
 
-    public List<WebAsset> scan(String dir, String glob, Charset charset) throws IOException {
-        return scan(new Scanner(dir, glob, charset));
+    public List<WebAsset> scan(String dir, String pathMatcher, Charset charset) throws IOException {
+        return scan(new Scanner(dir, pathMatcher, charset));
     }
 
     public List<WebAsset> scan(Scanner scanner) throws IOException {
@@ -64,7 +64,7 @@ public class ProjectResourcesScanner {
                 if (Files.isDirectory(rootDir)) {
                     final Path dirPath = rootDir.resolve(scanner.dir());
                     if (Files.isDirectory(dirPath) && dirPath.toString().endsWith(scanner.dir())) {
-                        scan(rootDir, dirPath, scanner.glob(), scanner.charset, webAssetConsumer, true);
+                        scan(rootDir, dirPath, scanner.pathMatcher(), scanner.charset, webAssetConsumer, true);
                         break;
                     }
                 } else {
@@ -72,7 +72,7 @@ public class ProjectResourcesScanner {
                         Path rootDirFs = artifactFs.getPath("/");
                         Path dirPath = artifactFs.getPath(scanner.dir());
                         if (Files.exists(dirPath)) {
-                            scan(rootDirFs, artifactFs.getPath("/"), scanner.glob(), scanner.charset(), webAssetConsumer,
+                            scan(rootDirFs, artifactFs.getPath("/"), scanner.pathMatcher(), scanner.charset(), webAssetConsumer,
                                     false);
                         }
                     } catch (IOException e) {
@@ -89,7 +89,7 @@ public class ProjectResourcesScanner {
                     try {
                         final Path dirPath = rootDir.resolve(scanner.dir());
                         if (Files.isDirectory(dirPath) && dirPath.toString().endsWith(scanner.dir())) {
-                            scan(rootDir, dirPath, scanner.glob(), scanner.charset, webAssetConsumer, true);
+                            scan(rootDir, dirPath, scanner.pathMatcher(), scanner.charset, webAssetConsumer, true);
                             break;
                         }
                     } catch (IOException e) {
@@ -103,7 +103,7 @@ public class ProjectResourcesScanner {
     private void scan(
             Path root,
             Path directory,
-            String glob,
+            String pathMatcher,
             Charset charset,
             Consumer<WebAsset> webAssetConsumer,
             boolean canReadLater)
@@ -119,7 +119,7 @@ public class ProjectResourcesScanner {
                     filePath = filePath.getRoot().relativize(filePath);
                 }
                 final PathMatcher assetsPathMatcher = filePath.getFileSystem()
-                        .getPathMatcher("glob:" + glob);
+                        .getPathMatcher(pathMatcher);
                 final boolean isAsset = assetsPathMatcher.matches(filePath);
                 if (Files.isRegularFile(filePath) && isAsset) {
                     String assetPath = root.relativize(filePath).normalize().toString();
@@ -132,7 +132,7 @@ public class ProjectResourcesScanner {
                     }
                 } else if (Files.isDirectory(filePath)) {
                     LOGGER.debugf("Scan directory: %s", filePath);
-                    scan(root, filePath, glob, charset, webAssetConsumer, canReadLater);
+                    scan(root, filePath, pathMatcher, charset, webAssetConsumer, canReadLater);
                 }
             }
         }
@@ -166,13 +166,13 @@ public class ProjectResourcesScanner {
 
     static class Scanner {
         private final String dir;
-        private final String glob;
+        private final String pathMatcher;
 
         private final Charset charset;
 
-        Scanner(String dir, String glob, Charset charset) {
+        Scanner(String dir, String pathMatcher, Charset charset) {
             this.dir = dir;
-            this.glob = glob;
+            this.pathMatcher = pathMatcher;
             this.charset = charset;
         }
 
@@ -180,8 +180,8 @@ public class ProjectResourcesScanner {
             return dir;
         }
 
-        public String glob() {
-            return glob;
+        public String pathMatcher() {
+            return pathMatcher;
         }
 
         public Charset charset() {
