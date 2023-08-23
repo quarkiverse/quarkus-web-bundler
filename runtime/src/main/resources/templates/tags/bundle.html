@@ -1,6 +1,6 @@
 {#let key?="main" tag?="both"}
 {#if tag is "script" or tag is "both"}
-  {#let src=inject:bundled.script(key)}
+  {#let src=inject:bundle.script(key)}
   {#if src}
     <script type="module" src="{src}"></script>
   {#else}
@@ -9,7 +9,7 @@
 {/if}
 {#if key != "chunk"}
   {#if tag is "style" or tag is "both"}
-    {#let href=inject:bundled.style(key)}
+    {#let href=inject:bundle.style(key)}
     {#if href}
       <link rel="stylesheet" media="screen" href="{href}" />
     {#else}

@@ -8,9 +8,9 @@ It's really simple, the web bundler:
 
 1. Takes/watches your web resources and <<web-dependencies>>.
 
-2. Bundles it with the supersonic esbuild compiler (scss are compiled if needed) and serves them.
+2. Bundles it with the supersonic esbuild compiler (scss are also compiled if needed) and serves them.
 
-3. Make it easy to import the bundled scripts and styles xref:advanced-guides.adoc#bundled-paths[from Qute or any other template engine].
+3. Make it easy to use the bundle scripts and styles xref:advanced-guides.adoc#bundle-paths[from Qute or any other template engine].
 
 [#web-dependencies]
 == Web Dependencies

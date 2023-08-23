@@ -2,13 +2,15 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
-import static io.quarkiverse.web.bundler.deployment.util.ResourcePaths.prefixWithSlash;
+import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.prefixWithSlash;
+import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.surroundWithSlashes;
 import static io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
+import static java.util.Map.entry;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -19,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,16 +35,17 @@ import io.mvnpm.esbuild.model.BundleOptionsBuilder;
 import io.mvnpm.esbuild.model.BundleResult;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
+import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.PublicAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
-import io.quarkiverse.web.bundler.runtime.Bundled;
+import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
@@ -57,11 +62,38 @@ import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.runtime.LaunchMode;
+import io.quarkus.runtime.configuration.ConfigurationException;
 
 class WebBundlerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(WebBundlerProcessor.class);
+
+    private static final Map<EsBuildConfig.Loader, Function<LoadersConfig, Optional<Set<String>>>> LOADER_CONFIGS = Map
+            .ofEntries(
+                    entry(EsBuildConfig.Loader.JS, LoadersConfig::js),
+                    entry(EsBuildConfig.Loader.JSX, LoadersConfig::jsx),
+                    entry(EsBuildConfig.Loader.TS, LoadersConfig::ts),
+                    entry(EsBuildConfig.Loader.TSX, LoadersConfig::tsx),
+                    entry(EsBuildConfig.Loader.CSS, LoadersConfig::css),
+                    entry(EsBuildConfig.Loader.LOCAL_CSS, LoadersConfig::localCss),
+                    entry(EsBuildConfig.Loader.GLOBAL_CSS, LoadersConfig::globalCss),
+                    entry(EsBuildConfig.Loader.JSON, LoadersConfig::json),
+                    entry(EsBuildConfig.Loader.TEXT, LoadersConfig::text),
+                    entry(EsBuildConfig.Loader.FILE, LoadersConfig::file),
+                    entry(EsBuildConfig.Loader.EMPTY, LoadersConfig::empty),
+                    entry(EsBuildConfig.Loader.COPY, LoadersConfig::copy),
+                    entry(EsBuildConfig.Loader.DATAURL, LoadersConfig::dataUrl),
+                    entry(EsBuildConfig.Loader.BASE64, LoadersConfig::base64),
+                    entry(EsBuildConfig.Loader.BINARY, LoadersConfig::binary));
     private static final String TARGET_DIR_NAME = "web-bundler";
+
+    static {
+        for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
+            if (!LOADER_CONFIGS.containsKey(loader)) {
+                throw new Error("There is no WebBundleConfig.LoadersConfig for this loader : " + loader);
+            }
+        }
+    }
 
     @BuildStep
     void bundle(WebBundlerConfig config,
@@ -88,7 +120,8 @@ class WebBundlerProcessor {
                         .noneMatch(liveReload.getChangedResources()::contains)
                 && Files.isDirectory(bundlesBuildContext.bundleDistDir())) {
             LOGGER.debug("Bundling not needed for live reload");
-            handleBundleDistDir(generatedBundleProducer, staticResourceProducer, bundlesBuildContext.bundleDistDir(), false);
+            handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, bundlesBuildContext.bundleDistDir(),
+                    false);
             return;
         }
         boolean hasScssChange = isLiveReload
@@ -101,13 +134,14 @@ class WebBundlerProcessor {
             }
             Files.createDirectories(targetDir);
             LOGGER.debugf("Preparing bundle in %s", targetDir);
-            final Map<String, EsBuildConfig.Loader> loaders = EsBuildConfigBuilder.getDefaultLoadersMap();
+            final Map<String, EsBuildConfig.Loader> loaders = computeLoaders(config);
             loaders.put(".scss", EsBuildConfig.Loader.CSS);
             final BundleOptionsBuilder options = new BundleOptionsBuilder()
                     .setWorkFolder(targetDir)
                     .withDependencies(webDependencies.getDependencies())
                     .withEsConfig(new EsBuildConfigBuilder()
                             .loader(loaders)
+                            .addExternal(surroundWithSlashes(config.staticDir()) + "*")
                             .minify(launchMode.getLaunchMode().equals(LaunchMode.NORMAL)).build())
                     .withType(type);
             int addedEntryPoints = 0;
@@ -140,7 +174,12 @@ class WebBundlerProcessor {
                         .collect(
                                 Collectors.joining("\n"));
 
-                LOGGER.infof("Bundling '%s' with:\n%s", entryPoint.getEntryPointKey(), scriptsLog);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debugf("Bundling '%s' (%d files):\n %s", entryPoint.getEntryPointKey(), scripts.size(), scriptsLog);
+                } else {
+                    LOGGER.infof("Bundling '%s' (%d files)", entryPoint.getEntryPointKey(), scripts.size());
+                }
+
                 if (scripts.size() > 0) {
                     options.addAutoEntryPoint(targetDir, entryPoint.getEntryPointKey(), scripts);
                     addedEntryPoints++;
@@ -173,8 +212,8 @@ class WebBundlerProcessor {
                 if (!result.result().output().isBlank()) {
                     LOGGER.debugf(result.result().output());
                 }
-                LOGGER.debugf("Bundle generated in %s", result.dist());
-                handleBundleDistDir(generatedBundleProducer, staticResourceProducer, result.dist(), true);
+
+                handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), true);
                 liveReload.setContextObject(BundlesBuildContext.class,
                         new BundlesBuildContext(webDependencies.getDependencies(), entryPoints, result.dist()));
             } else {
@@ -190,43 +229,79 @@ class WebBundlerProcessor {
         }
     }
 
+    private Map<String, EsBuildConfig.Loader> computeLoaders(WebBundlerConfig config) {
+        Map<String, EsBuildConfig.Loader> loaders = new HashMap<>();
+        for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
+            final Function<LoadersConfig, Optional<Set<String>>> configFn = requireNonNull(LOADER_CONFIGS.get(loader));
+            final Optional<Set<String>> values = configFn.apply(config.loaders());
+            if (values.isPresent()) {
+                for (String v : values.get()) {
+                    final String ext = v.startsWith(".") ? v : "." + v;
+                    if (loaders.containsKey(ext)) {
+                        throw new ConfigurationException(
+                                "A Web Bundler file extension for loaders is provided more than once: " + ext);
+                    }
+                    loaders.put(ext, loader);
+                }
+            }
+        }
+        return loaders;
+    }
+
     static void convertToScss(Path file, Path root) {
         LOGGER.debugf("Converting %s to css", file);
         String content = SassBuildTimeCompiler.convertScss(file, root, (s, s2) -> {
         });
         try {
-            Files.write(file, content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
+            Files.writeString(file, content, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    void handleBundleDistDir(BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
+    void handleBundleDistDir(WebBundlerConfig config, BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, Path bundleDir, boolean changed) {
         try {
             Map<String, String> bundle = new HashMap<>();
-            Files.list(bundleDir).forEach(path -> {
-                final String fileName = path.getFileName().toString();
-                final int dashIndex = fileName.lastIndexOf("-");
-                final int extIndex = fileName.indexOf(".");
-                final String key = fileName.substring(0, dashIndex) + fileName.substring(extIndex, fileName.length());
-                bundle.put(key, "/static/" + fileName);
-            });
+            final String bundlePublicPath = surroundWithSlashes(config.bundleDir());
+            List<String> names = new ArrayList<>();
+            StringBuilder mappingString = new StringBuilder();
+            try (Stream<Path> stream = Files.find(bundleDir, 20, (p, i) -> Files.isRegularFile(p))) {
+                stream.forEach(path -> {
+                    final String relativePath = bundleDir.relativize(path).toString();
+                    final String key = relativePath.replaceAll("-[^.]+\\.", ".");
+                    final String publicPath = bundlePublicPath + relativePath;
+                    final String fileName = path.getFileName().toString();
+                    final String ext = fileName.substring(fileName.indexOf("."));
+                    if (Bundle.BUNDLE_MAPPING_EXT.contains(ext)) {
+                        mappingString.append("  ").append(key).append(" => ").append(publicPath).append("\n");
+                        bundle.put(key, publicPath);
+                    }
+                    names.add(publicPath);
+                    makePublic(staticResourceProducer, publicPath, path.normalize(), WatchMode.DISABLED, changed);
+                });
+            }
+            LOGGER.infof("Bundle generated in %s (%d files)", bundleDir, names.size());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debugf("Bundle generated in %s (%d files):\n%s", bundleDir, names.size(), String.join("\n  -", names));
+            } else {
+                LOGGER.infof("Bundle generated in %s (%d files)", bundleDir, names.size());
+            }
+            LOGGER.infof("Bundle#mapping:\n %s", mappingString);
             generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));
-            makeDirPublic(staticResourceProducer, "/static/", bundleDir, WatchMode.DISABLED, changed);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @BuildStep
-    void processPublic(WebBundlerConfig config,
-            PublicAssetsBuildItem staticAssets,
+    void processStaticWebAssets(WebBundlerConfig config,
+            StaticAssetsBuildItem staticAssets,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             LiveReloadBuildItem liveReload) {
         for (WebAsset webAsset : staticAssets.getWebAssets()) {
-            final String publicPath = webAsset.pathFromWebRoot(config.webRoot()).substring(config.publicDir().length());
+            final String publicPath = webAsset.pathFromWebRoot(config.webRoot());
             makeWebAssetPublic(staticResourceProducer, prefixWithSlash(publicPath), liveReload, webAsset);
         }
     }
@@ -260,10 +335,10 @@ class WebBundlerProcessor {
             GeneratedBundleBuildItem generatedBundle,
             WebBundlerBuildRecorder recorder) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
-        syntheticBeans.produce(SyntheticBeanBuildItem.configure(Bundled.Mapping.class)
+        syntheticBeans.produce(SyntheticBeanBuildItem.configure(Bundle.Mapping.class)
                 .supplier(recorder.createContext(bundle))
                 .done());
-        additionalBeans.produce(new AdditionalBeanBuildItem(Bundled.class));
+        additionalBeans.produce(new AdditionalBeanBuildItem(Bundle.class));
     }
 
     private static void makeWebAssetPublic(
@@ -280,15 +355,6 @@ class WebBundlerProcessor {
                 WatchMode.RESTART);
     }
 
-    private static void makeDirPublic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            String publicPath,
-            Path bundleDir, WatchMode watchMode, boolean changed)
-            throws IOException {
-        Files.list(bundleDir)
-                .forEach(p -> makePublic(staticResourceProducer, publicPath + p.getFileName(), p.normalize(), watchMode,
-                        changed));
-    }
-
     private static void makePublic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, String publicPath,
             Path file, WatchMode watchMode, boolean changed) {
         if (!Files.exists(file)) {
@@ -298,12 +364,6 @@ class WebBundlerProcessor {
                 watchMode);
     }
 
-    private void handleSassStyle(EntryPointBuildItem bundle,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            WebAsset asset) {
-        LOGGER.debugf("Handling %s as a sass web asset", asset.resourceName());
-    }
-
     private static void handleStaticResource(
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             Set<GeneratedStaticResourceBuildItem.Source> sources,
@@ -311,7 +371,6 @@ class WebBundlerProcessor {
             byte[] content,
             boolean changed,
             WatchMode watchMode) {
-        LOGGER.debugf("new static resource available: %s", publicPath);
         staticResourceProducer.produce(new GeneratedStaticResourceBuildItem(
                 sources,
                 publicPath,

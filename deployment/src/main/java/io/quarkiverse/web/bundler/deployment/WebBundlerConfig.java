@@ -1,13 +1,17 @@
 package io.quarkiverse.web.bundler.deployment;
 
+import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.addTrailingSlash;
+import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.removeLeadingSlash;
 import static java.util.function.Predicate.not;
 
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
-import io.quarkiverse.web.bundler.deployment.util.ResourcePaths;
+import jakarta.validation.constraints.NotBlank;
+
 import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -24,10 +28,11 @@ public interface WebBundlerConfig {
      * The directory in the resources which serves as root for the web assets
      */
     @WithDefault("web")
+    @NotBlank
     String webRoot();
 
     default String fromWebRoot(String dir) {
-        return ResourcePaths.join(webRoot(), dir);
+        return addTrailingSlash(webRoot()) + removeLeadingSlash(dir);
     }
 
     /**
@@ -36,17 +41,30 @@ public interface WebBundlerConfig {
     Map<String, EntryPointConfig> bundle();
 
     /**
-     * The public resources.
-     * Default to all files in the "/{web-root}/public" directory.
+     * Any static file to be served under this path
      */
-    @WithName("public")
-    @WithDefault("public")
-    String publicDir();
+    @WithName("static")
+    @WithDefault("static")
+    @NotBlank
+    String staticDir();
+
+    /**
+     * Bundle files will be served under this path
+     */
+    @WithName("bundle")
+    @WithDefault("static/bundle")
+    @NotBlank
+    String bundleDir();
 
     /**
      * The config for presets
      */
     PresetsConfig presets();
+
+    /**
+     * The config for esbuild loaders https://esbuild.github.io/content-types/
+     */
+    LoadersConfig loaders();
 
     /**
      * Configure how dependencies are collected
@@ -111,6 +129,95 @@ public interface WebBundlerConfig {
          */
         @WithDefault("mvnpm")
         WebDependencyType type();
+
+    }
+
+    interface LoadersConfig {
+
+        /**
+         * Configure the file extensions using the js loader: https://esbuild.github.io/content-types/#javascript
+         */
+        @WithDefault("js,cjs,mjs")
+        Optional<Set<String>> js();
+
+        /**
+         * Configure the file extensions using the jsx loader: https://esbuild.github.io/content-types/#jsx
+         */
+        @WithDefault("jsx")
+        Optional<Set<String>> jsx();
+
+        /**
+         * Configure the file extensions using the tsx loader: https://esbuild.github.io/content-types/#jsx
+         */
+        @WithDefault("tsx")
+        Optional<Set<String>> tsx();
+
+        /**
+         * Configure the file extensions using the ts loader: https://esbuild.github.io/content-types/#typescript
+         */
+        @WithDefault("ts,mts,cts")
+        Optional<Set<String>> ts();
+
+        /**
+         * Configure the file extensions using the css loader: https://esbuild.github.io/content-types/#css
+         */
+        @WithDefault("css")
+        Optional<Set<String>> css();
+
+        /**
+         * Configure the file extensions using the local-css loader: https://esbuild.github.io/content-types/#css
+         */
+        @WithDefault(".module.css")
+        Optional<Set<String>> localCss();
+
+        /**
+         * Configure the file extensions using the global-css loader: https://esbuild.github.io/content-types/#css
+         */
+        Optional<Set<String>> globalCss();
+
+        /**
+         * Configure the file extensions using the file loader: https://esbuild.github.io/content-types/#file
+         * This loader will copy the file to the output directory and embed the file name into the bundle as a string.
+         */
+        @WithDefault("aac,abw,arc,avif,avi,azw,bin,bmp,bz,bz2,cda,csv,yaml,yml,doc,docx,eot,epub,gz,gif,htm,html,ico,ics,jar,jpeg,jpg,jsonld,mid,midi,mp3,mp4,mpeg,mpkg,odp,ods,odt,oga,ogv,ogx,opus,otf,png,pdf,ppt,pptx,rar,rtf,svg,tar,tif,tiff,ttf,vsd,wav,weba,webm,webp,woff,woff2,xhtml,xls,xlsx,xml,xul,zip,3gp,3g2,7z")
+        Optional<Set<String>> file();
+
+        /**
+         * Configure the file extensions using the copy loader: https://esbuild.github.io/content-types/#copy
+         */
+        Optional<Set<String>> copy();
+
+        /**
+         * Configure the file extensions using the base64 loader: https://esbuild.github.io/content-types/#base64
+         */
+        Optional<Set<String>> base64();
+
+        /**
+         * Configure the file extensions using the binary loader: https://esbuild.github.io/content-types/#binary
+         */
+        Optional<Set<String>> binary();
+
+        /**
+         * Configure the file extensions using the dataurl loader: https://esbuild.github.io/content-types/#data-url
+         */
+        Optional<Set<String>> dataUrl();
+
+        /**
+         * Configure the file extensions using the empty loader: https://esbuild.github.io/content-types/#empty-file
+         */
+        Optional<Set<String>> empty();
+
+        /**
+         * Configure the file extensions using the text loader: https://esbuild.github.io/content-types/#text
+         */
+        @WithDefault("txt")
+        Optional<Set<String>> text();
+
+        /**
+         * Configure the file extensions using the json loader: https://esbuild.github.io/content-types/#json
+         */
+        @WithDefault("json")
+        Optional<Set<String>> json();
 
     }
 

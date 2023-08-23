@@ -22,24 +22,40 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_WEB_BUNDLER_WEB_ROOT+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--|String 
 |`web`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.public]]`link:#quarkus-web-bundler_quarkus.web-bundler.public[quarkus.web-bundler.public]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static]]`link:#quarkus-web-bundler_quarkus.web-bundler.static[quarkus.web-bundler.static]`
 
 [.description]
 --
-The public resources. Default to all files in the "/++{++web-root++}++/public" directory.
+Any static file to be served under this path
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_PUBLIC+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_PUBLIC+++`
+Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC+++`
 endif::add-copy-button-to-env-var[]
---|string 
-|`public`
+--|String 
+|`static`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle[quarkus.web-bundler.bundle]`
+
+[.description]
+--
+Bundle files will be served under this path
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE+++`
+endif::add-copy-button-to-env-var[]
+--|String 
+|`static/bundle`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app[quarkus.web-bundler.presets.app]`
@@ -104,6 +120,246 @@ Environment variable: `+++QUARKUS_WEB_BUNDLER_PRESETS_COMPONENTS_ENTRY_POINT_KEY
 endif::add-copy-button-to-env-var[]
 --|string 
 |`main`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.js]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.js[quarkus.web-bundler.loaders.js]`
+
+[.description]
+--
+Configure the file extensions using the js loader: https://esbuild.github.io/content-types/++#++javascript
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_JS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_JS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`js,cjs,mjs`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.jsx]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.jsx[quarkus.web-bundler.loaders.jsx]`
+
+[.description]
+--
+Configure the file extensions using the jsx loader: https://esbuild.github.io/content-types/++#++jsx
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_JSX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_JSX+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`jsx`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.tsx]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.tsx[quarkus.web-bundler.loaders.tsx]`
+
+[.description]
+--
+Configure the file extensions using the tsx loader: https://esbuild.github.io/content-types/++#++jsx
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_TSX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_TSX+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`tsx`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.ts]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.ts[quarkus.web-bundler.loaders.ts]`
+
+[.description]
+--
+Configure the file extensions using the ts loader: https://esbuild.github.io/content-types/++#++typescript
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_TS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_TS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`ts,mts,cts`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.css[quarkus.web-bundler.loaders.css]`
+
+[.description]
+--
+Configure the file extensions using the css loader: https://esbuild.github.io/content-types/++#++css
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_CSS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_CSS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`css`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.local-css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.local-css[quarkus.web-bundler.loaders.local-css]`
+
+[.description]
+--
+Configure the file extensions using the local-css loader: https://esbuild.github.io/content-types/++#++css
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_LOCAL_CSS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_LOCAL_CSS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`.module.css`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.global-css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.global-css[quarkus.web-bundler.loaders.global-css]`
+
+[.description]
+--
+Configure the file extensions using the global-css loader: https://esbuild.github.io/content-types/++#++css
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_GLOBAL_CSS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_GLOBAL_CSS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.file]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.file[quarkus.web-bundler.loaders.file]`
+
+[.description]
+--
+Configure the file extensions using the file loader: https://esbuild.github.io/content-types/++#++file This loader will copy the file to the output directory and embed the file name into the bundle as a string.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_FILE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_FILE+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`aac,abw,arc,avif,avi,azw,bin,bmp,bz,bz2,cda,csv,yaml,yml,doc,docx,eot,epub,gz,gif,htm,html,ico,ics,jar,jpeg,jpg,jsonld,mid,midi,mp3,mp4,mpeg,mpkg,odp,ods,odt,oga,ogv,ogx,opus,otf,png,pdf,ppt,pptx,rar,rtf,svg,tar,tif,tiff,ttf,vsd,wav,weba,webm,webp,woff,woff2,xhtml,xls,xlsx,xml,xul,zip,3gp,3g2,7z`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.copy]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.copy[quarkus.web-bundler.loaders.copy]`
+
+[.description]
+--
+Configure the file extensions using the copy loader: https://esbuild.github.io/content-types/++#++copy
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_COPY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_COPY+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.base64]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.base64[quarkus.web-bundler.loaders.base64]`
+
+[.description]
+--
+Configure the file extensions using the base64 loader: https://esbuild.github.io/content-types/++#++base64
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_BASE64+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_BASE64+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.binary]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.binary[quarkus.web-bundler.loaders.binary]`
+
+[.description]
+--
+Configure the file extensions using the binary loader: https://esbuild.github.io/content-types/++#++binary
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_BINARY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_BINARY+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.data-url]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.data-url[quarkus.web-bundler.loaders.data-url]`
+
+[.description]
+--
+Configure the file extensions using the dataurl loader: https://esbuild.github.io/content-types/++#++data-url
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_DATA_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_DATA_URL+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.empty]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.empty[quarkus.web-bundler.loaders.empty]`
+
+[.description]
+--
+Configure the file extensions using the empty loader: https://esbuild.github.io/content-types/++#++empty-file
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_EMPTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_EMPTY+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.text]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.text[quarkus.web-bundler.loaders.text]`
+
+[.description]
+--
+Configure the file extensions using the text loader: https://esbuild.github.io/content-types/++#++text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_TEXT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_TEXT+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`txt`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.json]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.json[quarkus.web-bundler.loaders.json]`
+
+[.description]
+--
+Configure the file extensions using the json loader: https://esbuild.github.io/content-types/++#++json
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_LOADERS_JSON+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_LOADERS_JSON+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`json`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.type]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.type[quarkus.web-bundler.dependencies.type]`

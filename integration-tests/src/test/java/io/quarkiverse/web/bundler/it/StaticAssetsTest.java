@@ -14,15 +14,15 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 
 @QuarkusTest
-public class PublicAssetsTest {
+public class StaticAssetsTest {
 
-    @TestHTTPResource("/images/logo.svg")
+    @TestHTTPResource("/static/images/logo.svg")
     URL logo;
 
-    @TestHTTPResource("/hello.txt")
+    @TestHTTPResource("/static/hello.txt")
     URL txt;
 
-    @TestHTTPResource("/static/hello.md")
+    @TestHTTPResource("/static/dir/hello.md")
     URL md;
 
     @Test
@@ -30,7 +30,7 @@ public class PublicAssetsTest {
         RestAssured.get(logo)
                 .then()
                 .statusCode(200)
-                .body(is(asString("/web/public/images/logo.svg")));
+                .body(is(asString("/web/static/images/logo.svg")));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class PublicAssetsTest {
         RestAssured.get(md)
                 .then()
                 .statusCode(200)
-                .body(is(asString("/web/public/static/hello.md")));
+                .body(is(asString("/web/static/dir/hello.md")));
     }
 
     @Test
@@ -46,11 +46,11 @@ public class PublicAssetsTest {
         RestAssured.get(txt)
                 .then()
                 .statusCode(200)
-                .body(is(asString("/web/public/hello.txt")));
+                .body(is(asString("/web/static/hello.txt")));
     }
 
     private static String asString(String name) throws IOException {
-        try (InputStream resourceAsStream = PublicAssetsTest.class.getResourceAsStream(name)) {
+        try (InputStream resourceAsStream = StaticAssetsTest.class.getResourceAsStream(name)) {
             return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
