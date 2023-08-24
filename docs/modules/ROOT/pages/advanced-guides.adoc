@@ -9,7 +9,7 @@ The Web Root is `src/main/resources/web`, this is where the Web Bundler will loo
 [#static]
 == Static files
 
-Files in `src/main/resources/web/static/\**/*` will be served statically under `/static/...` (you can choose another directory name xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.static[Config Reference])
+Files in `src/main/resources/web/static/&#42;&#42;` will be served statically under http://localhost:8080/static/ (you can choose another directory name xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.static[Config Reference])
 
 == Bundling
 
@@ -27,7 +27,7 @@ Directory `src/main/resources/web/app` is destined to contain the scripts, style
 
 This is not always needed but if you need to add specific script and/or style to your {quarkus-guides-url}/qute-reference#user_tags[Qute tags] (Server Side Web Components). This preset will help you do it elegantly.
 
-By convention, your component will be defined in `src/main/resources/web/components/[name]/[name].js,ts,css,scss,html`. The scripts and styles will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
+By convention, your component will be defined in `src/main/resources/web/components/[name]/[name].&#42;`. The scripts, styles and assets will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
 
 This way all your components scripts/styles will be bundled and you tags will be available in your templates.
 
@@ -126,7 +126,7 @@ By default, you can import and use fonts and images from your scripts and styles
 
 In a css file, using `url('./example.png')` will be processed by a loader (see xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.file[file loader]), the file will be copied with a static name and the path will be replaced by the new file static path (e.g. `/static/bundle/assets/example-QH383.png`).
 
-NOTE: For convenience, when using a static file (e.g. `url('/static/example.png')`, the path will not be processed because all files under `/static/\**/*` are marked as external (to be ignored from the bundling). Since `/static/example.png` will be served (See <<static>>), it is ok.
+NOTE: For convenience, when using a static file (e.g. `url('/static/example.png')`, the path will not be processed because all files under `/static/&#42;&#42;` are marked as external (to be ignored from the bundling). Since `/static/example.png` will be served (See <<static>>), it is ok.
 
 
 === SCSS, SASS

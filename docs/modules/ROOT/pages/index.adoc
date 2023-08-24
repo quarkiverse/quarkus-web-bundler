@@ -31,11 +31,10 @@ For instance, with Maven, add the following dependency to your POM file:
 
 == Usage
 
-Add you web resources in `src/main/resources/web`:
+Add your web resources in `src/main/resources/web`:
 
-* `app/\**/*`: Bundle app scripts (js, ts, jsx, tsx, ...), styles (css, scss, sass) and assets (jpg, gif, png, ...)
-* `components/[my-comp]/[my-comp].js,ts,css,scss,sass,html`: server side web-component
-* `static/\**/*`: Any static file to be served under `static/...`
+* `app/&#42;&#42;`: App scripts (js, ts, jsx, tsx, ...), styles (css, scss, sass) and assets (svg, jpg, gif, png, ...), to be *bundled* and served under http://localhost:8080/static/bundle/
+* `static/&#42;&#42;`: Any static file to be *served* without change under http://localhost:8080/static/
 
 Add xref:advanced-guides.adoc#web-dependencies[Web Dependencies] and import them from your scripts and styles:
 
