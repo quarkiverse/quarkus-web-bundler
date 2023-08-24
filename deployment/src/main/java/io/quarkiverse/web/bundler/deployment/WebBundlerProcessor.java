@@ -36,6 +36,7 @@ import io.mvnpm.esbuild.model.BundleResult;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
+import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
@@ -99,6 +100,7 @@ class WebBundlerProcessor {
     void bundle(WebBundlerConfig config,
             WebDependenciesBuildItem webDependencies,
             List<EntryPointBuildItem> entryPoints,
+            BundleConfigAssetsBuildItem bundleConfigs,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
             LiveReloadBuildItem liveReload,
@@ -114,6 +116,7 @@ class WebBundlerProcessor {
                 && bundlesBuildContext.bundleDistDir() != null;
         if (isLiveReload
                 && webDependencies.getDependencies().equals(bundlesBuildContext.webDependencies())
+                && !liveReload.getChangedResources().contains("web/tsconfig.json")
                 && entryPoints.equals(bundlesBuildContext.entryPoints())
                 && entryPoints.stream().map(EntryPointBuildItem::getWebAssets).flatMap(List::stream)
                         .map(WebAsset::resourceName)
@@ -128,12 +131,24 @@ class WebBundlerProcessor {
                 && liveReload.getChangedResources().stream().anyMatch(WebBundlerProcessor::isSassFile);
         final Bundler.BundleType type = Bundler.BundleType.valueOf(webDependencies.getType().toString());
         final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+
         try {
             if (!isLiveReload) {
                 FileUtil.deleteDirectory(targetDir);
             }
             Files.createDirectories(targetDir);
             LOGGER.debugf("Preparing bundle in %s", targetDir);
+
+            if (!bundleConfigs.getWebAssets().isEmpty()) {
+                for (WebAsset webAsset : bundleConfigs.getWebAssets()) {
+                    if (webAsset.filePath().isPresent()) {
+                        final Path targetConfig = targetDir.resolve(webAsset.pathFromWebRoot(config.webRoot()));
+                        Files.deleteIfExists(targetConfig);
+                        Files.copy(webAsset.filePath().get(), targetConfig);
+                    }
+                }
+            }
+
             final Map<String, EsBuildConfig.Loader> loaders = computeLoaders(config);
             loaders.put(".scss", EsBuildConfig.Loader.CSS);
             final BundleOptionsBuilder options = new BundleOptionsBuilder()
@@ -175,7 +190,7 @@ class WebBundlerProcessor {
                                 Collectors.joining("\n"));
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debugf("Bundling '%s' (%d files):\n %s", entryPoint.getEntryPointKey(), scripts.size(), scriptsLog);
+                    LOGGER.debugf("Bundling '%s' (%d files):\n%s", entryPoint.getEntryPointKey(), scripts.size(), scriptsLog);
                 } else {
                     LOGGER.infof("Bundling '%s' (%d files)", entryPoint.getEntryPointKey(), scripts.size());
                 }
@@ -282,13 +297,13 @@ class WebBundlerProcessor {
                     makePublic(staticResourceProducer, publicPath, path.normalize(), WatchMode.DISABLED, changed);
                 });
             }
-            LOGGER.infof("Bundle generated in %s (%d files)", bundleDir, names.size());
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debugf("Bundle generated in %s (%d files):\n%s", bundleDir, names.size(), String.join("\n  -", names));
+                LOGGER.debugf("Bundle generated in %s (%d files):\n  - %s", bundleDir, names.size(),
+                        String.join("\n  - ", names));
             } else {
                 LOGGER.infof("Bundle generated in %s (%d files)", bundleDir, names.size());
             }
-            LOGGER.infof("Bundle#mapping:\n %s", mappingString);
+            LOGGER.infof("Bundle#mapping:\n%s", mappingString);
             generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));
         } catch (IOException e) {
             throw new RuntimeException(e);
