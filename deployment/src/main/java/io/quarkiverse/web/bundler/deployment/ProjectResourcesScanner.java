@@ -72,7 +72,7 @@ public class ProjectResourcesScanner {
                         Path rootDirFs = artifactFs.getPath("/");
                         Path dirPath = artifactFs.getPath(scanner.dir());
                         if (Files.exists(dirPath)) {
-                            scan(rootDirFs, artifactFs.getPath("/"), scanner.pathMatcher(), scanner.charset(), webAssetConsumer,
+                            scan(rootDirFs, dirPath, scanner.pathMatcher(), scanner.charset(), webAssetConsumer,
                                     false);
                         }
                     } catch (IOException e) {
@@ -109,7 +109,7 @@ public class ProjectResourcesScanner {
             boolean canReadLater)
             throws IOException {
         Path toScan = directory == null ? root : directory;
-        try (Stream<Path> files = Files.list(toScan)) {
+        try (Stream<Path> files = Files.find(toScan, 20, (p, a) -> Files.isRegularFile(p))) {
             Iterator<Path> iter = files.iterator();
             while (iter.hasNext()) {
                 Path filePath = iter.next();
@@ -118,10 +118,11 @@ public class ProjectResourcesScanner {
                         && filePath.getRoot() != null) {
                     filePath = filePath.getRoot().relativize(filePath);
                 }
-                final PathMatcher assetsPathMatcher = filePath.getFileSystem()
+                final Path relativePath = directory.relativize(filePath);
+                final PathMatcher assetsPathMatcher = relativePath.getFileSystem()
                         .getPathMatcher(pathMatcher);
-                final boolean isAsset = assetsPathMatcher.matches(filePath);
-                if (Files.isRegularFile(filePath) && isAsset) {
+                final boolean isAsset = assetsPathMatcher.matches(relativePath);
+                if (isAsset) {
                     String assetPath = root.relativize(filePath).normalize().toString();
                     if (File.separatorChar != '/') {
                         assetPath = assetPath.replace(File.separatorChar, '/');
@@ -130,9 +131,6 @@ public class ProjectResourcesScanner {
                         webAssetConsumer.accept(toWebAsset(assetPath,
                                 filePath.normalize(), charset, canReadLater));
                     }
-                } else if (Files.isDirectory(filePath)) {
-                    LOGGER.debugf("Scan directory: %s", filePath);
-                    scan(root, filePath, pathMatcher, charset, webAssetConsumer, canReadLater);
                 }
             }
         }
