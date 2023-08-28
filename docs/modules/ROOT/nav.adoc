@@ -1,4 +1,5 @@
 include::./includes/attributes.adoc[]
+:favicon: _images/logo.svg
 :config-file: application.properties
 
 * xref:index.adoc[Getting started]
