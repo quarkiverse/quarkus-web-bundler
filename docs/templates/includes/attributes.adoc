@@ -2,6 +2,8 @@
 
 :maven-version: 3.8.1+
 
+:favicon: _images/logo.svg
+
 :quarkus-org-url: https://github.com/quarkusio
 :quarkus-base-url: {quarkus-org-url}/quarkus
 :quarkus-clone-url: {quarkus-base-url}.git
