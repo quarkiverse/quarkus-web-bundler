@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -124,14 +125,13 @@ class WebBundlerProcessor {
                 && Files.isDirectory(bundlesBuildContext.bundleDistDir())) {
             LOGGER.debug("Bundling not needed for live reload");
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, bundlesBuildContext.bundleDistDir(),
-                    false);
+                    null, false);
             return;
         }
         boolean hasScssChange = isLiveReload
                 && liveReload.getChangedResources().stream().anyMatch(WebBundlerProcessor::isSassFile);
         final Bundler.BundleType type = Bundler.BundleType.valueOf(webDependencies.getType().toString());
         final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
-
         try {
             if (!isLiveReload) {
                 FileUtil.deleteDirectory(targetDir);
@@ -201,6 +201,24 @@ class WebBundlerProcessor {
                 }
             }
             if (addedEntryPoints > 0) {
+
+                if (!isLiveReload
+                        || !Objects.equals(webDependencies.getDependencies(), bundlesBuildContext.webDependencies())) {
+                    long startedInstall = Instant.now().toEpochMilli();
+                    Bundler.install(targetDir, webDependencies.getDependencies(), type);
+                    final long duration = Instant.now().minusMillis(startedInstall).toEpochMilli();
+                    if (LOGGER.isDebugEnabled()) {
+                        String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString)
+                                .collect(
+                                        Collectors.joining(", "));
+                        LOGGER.infof("%d %s Web dependencies installed in %sms: %s", webDependencies.getDependencies().size(),
+                                webDependencies.getType(), duration, deps);
+                    } else {
+                        LOGGER.infof("%d %s Web Dependencies installed in %sms ", webDependencies.getDependencies().size(),
+                                webDependencies.getType(), duration);
+                    }
+                }
+                final long startedBundling = Instant.now().toEpochMilli();
                 // SCSS conversion
                 if (!isLiveReload || hasScssChange) {
                     try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
@@ -209,26 +227,13 @@ class WebBundlerProcessor {
                         stream.forEach(p -> convertToScss(p, targetDir));
                     }
                 }
-                if (isLiveReload
-                        && !Objects.equals(webDependencies.getDependencies(), bundlesBuildContext.webDependencies())) {
-                    Bundler.install(targetDir, webDependencies.getDependencies(), type);
-                    String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString).collect(
-                            Collectors.joining(", "));
-                    LOGGER.infof("%s Web dependencies changed: %s", webDependencies.getType(), deps);
-                } else {
-                    if (!isLiveReload) {
-                        String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString)
-                                .collect(
-                                        Collectors.joining(", "));
-                        LOGGER.infof("%s Web dependencies detected: %s", webDependencies.getType(), deps);
-                    }
-                }
                 final BundleResult result = Bundler.bundle(options.build());
                 if (!result.result().output().isBlank()) {
                     LOGGER.debugf(result.result().output());
                 }
 
-                handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), true);
+                handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), startedBundling,
+                        true);
                 liveReload.setContextObject(BundlesBuildContext.class,
                         new BundlesBuildContext(webDependencies.getDependencies(), entryPoints, result.dist()));
             } else {
@@ -276,7 +281,8 @@ class WebBundlerProcessor {
     }
 
     void handleBundleDistDir(WebBundlerConfig config, BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, Path bundleDir, boolean changed) {
+            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, Path bundleDir, Long started,
+            boolean changed) {
         try {
             Map<String, String> bundle = new HashMap<>();
             final String bundlePublicPath = surroundWithSlashes(config.bundleDir());
@@ -297,13 +303,19 @@ class WebBundlerProcessor {
                     makePublic(staticResourceProducer, publicPath, path.normalize(), WatchMode.DISABLED, changed);
                 });
             }
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debugf("Bundle generated in %s (%d files):\n  - %s", bundleDir, names.size(),
-                        String.join("\n  - ", names));
-            } else {
-                LOGGER.infof("Bundle generated in %s (%d files)", bundleDir, names.size());
+            if (started != null) {
+                LOGGER.infof("Bundle generated %d files in %sms", names.size(),
+                        Instant.now().minusMillis(started).toEpochMilli());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debugf("Bundle dir: '%s'\n  - %s", bundleDir, names.size(),
+                            String.join("\n  - ", names));
+                }
+                if (LOGGER.isDebugEnabled() || LaunchMode.current() == LaunchMode.DEVELOPMENT) {
+                    LOGGER.infof("Bundle#mapping:\n%s", mappingString);
+                }
+
             }
-            LOGGER.infof("Bundle#mapping:\n%s", mappingString);
+
             generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));
         } catch (IOException e) {
             throw new RuntimeException(e);
