@@ -146,13 +146,7 @@ Once added in the pom.xml the dependencies are directly available through import
 
 mvnpm (Maven NPM) is a maven repository facade on top of the NPM Registry.
 
-If configured with the mvnpm repository, when requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency and publish it to Maven Central.
-
-NOTE: You can also use the mvnpm.org website to synchronize new versions with Maven Central and avoid the need to add the mvnpm repository to the pom.xml.
-
-WARNING: **Synchronisation with Maven Central is temporarily disabled**. It will be up again soon. Until then use the mvnpm repo.
-
-Add web dependencies (and optionally the mvnpm repo) to your pom.xml:
+Lookup for packages on https://mvnpm.org or https://www.npmjs.com/ then add them as web dependencies to your pom.xml:
 
 .pom.xml
 [source,xml]
@@ -166,25 +160,47 @@ Add web dependencies (and optionally the mvnpm repo) to your pom.xml:
         <version>3.7.0</version> // <3>
     </dependency>
 </dependencies>
-<repositories>
-    <repository>
-      <id>central</id>
-      <name>central</name>
-      <url>https://repo.maven.apache.org/maven2</url>
-    </repository>
-    <repository> // <4>
-      <id>mvnpm.org</id>
-      <name>mvnpm</name>
-      <url>https://repo.mvnpm.org/maven2</url>
-    </repository>
-</repositories>
 ...
 ----
 
 <1> use `org.mvnpm` or `org.mvnpm.at.something` for `@something/dep`
 <2> All dependencies published on NPM are available
 <3> Any https://www.npmjs.com/package/jquery?activeTab=versions[published NPM version] for your dependency
-<4> Add mvnpm repository (Maven Central is also added for priority)
+
+If a package or a version in not yet available in Maven Central:
+- [Available Soon] You can also use the mvnpm.org website to synchronize new versions with Maven Central.
+- If configured with the mvnpm repository, when requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency and publish it to Maven Central so that future developers won't need the repository.
+
+.settings.xml
+----
+<settings>
+    <profiles>
+        <profile>
+            <id>mvnpm</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <name>central</name>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                </repository>
+                <repository>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                    <id>mvnpm.org</id> 
+                    <name>mvnpm</name>
+                    <url>https://repo.mvnpm.org/maven2</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>mvnpm</activeProfile>
+    </activeProfiles>
+
+</settings>
+----
 
 [#webjars]
 === WebJars
