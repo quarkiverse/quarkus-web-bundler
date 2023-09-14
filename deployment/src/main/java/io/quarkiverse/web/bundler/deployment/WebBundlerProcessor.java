@@ -34,6 +34,7 @@ import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
 import io.mvnpm.esbuild.model.BundleOptionsBuilder;
 import io.mvnpm.esbuild.model.BundleResult;
+import io.mvnpm.esbuild.model.BundleType;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
@@ -130,7 +131,7 @@ class WebBundlerProcessor {
         }
         boolean hasScssChange = isLiveReload
                 && liveReload.getChangedResources().stream().anyMatch(WebBundlerProcessor::isSassFile);
-        final Bundler.BundleType type = Bundler.BundleType.valueOf(webDependencies.getType().toString());
+        final BundleType type = BundleType.valueOf(webDependencies.getType().toString());
         final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
         try {
             if (!isLiveReload) {
