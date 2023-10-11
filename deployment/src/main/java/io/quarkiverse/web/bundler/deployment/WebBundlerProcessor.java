@@ -50,6 +50,7 @@ import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticReso
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
+import io.quarkiverse.web.bundler.runtime.WebDependenciesBlockerRecorder;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
 import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteEngineObserver;
@@ -57,6 +58,7 @@ import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.builder.BuildException;
+import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
@@ -66,6 +68,7 @@ import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
+import io.quarkus.vertx.http.deployment.RouteBuildItem;
 
 class WebBundlerProcessor {
 
@@ -367,6 +370,19 @@ class WebBundlerProcessor {
                 .supplier(recorder.createContext(bundle))
                 .done());
         additionalBeans.produce(new AdditionalBeanBuildItem(Bundle.class));
+    }
+
+    @BuildStep(onlyIf = IsNormal.class)
+    @Record(STATIC_INIT)
+    void webDepBlocker(WebBundlerConfig config, BuildProducer<RouteBuildItem> routes, WebDependenciesBlockerRecorder recorder) {
+        if (!config.dependencies().serve()) {
+            routes.produce(RouteBuildItem.builder().orderedRoute("/_static/*", 0)
+                    .handler(recorder.handler())
+                    .build());
+            routes.produce(RouteBuildItem.builder().orderedRoute("/webjars/*", 0)
+                    .handler(recorder.handler())
+                    .build());
+        }
     }
 
     private static void makeWebAssetPublic(

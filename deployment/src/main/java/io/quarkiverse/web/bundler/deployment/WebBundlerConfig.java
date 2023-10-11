@@ -130,6 +130,12 @@ public interface WebBundlerConfig {
         @WithDefault("mvnpm")
         WebDependencyType type();
 
+        /**
+         * If enabled web dependencies will also be served, this is usually not needed as they are already bundled.
+         */
+        @WithDefault("false")
+        boolean serve();
+
     }
 
     interface LoadersConfig {

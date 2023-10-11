@@ -379,6 +379,22 @@ endif::add-copy-button-to-env-var[]
 |`mvnpm`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.serve]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.serve[quarkus.web-bundler.dependencies.serve]`
+
+[.description]
+--
+If enabled web dependencies will also be served, this is usually not needed as they are already bundled.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_SERVE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_SERVE+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.charset]]`link:#quarkus-web-bundler_quarkus.web-bundler.charset[quarkus.web-bundler.charset]`
 
 [.description]
