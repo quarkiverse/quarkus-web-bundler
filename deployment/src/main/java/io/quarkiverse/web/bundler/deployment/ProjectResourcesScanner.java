@@ -1,6 +1,7 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import java.io.File;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.toUnixPath;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
@@ -88,7 +89,7 @@ public class ProjectResourcesScanner {
                     // a wrong directory bundleName on case-insensitive file systems
                     try {
                         final Path dirPath = rootDir.resolve(scanner.dir());
-                        if (Files.isDirectory(dirPath) && dirPath.toString().endsWith(scanner.dir())) {
+                        if (Files.isDirectory(dirPath) && toUnixPath(dirPath.toString()).endsWith(scanner.dir())) {
                             scan(rootDir, dirPath, scanner.pathMatcher(), scanner.charset, webAssetConsumer, true);
                             break;
                         }
@@ -118,14 +119,14 @@ public class ProjectResourcesScanner {
                         && filePath.getRoot() != null) {
                     filePath = filePath.getRoot().relativize(filePath);
                 }
-                final Path relativePath = directory.relativize(filePath);
+                final Path relativePath = toScan.relativize(filePath);
                 final PathMatcher assetsPathMatcher = relativePath.getFileSystem()
                         .getPathMatcher(pathMatcher);
                 final boolean isAsset = assetsPathMatcher.matches(relativePath);
                 if (isAsset) {
                     String assetPath = root.relativize(filePath).normalize().toString();
-                    if (File.separatorChar != '/') {
-                        assetPath = assetPath.replace(File.separatorChar, '/');
+                    if (assetPath.contains("\\")) {
+                        assetPath = toUnixPath(assetPath);
                     }
                     if (!assetPath.isEmpty()) {
                         webAssetConsumer.accept(toWebAsset(assetPath,

@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import io.quarkus.bootstrap.workspace.ArtifactSources;
 import io.quarkus.bootstrap.workspace.SourceDir;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -26,6 +28,7 @@ import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.vertx.http.deployment.spi.AdditionalStaticResourceBuildItem;
 
 public class GeneratedStaticResourcesProcessor {
+    private static final Logger LOGGER = Logger.getLogger(GeneratedStaticResourcesProcessor.class);
 
     @BuildStep
     public void processStaticFiles(
@@ -106,6 +109,11 @@ public class GeneratedStaticResourcesProcessor {
                 // pick the first resources output dir
                 Path resourcesOutputDir = srcDirs.iterator().next().getOutputDir();
                 buildDir = resourcesOutputDir.toFile();
+                if (srcDirs.size() > 1) {
+                    LOGGER.warnf("Multiple resources directories found, using the first one in the list: %s",
+                            resourcesOutputDir);
+                }
+
             }
         }
         if (buildDir == null) {

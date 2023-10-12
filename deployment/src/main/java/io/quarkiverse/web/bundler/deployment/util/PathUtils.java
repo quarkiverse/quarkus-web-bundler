@@ -1,6 +1,10 @@
 package io.quarkiverse.web.bundler.deployment.util;
 
-public final class ConfiguredPaths {
+public final class PathUtils {
+
+    public static String toUnixPath(String path) {
+        return path.replaceAll("\\\\", "/");
+    }
 
     public static String prefixWithSlash(String path) {
         return path.startsWith("/") ? path : "/" + path;

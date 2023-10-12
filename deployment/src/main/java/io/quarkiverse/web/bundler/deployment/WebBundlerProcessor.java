@@ -2,8 +2,8 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
-import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.prefixWithSlash;
-import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.surroundWithSlashes;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
 import static io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static java.util.Map.entry;

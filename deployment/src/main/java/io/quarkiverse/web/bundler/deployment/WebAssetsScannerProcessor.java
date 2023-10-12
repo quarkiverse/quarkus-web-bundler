@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.addTrailingSlash;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
 
 import java.io.IOException;
 import java.nio.file.Files;
