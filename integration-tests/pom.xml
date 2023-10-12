@@ -58,9 +58,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkiverse.quinoa</groupId>
-            <artifactId>quarkus-quinoa-testing</artifactId>
-            <version>2.1.0</version>
+            <groupId>io.quarkiverse.playwright</groupId>
+            <artifactId>quarkus-playwright</artifactId>
+            <version>0.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

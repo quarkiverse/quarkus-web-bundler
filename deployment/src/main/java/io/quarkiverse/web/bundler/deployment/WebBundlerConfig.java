@@ -1,7 +1,7 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.addTrailingSlash;
-import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.removeLeadingSlash;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.removeLeadingSlash;
 import static java.util.function.Predicate.not;
 
 import java.nio.charset.Charset;

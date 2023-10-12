@@ -2,8 +2,8 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
-import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.prefixWithSlash;
-import static io.quarkiverse.web.bundler.deployment.util.ConfiguredPaths.surroundWithSlashes;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
 import static io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static java.util.Map.entry;
@@ -58,7 +58,6 @@ import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.builder.BuildException;
-import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
@@ -372,7 +371,7 @@ class WebBundlerProcessor {
         additionalBeans.produce(new AdditionalBeanBuildItem(Bundle.class));
     }
 
-    @BuildStep(onlyIf = IsNormal.class)
+    @BuildStep
     @Record(STATIC_INIT)
     void webDepBlocker(WebBundlerConfig config, BuildProducer<RouteBuildItem> routes, WebDependenciesBlockerRecorder recorder) {
         if (!config.dependencies().serve()) {

@@ -12,15 +12,15 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 
-import io.quarkiverse.quinoa.testing.QuarkusPlaywrightManager;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkiverse.playwright.InjectPlaywright;
+import io.quarkiverse.playwright.WithPlaywright;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@QuarkusTestResource(QuarkusPlaywrightManager.class)
+@WithPlaywright
 public class WebTest {
-    @QuarkusPlaywrightManager.InjectPlaywright
+    @InjectPlaywright
     BrowserContext context;
 
     @TestHTTPResource("/")
