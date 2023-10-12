@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URL;
 
-import io.quarkiverse.playwright.InjectPlaywright;
-import io.quarkiverse.playwright.WithPlaywright;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +12,8 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 
+import io.quarkiverse.playwright.InjectPlaywright;
+import io.quarkiverse.playwright.WithPlaywright;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 

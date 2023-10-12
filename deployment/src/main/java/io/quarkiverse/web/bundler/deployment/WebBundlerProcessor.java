@@ -58,7 +58,6 @@ import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.builder.BuildException;
-import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
@@ -372,7 +371,7 @@ class WebBundlerProcessor {
         additionalBeans.produce(new AdditionalBeanBuildItem(Bundle.class));
     }
 
-    @BuildStep(onlyIf = IsNormal.class)
+    @BuildStep
     @Record(STATIC_INIT)
     void webDepBlocker(WebBundlerConfig config, BuildProducer<RouteBuildItem> routes, WebDependenciesBlockerRecorder recorder) {
         if (!config.dependencies().serve()) {
