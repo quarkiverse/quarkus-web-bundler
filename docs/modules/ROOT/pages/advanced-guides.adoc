@@ -168,6 +168,7 @@ Lookup for packages on https://mvnpm.org or https://www.npmjs.com/ then add them
 <3> Any https://www.npmjs.com/package/jquery?activeTab=versions[published NPM version] for your dependency
 
 If a package or a version in not yet available in Maven Central:
+
 - [Available Soon] You can also use the mvnpm.org website to synchronize new versions with Maven Central.
 - If configured with the mvnpm repository, when requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency and publish it to Maven Central so that future developers won't need the repository.
 
