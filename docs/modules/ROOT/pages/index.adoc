@@ -36,7 +36,7 @@ Add your web resources in `src/main/resources/web`:
 * `app/&#42;&#42;`: App scripts (js, ts, jsx, tsx, ...), styles (css, scss, sass) and assets (svg, jpg, gif, png, ...), to be *bundled* and served under http://localhost:8080/static/bundle/
 * `static/&#42;&#42;`: Any static file to be *served* without change under http://localhost:8080/static/
 
-Add xref:advanced-guides.adoc#web-dependencies[Web Dependencies] and import them from your scripts and styles:
+Add xref:advanced-guides.adoc#web-dependencies[Web Dependencies] to the pom *and import them* (scripts and styles):
 
 .web/app/script.js
 [source,javascript]
@@ -46,6 +46,8 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 $('.hello').innerText('Hello');
 ----
+
+WARNING: If you don't import a Web Dependency, it won't be bundled (dead code elimination).
 
 Install the bundle in your index.html template:
 
