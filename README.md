@@ -4,7 +4,7 @@
 
 Create full-stack web apps and components with this Quarkus extension. It offers zero-configuration bundling and minification (with source-map) for your web app scripts (JS, JSX, TS, TSX), dependencies (jQuery, htmx, Bootstrap, Lit etc.), and styles (CSS, SCSS, SASS).
 
-No need to install NodeJs, it relies on a Java wrapped version of [esbuild](https://esbuild.github.io/) to bundle scripts (js, ts, jsx, tsx) and styles (css, scss, sass) and make them easily available in the templates.
+No need to install NodeJs, it relies on a Java wrapped version of [esbuild](https://esbuild.github.io/). For libraries, all the NPM catalog is accessible through Maven or Gradle dependencies.
 
 * [x] Production build
 * [x] Awesome Dev experience
