@@ -62,7 +62,7 @@ WARNING: It is currently not possible to import `scss` from the dependencies (ht
 [#indexing]
 ==== Indexing
 
-Only what's imported will be part of the resulting bundle, to make it easy, the Web Bundler will automatically generate an index importing all the files found in an entry-point directory.
+*Only what's imported will be part of the resulting bundle*, to make it easy, the Web Bundler will automatically generate an index importing all the files found in an entry-point directory.
 
 Of course, you can also provide this index manually (named `index.js,ts,jsx,tsx`) and choose what to import. Example:
 
@@ -140,6 +140,8 @@ WARNING: It is currently not possible to import `scss` from the dependencies (ht
 
 The Web Bundler is integrated with NPM dependencies through <<mvnpm>> (default) or <<webjars>>.
 Once added in the pom.xml the dependencies are directly available through import from the scripts and styles.
+
+WARNING: If you don't import a Web Dependency from an entry-point (<<indexing>>), it won't be bundled (dead code elimination).
 
 [#mvnpm]
 === MVNPM (default)
