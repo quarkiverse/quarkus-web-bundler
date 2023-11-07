@@ -39,6 +39,12 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <excludedArtifacts>
+            <excludedArtifact>org.mvnpm*</excludedArtifact>
+            <excludedArtifact>org.webjars*</excludedArtifact>
+          </excludedArtifacts>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
