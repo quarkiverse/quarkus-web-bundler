@@ -11,7 +11,7 @@
   {#if tag is "style" or tag is "both"}
     {#let href=inject:bundle.style(key)}
     {#if href}
-      <link rel="stylesheet" media="screen" href="{href}" />
+      <link rel="stylesheet" href="{href}" />
     {#else}
       <!-- no value found for key '{key}' in Bundler mapping !-->
     {/if}
