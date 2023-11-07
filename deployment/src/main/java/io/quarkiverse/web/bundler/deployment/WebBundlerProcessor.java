@@ -154,13 +154,19 @@ class WebBundlerProcessor {
 
             final Map<String, EsBuildConfig.Loader> loaders = computeLoaders(config);
             loaders.put(".scss", EsBuildConfig.Loader.CSS);
+            final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
+                    .loader(loaders)
+                    .addExternal(surroundWithSlashes(config.staticDir()) + "*")
+                    .minify(launchMode.getLaunchMode().equals(LaunchMode.NORMAL));
+            if (config.externalImports().isPresent()) {
+                for (String e : config.externalImports().get()) {
+                    esBuildConfigBuilder.addExternal(e);
+                }
+            }
             final BundleOptionsBuilder options = new BundleOptionsBuilder()
                     .setWorkFolder(targetDir)
                     .withDependencies(webDependencies.getDependencies())
-                    .withEsConfig(new EsBuildConfigBuilder()
-                            .loader(loaders)
-                            .addExternal(surroundWithSlashes(config.staticDir()) + "*")
-                            .minify(launchMode.getLaunchMode().equals(LaunchMode.NORMAL)).build())
+                    .withEsConfig(esBuildConfigBuilder.build())
                     .withType(type);
             int addedEntryPoints = 0;
             for (EntryPointBuildItem entryPoint : entryPoints) {

@@ -5,6 +5,7 @@ import static io.quarkiverse.web.bundler.deployment.util.PathUtils.removeLeading
 import static java.util.function.Predicate.not;
 
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -65,6 +66,12 @@ public interface WebBundlerConfig {
      * The config for esbuild loaders https://esbuild.github.io/content-types/
      */
     LoadersConfig loaders();
+
+    /**
+     * This defines the list of external paths for esbuild (https://esbuild.github.io/api/#external).
+     * Instead of being bundled, the import will be preserved.
+     */
+    Optional<List<String>> externalImports();
 
     /**
      * Configure how dependencies are collected
