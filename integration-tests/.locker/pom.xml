@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.quarkiverse.web-bundler</groupId>
+  <artifactId>quarkus-web-bundler-integration-tests-locker</artifactId>
+  <version>999-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.mvnpm.at.hotwired</groupId>
+        <artifactId>stimulus</artifactId>
+        <version>3.2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mvnpm</groupId>
+        <artifactId>bootstrap</artifactId>
+        <version>5.3.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mvnpm</groupId>
+        <artifactId>jquery</artifactId>
+        <version>3.7.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mvnpm</groupId>
+        <artifactId>slick-carousel</artifactId>
+        <version>1.8.1</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <properties>
+    <lock-integrity-org.mvnpm.at.hotwired--stimulus>sha512:MfcV4RStTxVwzwZb1gnSC74UABMGxYay8qDK9g2iDX1TqrIj5cCv2wm5VkWNE2MOaNLT6IXp8JDiVfUL529TmQ==</lock-integrity-org.mvnpm.at.hotwired--stimulus>
+    <lock-integrity-org.mvnpm--bootstrap>sha512:VITLgIqXKQFyWLPhprfQpfhmXGXSSF1JX12ySYXkvCQliN94QmNcRJUQPSAjVahmWNTyVmutxtKRZNKqiK0OPg==</lock-integrity-org.mvnpm--bootstrap>
+    <lock-integrity-org.mvnpm--jquery>sha512:6spsOuarJ4OlG4MJGN3rKS6XooPkgWpyjl9T9j35xJrS1ECjfnx6CG1UbURXCaqfGJ9ZcbO3G5VxXFfSsVcvVg==</lock-integrity-org.mvnpm--jquery>
+    <lock-integrity-org.mvnpm--slick-carousel>sha512:kaObqoqxbGvkbSY7gz2AFVWRjirse/RT8Sa5w56MtUgVtWqGjLPwXizy1s3rSvMzvtkiOUWNjuTLE8/rTfFV6g==</lock-integrity-org.mvnpm--slick-carousel>
+  </properties>
+</project>

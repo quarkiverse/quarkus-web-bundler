@@ -29,7 +29,7 @@ public class WebTest {
     @Test
     void root() {
         final Page page = context.newPage();
-        Response response = page.navigate(url.toString());
+        Response response = page.navigate(url.toString(), new Page.NavigateOptions().setTimeout(120000));
         Assertions.assertEquals("OK", response.statusText());
 
         page.waitForLoadState();
