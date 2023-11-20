@@ -33,9 +33,9 @@ This way all your components scripts/styles will be bundled and you tags will be
 
 === Importing Web Dependencies
 
-Once added in the pom.xml, the web dependencies can be imported and used with the ES import syntax, they will automatically be bundled.
+Once added in the pom.xml, the web dependencies can be imported and used with the ESM import syntax, they will automatically be bundled.
 
-NOTE: Currently Web Dependencies need to be imported in order to be bundled.
+WARNING: Web Dependencies (script and styles) need to be imported in order to be bundled, dead code will be eliminated during the build.
 
 .web/app/script.js
 [source,javascript]
@@ -171,15 +171,16 @@ Lookup for packages on https://mvnpm.org or https://www.npmjs.com/ then add them
 
 If a package or a version in not yet available in Maven Central:
 
-- [Available Soon] You can also use the mvnpm.org website to synchronize new versions with Maven Central.
-- If configured with the mvnpm repository, when requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency and publish it to Maven Central so that future developers won't need the repository.
+- You may use the mvnpm.org website to synchronize new versions with Maven Central (Click on the Maven Central icon)
+- If configured with the mvnpm repository, when requesting a dependency, it will inspect the registry to see if it exists and if it does, convert it to a Maven dependency and publish it to Maven Central so that future developers (and CI) won't need the repository.
 
+Configure the `mvnpm-repo` profile in your `~/.m2/settings.xml`:
 .settings.xml
 ----
 <settings>
     <profiles>
         <profile>
-            <id>mvnpm</id>
+            <id>mvnpm-repo</id>
             <repositories>
                 <repository>
                     <id>central</id>
@@ -197,13 +198,37 @@ If a package or a version in not yet available in Maven Central:
             </repositories>
         </profile>
     </profiles>
-
-    <activeProfiles>
-        <activeProfile>mvnpm</activeProfile>
-    </activeProfiles>
-
 </settings>
 ----
+
+NOTE: I only use `-Pmvnpm-repo` when locking my project or updating mvnpm versions.
+
+[#locking]
+=== Locking dependencies
+
+As the NPM ecosystem is over-using version ranges for dependencies, just a few npm dependencies can lead to a big amount of poms to download in order to get the right versions for your project. This leads to long lasting minutes of downloading poms when cloning or during CI. To solve this problem and also to make your build reproducible it is highly recommended to lock your web dependencies versions.
+
+[#maven-locking]
+==== Locking with Maven (mvnpm Locker Maven Plugin)
+
+As Maven doesn't provide a native version locking system, the mvnpm team has implemented a way to easily generate and use a locking pom.xml (BOM). The locker Maven Plugin will create a version locker BOM for your org.mvnpm and org.webjars dependencies. It is essential as NPM dependencies are over using ranges. After the locking, the quantity of files to download is considerably reduced (better for reproducibility, contributors and CI).
+
+It is easy to set up, https://github.com/mvnpm/locker/blob/main/README.md#lock-your-mvnpm-and-webjars-versions[here is the documentation].
+
+[#gradle-locking]
+==== Locking with Gradle
+
+Gradle provides a https://docs.gradle.org/current/userguide/dependency_locking.html[native version locking system], to install it, add this:
+
+.build.gradle
+[source,groovy]
+----
+dependencyLocking {
+    lockAllConfigurations()
+}
+----
+
+Then run `gradle dependencies --write-locks` to generate the lockfile.
 
 [#webjars]
 === WebJars
