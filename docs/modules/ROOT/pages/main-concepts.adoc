@@ -31,3 +31,5 @@ $('.hello').innerText('Hello');
 ----
 
 Imported dependencies scripts and styles will be bundled.
+
+WARNING: Only imported dependencies (scripts and styles) will be bundled, dead code will be eliminated during the build.
