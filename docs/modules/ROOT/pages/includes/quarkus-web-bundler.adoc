@@ -12,7 +12,6 @@ h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.web-root]]`link:#quarkus-web-bundler_quarkus.web-bundler.web-root[quarkus.web-bundler.web-root]`
 
-
 [.description]
 --
 The directory in the resources which serves as root for the web assets
@@ -23,13 +22,11 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_WEB_BUNDLER_WEB_ROOT+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/lang/String.html[String]
- 
+--|String 
 |`web`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static]]`link:#quarkus-web-bundler_quarkus.web-bundler.static[quarkus.web-bundler.static]`
-
 
 [.description]
 --
@@ -41,13 +38,11 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_WEB_BUNDLER_STATIC+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/lang/String.html[String]
- 
+--|String 
 |`static`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle[quarkus.web-bundler.bundle]`
-
 
 [.description]
 --
@@ -59,13 +54,11 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/lang/String.html[String]
- 
+--|String 
 |`static/bundle`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app[quarkus.web-bundler.presets.app]`
-
 
 [.description]
 --
@@ -83,7 +76,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.app.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.app.entry-point-key[quarkus.web-bundler.presets.app.entry-point-key]`
 
-
 [.description]
 --
 The entry point key used for this preset (used in the output)
@@ -99,7 +91,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.components]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.components[quarkus.web-bundler.presets.components]`
-
 
 [.description]
 --
@@ -117,7 +108,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.presets.components.entry-point-key]]`link:#quarkus-web-bundler_quarkus.web-bundler.presets.components.entry-point-key[quarkus.web-bundler.presets.components.entry-point-key]`
 
-
 [.description]
 --
 The entry point key used for this preset (used in the output)
@@ -133,7 +123,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.js]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.js[quarkus.web-bundler.loaders.js]`
-
 
 [.description]
 --
@@ -151,7 +140,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.jsx]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.jsx[quarkus.web-bundler.loaders.jsx]`
 
-
 [.description]
 --
 Configure the file extensions using the jsx loader: https://esbuild.github.io/content-types/++#++jsx
@@ -167,7 +155,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.tsx]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.tsx[quarkus.web-bundler.loaders.tsx]`
-
 
 [.description]
 --
@@ -185,7 +172,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.ts]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.ts[quarkus.web-bundler.loaders.ts]`
 
-
 [.description]
 --
 Configure the file extensions using the ts loader: https://esbuild.github.io/content-types/++#++typescript
@@ -201,7 +187,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.css[quarkus.web-bundler.loaders.css]`
-
 
 [.description]
 --
@@ -219,7 +204,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.local-css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.local-css[quarkus.web-bundler.loaders.local-css]`
 
-
 [.description]
 --
 Configure the file extensions using the local-css loader: https://esbuild.github.io/content-types/++#++css
@@ -235,7 +219,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.global-css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.global-css[quarkus.web-bundler.loaders.global-css]`
-
 
 [.description]
 --
@@ -253,7 +236,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.file]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.file[quarkus.web-bundler.loaders.file]`
 
-
 [.description]
 --
 Configure the file extensions using the file loader: https://esbuild.github.io/content-types/++#++file This loader will copy the file to the output directory and embed the file name into the bundle as a string.
@@ -269,7 +251,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.copy]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.copy[quarkus.web-bundler.loaders.copy]`
-
 
 [.description]
 --
@@ -287,7 +268,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.base64]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.base64[quarkus.web-bundler.loaders.base64]`
 
-
 [.description]
 --
 Configure the file extensions using the base64 loader: https://esbuild.github.io/content-types/++#++base64
@@ -303,7 +283,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.binary]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.binary[quarkus.web-bundler.loaders.binary]`
-
 
 [.description]
 --
@@ -321,7 +300,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.data-url]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.data-url[quarkus.web-bundler.loaders.data-url]`
 
-
 [.description]
 --
 Configure the file extensions using the dataurl loader: https://esbuild.github.io/content-types/++#++data-url
@@ -337,7 +315,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.empty]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.empty[quarkus.web-bundler.loaders.empty]`
-
 
 [.description]
 --
@@ -355,7 +332,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.text]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.text[quarkus.web-bundler.loaders.text]`
 
-
 [.description]
 --
 Configure the file extensions using the text loader: https://esbuild.github.io/content-types/++#++text
@@ -371,7 +347,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.json]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.json[quarkus.web-bundler.loaders.json]`
-
 
 [.description]
 --
@@ -389,7 +364,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.external-imports]]`link:#quarkus-web-bundler_quarkus.web-bundler.external-imports[quarkus.web-bundler.external-imports]`
 
-
 [.description]
 --
 This defines the list of external paths for esbuild (https://esbuild.github.io/api/++#++external). Instead of being bundled, the import will be preserved.
@@ -405,7 +379,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.type]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.type[quarkus.web-bundler.dependencies.type]`
-
 
 [.description]
 --
@@ -424,7 +397,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.serve]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.serve[quarkus.web-bundler.dependencies.serve]`
 
-
 [.description]
 --
 If enabled web dependencies will also be served, this is usually not needed as they are already bundled.
@@ -440,7 +412,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.charset]]`link:#quarkus-web-bundler_quarkus.web-bundler.charset[quarkus.web-bundler.charset]`
-
 
 [.description]
 --
@@ -459,7 +430,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle[quarkus.web-bundler.bundle."bundle"]`
 
-
 [.description]
 --
 Enable or disable this entry point. You can use this to use the map key as key and dir for this entry point.
@@ -476,7 +446,6 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir[quarkus.web-bundler.bundle."bundle".dir]`
 
-
 [.description]
 --
 The directory for this entry point under the web root. By default, it will use the bundle map key.
@@ -492,7 +461,6 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.key]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.key[quarkus.web-bundler.bundle."bundle".key]`
-
 
 [.description]
 --
