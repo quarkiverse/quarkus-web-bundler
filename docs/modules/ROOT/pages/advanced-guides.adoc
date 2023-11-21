@@ -203,6 +203,9 @@ Configure the `mvnpm-repo` profile in your `~/.m2/settings.xml`:
 
 NOTE: I only use `-Pmvnpm-repo` when locking my project or updating mvnpm versions.
 
+NOTE: In case of web dependencies versions conflicts, you can set the version to use for this dependency in the project dependencyManagement (even when using the locker).
+
+
 [#locking]
 === Locking dependencies
 
