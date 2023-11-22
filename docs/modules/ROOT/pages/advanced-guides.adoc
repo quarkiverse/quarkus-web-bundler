@@ -216,7 +216,7 @@ As the NPM ecosystem is over-using version ranges for dependencies, just a few n
 
 As Maven doesn't provide a native version locking system, the mvnpm team has implemented a way to easily generate and use a locking pom.xml (BOM). The locker Maven Plugin will create a version locker BOM for your org.mvnpm and org.webjars dependencies. It is essential as NPM dependencies are over using ranges. After the locking, the quantity of files to download is considerably reduced (better for reproducibility, contributors and CI).
 
-It is easy to set up, https://github.com/mvnpm/locker/blob/main/README.md#lock-your-mvnpm-and-webjars-versions[here is the documentation].
+It is easy to set up, https://github.com/mvnpm/locker#lock-your-mvnpm-and-webjars-versions[here is the documentation].
 
 [#gradle-locking]
 ==== Locking with Gradle
