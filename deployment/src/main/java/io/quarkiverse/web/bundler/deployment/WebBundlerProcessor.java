@@ -301,7 +301,7 @@ class WebBundlerProcessor {
             try (Stream<Path> stream = Files.find(bundleDir, 20, (p, i) -> Files.isRegularFile(p))) {
                 stream.forEach(path -> {
                     final String relativePath = bundleDir.relativize(path).toString();
-                    final String key = relativePath.replaceAll("-[^.]+\\.", ".");
+                    final String key = relativePath.replaceAll("-[^-.]+\\.", ".");
                     final String publicPath = bundlePublicPath + relativePath;
                     final String fileName = path.getFileName().toString();
                     final String ext = fileName.substring(fileName.indexOf("."));
