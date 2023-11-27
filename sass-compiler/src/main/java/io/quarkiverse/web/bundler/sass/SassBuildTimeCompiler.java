@@ -8,15 +8,16 @@ import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+import com.sass_lang.embedded_protocol.InboundMessage;
+import com.sass_lang.embedded_protocol.InboundMessage.ImportResponse.ImportSuccess;
+import com.sass_lang.embedded_protocol.OutputStyle;
+import com.sass_lang.embedded_protocol.Syntax;
+
+import de.larsgrefer.sass.embedded.CompileSuccess;
 import de.larsgrefer.sass.embedded.SassCompilationFailedException;
 import de.larsgrefer.sass.embedded.SassCompiler;
 import de.larsgrefer.sass.embedded.SassCompilerFactory;
 import de.larsgrefer.sass.embedded.importer.CustomImporter;
-import sass.embedded_protocol.EmbeddedSass.InboundMessage.CompileRequest;
-import sass.embedded_protocol.EmbeddedSass.InboundMessage.ImportResponse.ImportSuccess;
-import sass.embedded_protocol.EmbeddedSass.OutboundMessage.CompileResponse.CompileSuccess;
-import sass.embedded_protocol.EmbeddedSass.OutputStyle;
-import sass.embedded_protocol.EmbeddedSass.Syntax;
 
 public class SassBuildTimeCompiler implements BiFunction<String[], BiConsumer<String, String>, String> {
 
@@ -57,7 +58,7 @@ public class SassBuildTimeCompiler implements BiFunction<String[], BiConsumer<St
                     Path resolved = parent.resolve(url);
                     // prefix with _ for partials
                     if (!resolved.getFileName().toString().startsWith("_")) {
-                        resolved = resolved.getParent().resolve("_" + resolved.getFileName().toString());
+                        resolved = resolved.getParent().resolve("_" + resolved.getFileName());
                     }
                     return "sass:" + resolved;
                 }
@@ -76,7 +77,7 @@ public class SassBuildTimeCompiler implements BiFunction<String[], BiConsumer<St
                 }
             });
             String contents = Files.readString(sassFile, StandardCharsets.UTF_8);
-            CompileRequest.StringInput stringInput = CompileRequest.StringInput.newBuilder()
+            InboundMessage.CompileRequest.StringInput stringInput = InboundMessage.CompileRequest.StringInput.newBuilder()
                     .setSource(contents)
                     .setUrl(sassFile.toString())
                     .setSyntax(isSass ? Syntax.INDENTED : Syntax.SCSS)
