@@ -74,6 +74,13 @@ public interface WebBundlerConfig {
     Optional<List<String>> externalImports();
 
     /**
+     * Enable or disable bundle splitting (https://esbuild.github.io/api/#splitting)
+     * Code shared between multiple entry points is split off into a separate shared file (chunk) that both entry points import
+     */
+    @WithDefault("true")
+    Boolean bundleSplitting();
+
+    /**
      * Configure how dependencies are collected
      */
     WebDependenciesConfig dependencies();

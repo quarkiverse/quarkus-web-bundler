@@ -378,6 +378,22 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle-splitting]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle-splitting[quarkus.web-bundler.bundle-splitting]`
+
+[.description]
+--
+Enable or disable bundle splitting (https://esbuild.github.io/api/++#++splitting) Code shared between multiple entry points is split off into a separate shared file (chunk) that both entry points import
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE_SPLITTING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE_SPLITTING+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.type]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.type[quarkus.web-bundler.dependencies.type]`
 
 [.description]
