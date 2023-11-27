@@ -30,7 +30,7 @@ a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler
 
 [.description]
 --
-Any static file to be served under this path
+Resources located in ++{++quarkus.web-bundler.web-root++}++/++{++quarkus.web-bundler.static++}++ will be served by Quarkus. This directory path is also used as prefix for serving (e.g. ++{++quarkus.web-bundler.web-root++}++/static/foo.png will be served on ++{++quarkus.http.root-path++}++/static/foo.png)
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_STATIC+++[]
@@ -42,19 +42,19 @@ endif::add-copy-button-to-env-var[]
 |`static`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle[quarkus.web-bundler.bundle]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle-path]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle-path[quarkus.web-bundler.bundle-path]`
 
 [.description]
 --
-Bundle files will be served under this path
+When configured with an internal path (e.g. 'foo/bar'), Bundle files will be served on this path by Quarkus (prefixed by ++{++quarkus.http.root-path++}++). When configured with an external URL (e.g. 'https://my.cdn.org/'), Bundle files will NOT be served by Quarkus and all resolved paths in the bundle and mapping will automatically point to this url (a CDN for example).
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE_PATH+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE+++`
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE_PATH+++`
 endif::add-copy-button-to-env-var[]
---|String 
+--|string 
 |`static/bundle`
 
 
@@ -375,7 +375,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_WEB_BUNDLER_EXTERNAL_IMPORTS+++`
 endif::add-copy-button-to-env-var[]
 --|list of string 
-|
+|`{quarkus.http.root-path}static/*`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle-splitting]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle-splitting[quarkus.web-bundler.bundle-splitting]`

@@ -1,6 +1,8 @@
 package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.removeLeadingSlash;
 import static java.util.function.Predicate.not;
 
@@ -12,8 +14,13 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 import io.quarkus.maven.dependency.Dependency;
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -42,20 +49,23 @@ public interface WebBundlerConfig {
     Map<String, EntryPointConfig> bundle();
 
     /**
-     * Any static file to be served under this path
+     * Resources located in {quarkus.web-bundler.web-root}/{quarkus.web-bundler.static} will be served by Quarkus.
+     * This directory path is also used as prefix for serving
+     * (e.g. {quarkus.web-bundler.web-root}/static/foo.png will be served on {quarkus.http.root-path}/static/foo.png)
      */
     @WithName("static")
     @WithDefault("static")
-    @NotBlank
+    @Pattern(regexp = "")
     String staticDir();
 
     /**
-     * Bundle files will be served under this path
+     * When configured with an internal path (e.g. 'foo/bar'), Bundle files will be served on this path by Quarkus (prefixed by
+     * {quarkus.http.root-path}).
+     * When configured with an external URL (e.g. 'https://my.cdn.org/'), Bundle files will NOT be served by Quarkus
+     * and all resolved paths in the bundle and mapping will automatically point to this url (a CDN for example).
      */
-    @WithName("bundle")
     @WithDefault("static/bundle")
-    @NotBlank
-    String bundleDir();
+    String bundlePath();
 
     /**
      * The config for presets
@@ -71,6 +81,7 @@ public interface WebBundlerConfig {
      * This defines the list of external paths for esbuild (https://esbuild.github.io/api/#external).
      * Instead of being bundled, the import will be preserved.
      */
+    @ConfigDocDefault("{quarkus.http.root-path}static/*")
     Optional<List<String>> externalImports();
 
     /**
@@ -91,15 +102,34 @@ public interface WebBundlerConfig {
     @WithDefault("UTF-8")
     Charset charset();
 
+    default String httpRootPath() {
+        Config allConfig = ConfigProvider.getConfig();
+        final String rootPath = allConfig.getOptionalValue("quarkus.http.root-path", String.class)
+                .orElse("/");
+        return prefixWithSlash(rootPath);
+    }
+
+    default String publicBundlePath() {
+        return isExternalBundlePath() ? bundlePath() : join(httpRootPath(), bundlePath());
+    }
+
+    default boolean isExternalBundlePath() {
+        return bundlePath().matches("^https?://.*");
+    }
+
+    default boolean shouldQuarkusServeBundle() {
+        return !isExternalBundlePath();
+    }
+
     interface PresetsConfig {
 
         /**
          * Configuration preset to allow defining the web app with scripts and styles to bundle.
          * - {web-root}/app/**\/*
-         *
+         * <p>
          * If an index.js/ts is detected, it will be used as entry point for your app.
          * If not found the entry point will be auto-generated with all the files in the app directory.
-         *
+         * <p>
          * => processed and added to static/[key].js and static/[key].css (key is "main" by default)
          */
         PresetConfig app();
@@ -110,7 +140,7 @@ public interface WebBundlerConfig {
          * - /{web-root}/components/[name]/[name].js/ts
          * - /{web-root}/components/[name]/[name].scss/css
          * - /{web-root}/components/[name]/[name].html (Qute tag)
-         *
+         * <p>
          * => processed and added to static/[key].js and static/[key].css (key is "main" by default)
          */
         PresetConfig components();

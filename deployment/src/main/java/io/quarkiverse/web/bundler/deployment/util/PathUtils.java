@@ -18,6 +18,10 @@ public final class PathUtils {
         return path.endsWith("/") ? path : path + "/";
     }
 
+    public static String join(String path1, String path2) {
+        return addTrailingSlash(path1) + removeLeadingSlash(path2);
+    }
+
     public static String removeLeadingSlash(String path) {
         return path.startsWith("/") ? path.substring(1) : path;
     }

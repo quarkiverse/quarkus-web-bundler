@@ -9,7 +9,13 @@ The Web Root is `src/main/resources/web`, this is where the Web Bundler will loo
 [#static]
 == Static files
 
-Files in `src/main/resources/web/static/&#42;&#42;` will be served statically under http://localhost:8080/static/ (you can choose another directory name xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.static[Config Reference])
+There are 2 ways to add static files (fonts, images, music, video, ...) to your app:
+- Files in `src/main/resources/web/static/&#42;&#42;` will be served statically under http://localhost:8080/static/ (you can choose another directory name xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.static[Config Reference]). For convenience, those static files are excluded (marked as external) from the bundling by default. This allows to reference them from scripts or styles without errors (e.g. `import '/static/foo.png';`).
+- Other files imported from scripts or styles will be bundled and processed by the configured loaders (see <<loaders>>) allowing different options (like embedding them as data-url).
+
+
+
+NOTE:
 
 == Bundling
 
@@ -120,14 +126,13 @@ quarkus.web-bundler.presets.components.key=components // <2>
 [#loaders]
 === How is it bundled (Loaders)
 
-Depending on the app file extensions the Web Bundler will use xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.js[pre-configured loaders] to bundle the app.
+Bases on the files extensions, the Web Bundler will use xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.js[pre-configured loaders] to bundle them. For scripts and styles, the default configuration should be enough.
 
-By default, you can import and use fonts and images from your scripts and styles (svg, gif, png, jpg, ...) using their relative path, they will be automatically copied and served using the xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.file[file loader].
+For other assets (svg, gif, png, jpg, ttf, ...) imported from your scripts and styles using their relative path, you may choose the loader based on the file extension allowing different options (e.g. serving, embedding the file as data-url, binary, base64, ...). By default, they will automatically be copied and served using the xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.file[file loader].
 
-In a css file, using `url('./example.png')` will be processed by a loader (see xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.file[file loader]), the file will be copied with a static name and the path will be replaced by the new file static path (e.g. `/static/bundle/assets/example-QH383.png`).
+For example, `url('./example.png')` in a style or `import example from './example.png';` in a script will be processed, the file will be copied with a static name and the path will be replaced by the new file static path (e.g. `/static/bundle/assets/example-QH383.png`). The `example` variable will contain the public path to this file to be used in a component img `src` for example.
 
-NOTE: For convenience, when using a static file (e.g. `url('/static/example.png')`, the path will not be processed because all files under `/static/&#42;&#42;` are marked as external (to be ignored from the bundling). Since `/static/example.png` will be served (See <<static>>), it is ok.
-
+NOTE: For convenience, when using a file located in the static directory (e.g. `url('/static/example.png')`, the path will not be processed because all files under `/static/&#42;&#42;` are marked as external (to be ignored from the bundling). Since `/static/example.png` will be served by Quarkus (See <<static>>), it is ok.
 
 === SCSS, SASS
 
@@ -259,7 +264,9 @@ quarkus.web-bundler.dependencies.type=webjars
 [#bundle-paths]
 == Bundle Paths
 
-After the bundling is done, the bundle files are served under `/static/bundle/...`.
+After the bundling is done, the bundle files will be served by Quarkus under `{quarkus.http.root-path}/static/bundle/...` by default (xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.bundle-path[Config Reference]).
+
+This may also be configured with an external URL (e.g. 'https://my.cdn.org/'), in which case, Bundle files will NOT be served by Quarkus and all resolved paths in the bundle and mapping will automatically point to this url (a CDN for example).
 
 In production, it is a good practise to have a hash inserted in the scripts and styles file names (E.g.: `main-XKHKUJNQ.js`) to differentiate builds (make them static). This way they can be cached without a risk of missing the most recent builds.
 
