@@ -23,11 +23,11 @@ public class BundleTest {
                         "main.css.map",
                         "chunk.js",
                         "main.css",
-                        "page1.js",
-                        "page1.js.map",
-                        "page1.css",
+                        "page-1.js",
+                        "page-1.js.map",
+                        "page-1.css",
                         "chunk.js.map",
-                        "page1.css.map",
+                        "page-1.css.map",
                         "main.js.map",
                         "main.js");
 
