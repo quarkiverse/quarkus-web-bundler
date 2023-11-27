@@ -156,6 +156,7 @@ class WebBundlerProcessor {
             loaders.put(".scss", EsBuildConfig.Loader.CSS);
             final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
                     .loader(loaders)
+                    .splitting(config.bundleSplitting())
                     .addExternal(surroundWithSlashes(config.staticDir()) + "*")
                     .minify(launchMode.getLaunchMode().equals(LaunchMode.NORMAL));
             if (config.externalImports().isPresent()) {

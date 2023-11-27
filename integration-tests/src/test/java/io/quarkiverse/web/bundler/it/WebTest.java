@@ -18,7 +18,7 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@WithPlaywright
+@WithPlaywright(verbose = true)
 public class WebTest {
     @InjectPlaywright
     BrowserContext context;
