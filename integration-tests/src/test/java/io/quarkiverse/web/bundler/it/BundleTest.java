@@ -1,6 +1,7 @@
 package io.quarkiverse.web.bundler.it;
 
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.UriBuilder;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,9 @@ public class BundleTest {
                         "main.js");
 
         for (String name : bundle.mapping().names()) {
-            RestAssured.get(bundle.resolve(name))
+            RestAssured.given()
+                    .basePath("")
+                    .get(UriBuilder.fromUri(bundle.resolve(name)).build())
                     .then()
                     .statusCode(200);
         }

@@ -2,6 +2,7 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
 import static io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
@@ -156,13 +157,15 @@ class WebBundlerProcessor {
             loaders.put(".scss", EsBuildConfig.Loader.CSS);
             final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
                     .loader(loaders)
+                    .publicPath(config.publicBundlePath())
                     .splitting(config.bundleSplitting())
-                    .addExternal(surroundWithSlashes(config.staticDir()) + "*")
                     .minify(launchMode.getLaunchMode().equals(LaunchMode.NORMAL));
             if (config.externalImports().isPresent()) {
                 for (String e : config.externalImports().get()) {
                     esBuildConfigBuilder.addExternal(e);
                 }
+            } else {
+                esBuildConfigBuilder.addExternal(join(config.httpRootPath(), "static/*"));
             }
             final BundleOptionsBuilder options = new BundleOptionsBuilder()
                     .setWorkFolder(targetDir)
@@ -295,22 +298,25 @@ class WebBundlerProcessor {
             boolean changed) {
         try {
             Map<String, String> bundle = new HashMap<>();
-            final String bundlePublicPath = surroundWithSlashes(config.bundleDir());
             List<String> names = new ArrayList<>();
             StringBuilder mappingString = new StringBuilder();
             try (Stream<Path> stream = Files.find(bundleDir, 20, (p, i) -> Files.isRegularFile(p))) {
                 stream.forEach(path -> {
                     final String relativePath = bundleDir.relativize(path).toString();
                     final String key = relativePath.replaceAll("-[^-.]+\\.", ".");
-                    final String publicPath = bundlePublicPath + relativePath;
+                    final String publicBundleAssetPath = join(config.publicBundlePath(), relativePath);
                     final String fileName = path.getFileName().toString();
                     final String ext = fileName.substring(fileName.indexOf("."));
                     if (Bundle.BUNDLE_MAPPING_EXT.contains(ext)) {
-                        mappingString.append("  ").append(key).append(" => ").append(publicPath).append("\n");
-                        bundle.put(key, publicPath);
+                        mappingString.append("  ").append(key).append(" => ").append(publicBundleAssetPath).append("\n");
+                        bundle.put(key, publicBundleAssetPath);
                     }
-                    names.add(publicPath);
-                    makePublic(staticResourceProducer, publicPath, path.normalize(), WatchMode.DISABLED, changed);
+                    names.add(publicBundleAssetPath);
+                    if (config.shouldQuarkusServeBundle()) {
+                        // The root-path will already be added by the static resources handler
+                        final String resourcePath = surroundWithSlashes(config.bundlePath()) + relativePath;
+                        makePublic(staticResourceProducer, resourcePath, path.normalize(), WatchMode.DISABLED, changed);
+                    }
                 });
             }
             if (started != null) {

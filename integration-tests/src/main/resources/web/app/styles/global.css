@@ -13,6 +13,6 @@ h1 {
 }
 
 #message {
-    background-image: url('/static/images/logo.svg');
+    background-image: url('/foo/static/images/logo.svg');
     color: coral;
 }
