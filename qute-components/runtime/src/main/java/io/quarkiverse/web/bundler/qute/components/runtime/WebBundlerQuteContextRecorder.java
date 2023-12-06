@@ -1,4 +1,4 @@
-package io.quarkiverse.web.bundler.runtime.qute;
+package io.quarkiverse.web.bundler.qute.components.runtime;
 
 import java.util.List;
 import java.util.Map;

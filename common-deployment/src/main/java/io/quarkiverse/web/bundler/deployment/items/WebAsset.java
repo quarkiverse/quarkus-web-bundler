@@ -18,6 +18,10 @@ public interface WebAsset {
         return readTemplateContent(filePath().orElseThrow());
     }
 
+    default byte[] contentOrReadFromFile() {
+        return hasContent() ? content() : readContentFromFile();
+    }
+
     default boolean hasContent() {
         return this.content() != null;
     }

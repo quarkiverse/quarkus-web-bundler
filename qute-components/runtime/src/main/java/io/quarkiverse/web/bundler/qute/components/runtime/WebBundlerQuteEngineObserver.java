@@ -1,6 +1,6 @@
-package io.quarkiverse.web.bundler.runtime.qute;
+package io.quarkiverse.web.bundler.qute.components.runtime;
 
-import static io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
+import static io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -12,7 +12,7 @@ import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
+import io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
 import io.quarkus.qute.EngineBuilder;
 import io.quarkus.qute.TemplateLocator;
 import io.quarkus.qute.UserTagSectionHelper;

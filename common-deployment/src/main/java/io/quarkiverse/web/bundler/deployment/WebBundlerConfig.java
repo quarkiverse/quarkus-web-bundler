@@ -1,9 +1,7 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.removeLeadingSlash;
 import static java.util.function.Predicate.not;
 
 import java.nio.charset.Charset;
@@ -11,15 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
-import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -36,16 +29,16 @@ public interface WebBundlerConfig {
      * The directory in the resources which serves as root for the web assets
      */
     @WithDefault("web")
-    @NotBlank
     String webRoot();
 
     default String fromWebRoot(String dir) {
-        return addTrailingSlash(webRoot()) + removeLeadingSlash(dir);
+        return join(webRoot(), dir);
     }
 
     /**
-     * Bundles of scripts and styles
+     * Bundle entry points config for scripts and styles
      */
+    @ConfigDocDefault("if not overridden, by default, 'app' directory will be bundled with 'main' as entry point key")
     Map<String, EntryPointConfig> bundle();
 
     /**
@@ -55,7 +48,6 @@ public interface WebBundlerConfig {
      */
     @WithName("static")
     @WithDefault("static")
-    @Pattern(regexp = "")
     String staticDir();
 
     /**
@@ -66,11 +58,6 @@ public interface WebBundlerConfig {
      */
     @WithDefault("static/bundle")
     String bundlePath();
-
-    /**
-     * The config for presets
-     */
-    PresetsConfig presets();
 
     /**
      * The config for esbuild loaders https://esbuild.github.io/content-types/
@@ -121,58 +108,13 @@ public interface WebBundlerConfig {
         return !isExternalBundlePath();
     }
 
-    interface PresetsConfig {
-
-        /**
-         * Configuration preset to allow defining the web app with scripts and styles to bundle.
-         * - {web-root}/app/**\/*
-         * <p>
-         * If an index.js/ts is detected, it will be used as entry point for your app.
-         * If not found the entry point will be auto-generated with all the files in the app directory.
-         * <p>
-         * => processed and added to static/[key].js and static/[key].css (key is "main" by default)
-         */
-        PresetConfig app();
-
-        /**
-         * Configuration preset to allow defining web components (js + style + html) as a bundle.
-         * Convention is to use:
-         * - /{web-root}/components/[name]/[name].js/ts
-         * - /{web-root}/components/[name]/[name].scss/css
-         * - /{web-root}/components/[name]/[name].html (Qute tag)
-         * <p>
-         * => processed and added to static/[key].js and static/[key].css (key is "main" by default)
-         */
-        PresetConfig components();
-
-    }
-
-    interface PresetConfig {
-
-        /**
-         * Enable or disable this preset
-         *
-         * @return
-         */
-        @WithParentName
-        @WithDefault("true")
-        boolean enabled();
-
-        /**
-         * The entry point key used for this preset (used in the output)
-         */
-        @WithDefault("main")
-        Optional<String> entryPointKey();
-    }
-
     interface WebDependenciesConfig {
 
         /**
-         * The type used to collect web dependencies:
-         * web-jar or mvnpm
+         * Path to the node_modules directory (relative to the project root).
          */
-        @WithDefault("mvnpm")
-        WebDependencyType type();
+        @ConfigDocDefault("node_modules will be in the build/target directory")
+        Optional<String> nodeModules();
 
         /**
          * If enabled web dependencies will also be served, this is usually not needed as they are already bundled.
@@ -283,14 +225,14 @@ public interface WebBundlerConfig {
 
         /**
          * The directory for this entry point under the web root.
-         * By default, it will use the bundle map key.
          */
+        @ConfigDocDefault("the bundle map key")
         Optional<String> dir();
 
         /**
-         * The key for this entry point
-         * By default, it will use the bundle map key.
+         * The key for this entry point (use the same key as another to bundle them together).
          */
+        @ConfigDocDefault("the bundle map key")
         Optional<String> key();
 
         default String effectiveDir(String mapKey) {
@@ -301,21 +243,6 @@ public interface WebBundlerConfig {
             return key().filter(not(String::isBlank)).orElse(mapKey);
         }
 
-    }
-
-    enum WebDependencyType {
-        WEBJARS("org.webjars.npm"::equals),
-        MVNPM(s -> s.startsWith("org.mvnpm"));
-
-        private final Predicate<String> groupMatcher;
-
-        WebDependencyType(Predicate<String> groupMatcher) {
-            this.groupMatcher = groupMatcher;
-        }
-
-        public boolean matches(Dependency dep) {
-            return this.groupMatcher.test(dep.getGroupId());
-        }
     }
 
 }

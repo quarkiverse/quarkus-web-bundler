@@ -9,7 +9,8 @@ No need to install NodeJs, it relies on a Java wrapped version of [esbuild](http
 * [x] Production build
 * [x] Awesome Dev experience
 * [x] Integrated with NPM dependencies through [mvnpm](https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#mvnpm) or [webjars](https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#webjars).
-* [x] Server Side Web Components (Qute template + Script + Style)
+* [x] Build-time index.html rendering with bundled scripts and styles
+* [x] Server Side Qute Components (Qute template + Script + Style)
 
 All the information you need to use Quarkus Web Bundler is in the [user documentation](https://docs.quarkiverse.io/quarkus-web-bundler/dev/).
 

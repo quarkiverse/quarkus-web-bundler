@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.quarkiverse.web-bundler</groupId>
-    <artifactId>quarkus-web-bundler-parent</artifactId>
+    <artifactId>quarkus-web-bundler-qute-components-parent</artifactId>
     <version>999-SNAPSHOT</version>
   </parent>
-  <artifactId>quarkus-web-bundler-deployment</artifactId>
-  <name>Quarkus Web Bundler - Deployment</name>
+  <artifactId>quarkus-web-bundler-qute-components-deployment</artifactId>
+  <name>Quarkus Web Bundler - Qute Components - Deployment</name>
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -15,38 +15,17 @@
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.web-bundler</groupId>
-      <artifactId>quarkus-web-bundler</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.web-bundler</groupId>
-      <artifactId>quarkus-web-bundler-sass-compiler</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.yahoo.platform.yui</groupId>
-      <artifactId>yuicompressor</artifactId>
-      <version>${yuicompressor.version}</version>
-    </dependency>
-    <!--
-    <dependency>
-      <groupId>com.sksamuel.scrimage</groupId>
-      <artifactId>scrimage-core</artifactId>
-      <version>${scrimage-core.version}</version>
-    </dependency>-->
-    <dependency>
-      <groupId>io.quarkus.qute</groupId>
-      <artifactId>qute-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.mvnpm</groupId>
-      <artifactId>esbuild-java</artifactId>
-      <version>${esbuild-java.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.web-bundler</groupId>
       <artifactId>quarkus-web-bundler-common-deployment</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkiverse.web-bundler</groupId>
+      <artifactId>quarkus-web-bundler-qute-components</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-qute-deployment</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.quarkiverse.web-bundler</groupId>
-    <artifactId>quarkus-web-bundler-parent</artifactId>
+    <artifactId>quarkus-web-bundler-qute-components-parent</artifactId>
     <version>999-SNAPSHOT</version>
   </parent>
-  <artifactId>quarkus-web-bundler</artifactId>
-  <name>Quarkus Web Bundler - Runtime</name>
+  <artifactId>quarkus-web-bundler-qute-components</artifactId>
+  <name>Quarkus Web Bundler - Qute Components - Runtime</name>
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -15,13 +15,11 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-vertx-http</artifactId>
+      <artifactId>quarkus-qute</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkiverse.web-bundler</groupId>
-      <artifactId>quarkus-web-bundler-qute-components</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-vertx-http</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -32,12 +30,15 @@
         <version>${quarkus.version}</version>
         <executions>
           <execution>
-            <phase>process-resources</phase>
+            <phase>compile</phase>
             <goals>
               <goal>extension-descriptor</goal>
             </goals>
             <configuration>
               <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
+              <dependencyCondition>
+                <artifact>io.quarkus:quarkus-qute</artifact>
+              </dependencyCondition>
             </configuration>
           </execution>
         </executions>
