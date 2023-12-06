@@ -10,7 +10,8 @@ No need to install NodeJs, it relies on a Java wrapped version of https://esbuil
 * [*] Production build
 * [*] Awesome Dev experience
 * [*] Integrated with NPM dependencies through xref:advanced-guides.adoc#mvnpm[mvnpm] or xref:advanced-guides.adoc#webjars[WebJars].
-* [*] Server Side Web Components (Qute template + Script + Style)
+* [*] Build-time index.html rendering with bundled scripts and styles
+* [*] Server Side Qute Components (Qute template + Script + Style)
 
 NOTE: The Web Bundler has been pre-configured to reduce the complexity of web bundling. You don't need to know all the concepts of web bundling (entry-points, loaders, ...) to use this extension, it has been pre-configured with sensible defaults that you may change if needed.
 
@@ -51,6 +52,7 @@ WARNING: If you don't import a Web Dependency, it won't be bundled (dead code el
 
 Install the bundle in your index.html template:
 
+.web/index.html
 [source,html]
 ----
 <html>

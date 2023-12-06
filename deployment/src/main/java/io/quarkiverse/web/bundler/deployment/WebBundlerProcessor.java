@@ -5,15 +5,20 @@ import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleT
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
-import static io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
@@ -33,17 +38,18 @@ import org.jboss.logging.Logger;
 
 import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
+import io.mvnpm.esbuild.model.BundleOptions;
 import io.mvnpm.esbuild.model.BundleOptionsBuilder;
 import io.mvnpm.esbuild.model.BundleResult;
-import io.mvnpm.esbuild.model.BundleType;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
+import io.mvnpm.esbuild.model.WebDependency;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
 import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.HtmlTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
@@ -52,9 +58,6 @@ import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticReso
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
 import io.quarkiverse.web.bundler.runtime.WebDependenciesBlockerRecorder;
-import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder;
-import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
-import io.quarkiverse.web.bundler.runtime.qute.WebBundlerQuteEngineObserver;
 import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -66,6 +69,7 @@ import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.util.FileUtil;
+import io.quarkus.qute.*;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
@@ -120,8 +124,8 @@ class WebBundlerProcessor {
                 && bundlesBuildContext != null
                 && bundlesBuildContext.bundleDistDir() != null;
         if (isLiveReload
-                && webDependencies.getDependencies().equals(bundlesBuildContext.webDependencies())
-                && !liveReload.getChangedResources().contains("web/tsconfig.json")
+                && Objects.equals(webDependencies.getDependencies(), bundlesBuildContext.webDependencies())
+                && !liveReload.getChangedResources().contains(config.fromWebRoot("tsconfig.json"))
                 && entryPoints.equals(bundlesBuildContext.entryPoints())
                 && entryPoints.stream().map(EntryPointBuildItem::getWebAssets).flatMap(List::stream)
                         .map(WebAsset::resourceName)
@@ -134,8 +138,8 @@ class WebBundlerProcessor {
         }
         boolean hasScssChange = isLiveReload
                 && liveReload.getChangedResources().stream().anyMatch(WebBundlerProcessor::isSassFile);
-        final BundleType type = BundleType.valueOf(webDependencies.getType().toString());
         final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+        final Path nodeModulesDir = resolveNodeModulesDir(config, outputTarget);
         try {
             if (!isLiveReload) {
                 FileUtil.deleteDirectory(targetDir);
@@ -167,11 +171,11 @@ class WebBundlerProcessor {
             } else {
                 esBuildConfigBuilder.addExternal(join(config.httpRootPath(), "static/*"));
             }
-            final BundleOptionsBuilder options = new BundleOptionsBuilder()
-                    .setWorkFolder(targetDir)
+            final BundleOptionsBuilder optionsBuilder = new BundleOptionsBuilder()
+                    .withWorkDir(targetDir)
                     .withDependencies(webDependencies.getDependencies())
                     .withEsConfig(esBuildConfigBuilder.build())
-                    .withType(type);
+                    .withNodeModulesDir(nodeModulesDir);
             int addedEntryPoints = 0;
             for (EntryPointBuildItem entryPoint : entryPoints) {
                 final List<String> scripts = new ArrayList<>();
@@ -208,27 +212,32 @@ class WebBundlerProcessor {
                     LOGGER.infof("Bundling '%s' (%d files)", entryPoint.getEntryPointKey(), scripts.size());
                 }
 
-                if (scripts.size() > 0) {
-                    options.addAutoEntryPoint(targetDir, entryPoint.getEntryPointKey(), scripts);
+                if (!scripts.isEmpty()) {
+                    optionsBuilder.addAutoEntryPoint(targetDir, entryPoint.getEntryPointKey(), scripts);
                     addedEntryPoints++;
                 }
             }
             if (addedEntryPoints > 0) {
-
+                final BundleOptions options = optionsBuilder.build();
                 if (!isLiveReload
                         || !Objects.equals(webDependencies.getDependencies(), bundlesBuildContext.webDependencies())) {
                     long startedInstall = Instant.now().toEpochMilli();
-                    Bundler.install(targetDir, webDependencies.getDependencies(), type);
-                    final long duration = Instant.now().minusMillis(startedInstall).toEpochMilli();
-                    if (LOGGER.isDebugEnabled()) {
-                        String deps = webDependencies.getDependencies().stream().map(Path::getFileName).map(Path::toString)
-                                .collect(
-                                        Collectors.joining(", "));
-                        LOGGER.infof("%d %s Web dependencies installed in %sms: %s", webDependencies.getDependencies().size(),
-                                webDependencies.getType(), duration, deps);
+                    if (Bundler.install(targetDir, options)) {
+                        final long duration = Instant.now().minusMillis(startedInstall).toEpochMilli();
+                        if (LOGGER.isDebugEnabled()) {
+                            String deps = webDependencies.getDependencies().stream().map(WebDependency::id)
+                                    .collect(
+                                            Collectors.joining(", "));
+                            LOGGER.infof("%d web dependencies installed in %sms: %s", webDependencies.getDependencies().size(),
+                                    duration, deps);
+                        } else {
+                            LOGGER.infof("%d web Dependencies installed in %sms.", webDependencies.getDependencies().size(),
+                                    duration);
+                        }
+                    } else if (webDependencies.getDependencies().isEmpty()) {
+                        LOGGER.info("No web dependencies to install.");
                     } else {
-                        LOGGER.infof("%d %s Web Dependencies installed in %sms ", webDependencies.getDependencies().size(),
-                                webDependencies.getType(), duration);
+                        LOGGER.info("All web dependencies are already installed.");
                     }
                 }
                 final long startedBundling = Instant.now().toEpochMilli();
@@ -240,7 +249,7 @@ class WebBundlerProcessor {
                         stream.forEach(p -> convertToScss(p, targetDir));
                     }
                 }
-                final BundleResult result = Bundler.bundle(options.build());
+                final BundleResult result = Bundler.bundle(options, false);
                 if (!result.result().output().isBlank()) {
                     LOGGER.debugf(result.result().output());
                 }
@@ -251,7 +260,7 @@ class WebBundlerProcessor {
                         new BundlesBuildContext(webDependencies.getDependencies(), entryPoints, result.dist()));
             } else {
                 liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
-                LOGGER.debugf("No entrypoint found, no bundle generated");
+                LOGGER.debugf("No entrypoint found, no bundle generated.");
             }
 
         } catch (IOException e) {
@@ -260,6 +269,22 @@ class WebBundlerProcessor {
             liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
             throw e;
         }
+    }
+
+    private static Path resolveNodeModulesDir(WebBundlerConfig config, OutputTargetBuildItem outputTarget) {
+        if (config.dependencies().nodeModules().isEmpty()) {
+            return outputTarget.getOutputDirectory().resolve(BundleOptions.NODE_MODULES);
+        }
+        final Path projectRoot = findProjectRoot(outputTarget.getOutputDirectory());
+        final Path nodeModulesDir = Path.of(config.dependencies().nodeModules().get().trim());
+        if (nodeModulesDir.isAbsolute() && Files.isDirectory(nodeModulesDir.getParent())) {
+            return nodeModulesDir;
+        }
+        if (projectRoot == null || !Files.isDirectory(projectRoot)) {
+            throw new IllegalStateException(
+                    "If not absolute, the node_modules directory is resolved relative to the project root, but Web Bundler was not able to find the project root.");
+        }
+        return projectRoot.resolve(nodeModulesDir);
     }
 
     private Map<String, EsBuildConfig.Loader> computeLoaders(WebBundlerConfig config) {
@@ -350,24 +375,43 @@ class WebBundlerProcessor {
     }
 
     @BuildStep
-    @Record(STATIC_INIT)
-    void initQuteTags(
-            BuildProducer<AdditionalBeanBuildItem> additionalBeans,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            WebBundlerQuteContextRecorder recorder,
-            QuteTagsBuildItem quteTags) {
-        final Map<String, String> templates = new HashMap<>();
-        final List<String> tags = new ArrayList<>();
-        for (WebAsset webAsset : quteTags.getWebAssets()) {
-            final String tag = webAsset.filePath().get().getFileName().toString();
-            final String tagName = tag.contains(".") ? tag.substring(0, tag.indexOf('.')) : tag;
-            templates.put(WEB_BUNDLER_ID_PREFIX + tagName, new String(webAsset.readContentFromFile(), webAsset.charset()));
-            tags.add(tagName);
+    void processHtmlTemplateWebAssets(WebBundlerConfig config,
+            HtmlTemplatesBuildItem htmlTemplates,
+            GeneratedBundleBuildItem generatedBundle,
+            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            LiveReloadBuildItem liveReload) {
+        final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
+        final Bundle.Mapping mapping = new Bundle.Mapping() {
+            @Override
+            public String get(String name) {
+                return bundle.get(name);
+            }
+
+            @Override
+            public Set<String> names() {
+                return bundle.keySet();
+            }
+        };
+        final Engine engine = Engine.builder()
+                .addDefaults()
+                .addNamespaceResolver(new NamespaceResolver.NamespaceResolverImpl("inject", 0, (c) -> {
+                    if (c.getName().equals("bundle")) {
+                        return CompletedStage.of(new Bundle(mapping));
+                    }
+                    return null;
+                }))
+                .addLocator(new WebBundlerTagsLocator())
+                .addSectionHelper(new UserTagSectionHelper.Factory("bundle", "web-bundler/bundle.html"))
+                .addValueResolver(new ReflectionValueResolver())
+                .addParserHook(new Qute.IndexedArgumentsParserHook())
+                .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
+                .build();
+        for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
+            final byte[] bytes = webAsset.contentOrReadFromFile();
+            final String content = engine.parse(new String(bytes, webAsset.charset())).render();
+            makeWebAssetPublic(staticResourceProducer, webAsset.pathFromWebRoot(config.webRoot()), liveReload,
+                    HtmlPageWebAsset.of(webAsset, content));
         }
-        additionalBeans.produce(new AdditionalBeanBuildItem(WebBundlerQuteEngineObserver.class));
-        syntheticBeans.produce(SyntheticBeanBuildItem.configure(WebBundlerQuteContext.class)
-                .supplier(recorder.createContext(tags, templates))
-                .done());
     }
 
     @BuildStep
@@ -406,7 +450,7 @@ class WebBundlerProcessor {
                 staticResourceProducer,
                 Set.of(new GeneratedStaticResourceBuildItem.Source(webAsset.resourceName(), webAsset.filePath())),
                 publicPath,
-                webAsset.readContentFromFile(),
+                webAsset.contentOrReadFromFile(),
                 liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.resourceName()),
                 WatchMode.RESTART);
     }
@@ -453,11 +497,71 @@ class WebBundlerProcessor {
         return lc.endsWith(".scss") || lc.endsWith(".sass");
     }
 
-    public record BundlesBuildContext(List<Path> webDependencies, List<EntryPointBuildItem> entryPoints,
+    public record BundlesBuildContext(List<WebDependency> webDependencies, List<EntryPointBuildItem> entryPoints,
             Path bundleDistDir) {
 
         public BundlesBuildContext() {
             this(List.of(), List.of(), null);
         }
+    }
+
+    static Path findProjectRoot(Path outputDirectory) {
+        Path currentPath = outputDirectory;
+        do {
+            if (Files.exists(currentPath.resolve(Paths.get("src", "main")))
+                    || Files.exists(currentPath.resolve(Paths.get("config", "application.properties")))
+                    || Files.exists(currentPath.resolve(Paths.get("config", "application.yaml")))
+                    || Files.exists(currentPath.resolve(Paths.get("config", "application.yml")))) {
+                return currentPath.normalize();
+            }
+            if (currentPath.getParent() != null && Files.exists(currentPath.getParent())) {
+                currentPath = currentPath.getParent();
+            } else {
+                return null;
+            }
+        } while (true);
+    }
+
+    private static final class WebBundlerTagsLocator implements TemplateLocator {
+        @Override
+        public Optional<TemplateLocation> locate(String id) {
+            if (!id.startsWith("web-bundler/")) {
+                return Optional.empty();
+            }
+            String name = id.replace("web-bundler/", "");
+            try (InputStream templateStream = this.getClass().getResourceAsStream("/templates/tags/" + name)) {
+                if (templateStream == null) {
+                    return Optional.empty();
+                }
+                return Optional.of(new TemplateLocation() {
+                    @Override
+                    public Reader read() {
+                        return new InputStreamReader(templateStream, StandardCharsets.UTF_8);
+                    }
+
+                    @Override
+                    public Optional<Variant> getVariant() {
+                        return Optional.empty();
+                    }
+                });
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+    }
+
+    record HtmlPageWebAsset(String resourceName, byte[] content, Charset charset) implements WebAsset {
+
+        static HtmlPageWebAsset of(WebAsset sourceAsset, String content) {
+            return new HtmlPageWebAsset(sourceAsset.resourceName(), content.getBytes(sourceAsset.charset()),
+                    sourceAsset.charset());
+        }
+
+        @Override
+        public Optional<Path> filePath() {
+            return Optional.empty();
+        }
+
     }
 }

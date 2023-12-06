@@ -6,42 +6,25 @@
     <artifactId>quarkus-web-bundler-parent</artifactId>
     <version>999-SNAPSHOT</version>
   </parent>
-  <artifactId>quarkus-web-bundler</artifactId>
-  <name>Quarkus Web Bundler - Runtime</name>
+  <artifactId>quarkus-web-bundler-common-deployment</artifactId>
+  <name>Quarkus Web Bundler - Common - Deployment</name>
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
+      <artifactId>quarkus-arc-deployment</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-vertx-http</artifactId>
+      <artifactId>quarkus-vertx-http-deployment</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkiverse.web-bundler</groupId>
-      <artifactId>quarkus-web-bundler-qute-components</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5-internal</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
     <plugins>
-      <plugin>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-extension-maven-plugin</artifactId>
-        <version>${quarkus.version}</version>
-        <executions>
-          <execution>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>extension-descriptor</goal>
-            </goals>
-            <configuration>
-              <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>

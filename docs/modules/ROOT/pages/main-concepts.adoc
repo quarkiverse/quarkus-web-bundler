@@ -13,9 +13,7 @@ image:web-bundler.png[Web Bundler schema]
 
 2. Bundles it with the supersonic esbuild compiler (scss are also compiled if needed) and serves them.
 
-3. Make it easy to use the bundle scripts and styles xref:advanced-guides.adoc#bundle-paths[from Qute or any other template engine].
-
-
+3. Make it easy to create pages (.html) with the bundle scripts and styles xref:advanced-guides.adoc#bundle-paths[using Qute or any other template engine].
 
 [#web-dependencies]
 == Web Dependencies
