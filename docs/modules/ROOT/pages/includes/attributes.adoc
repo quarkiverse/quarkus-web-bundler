@@ -1,4 +1,4 @@
-:project-version: 1.1.6
+:project-version: 1.2.0.alpha1
 
 :maven-version: 3.8.1+
 
