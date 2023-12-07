@@ -137,11 +137,14 @@ quarkus.web-bundler.bundle.qute-components.dir=components // <2>
 <1> use `main` to have a single merged bundle with the `app` (or remove this line to use `qute-components` as default)
 <2> unless you plan to have another components directory, this is nicer :)
 
-By convention, your component will be defined in `src/main/resources/web/qute-components/[name]/[name].{html,css,scss,js,ts,...};`. The scripts, styles and assets will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
+Here is a nice convention to define your components: `src/main/resources/web/components/[name]/[name].{html,css,scss,js,ts,...};`. The scripts, styles and assets will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
 
-This way all your components scripts/styles will be bundled and your tags will be available in your templates.
+Example:
+- `src/main/resources/web/components/hello/hello.html`
+- `src/main/resources/web/components/hello/hello.js`
+- `src/main/resources/web/components/hello/hello.scss`
 
-NOTE: If you don't want a single main bundled script, you may create a separate entry point for this with `quarkus.web-bundler.bundle.qute-components.key=components` (see <<entry-points>> for more options).
+This way you can use `{#hello}` in your templates and the scripts & styles will be bundled.
 
 [#web-dependencies]
 == Web Dependencies
