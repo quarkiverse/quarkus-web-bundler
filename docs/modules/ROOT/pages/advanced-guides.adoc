@@ -16,9 +16,11 @@ There are 2 ways to add static files (fonts, images, music, video, ...) to your 
 [#html-templates]
 == html templates rendering
 
-The Web-Bundler is natively integrated with Qute to render html templates at build-time (this won't affect runtime). This way you may create SPA out of the box.  For this, just provide an `index.html` file (or any other `.html` file) in the `src/main/resources/web` directory. Combined with the <<bundle-tag>>, this file will be rendered with the scripts and styles tags to include in your html template. This file will be served as the default index file (e.g. http://localhost:8080/).
+The Web-Bundler is natively integrated with Qute to render html templates at build-time (this won't affect runtime). This way you may create SPA out of the box.  For this, just provide an `index.html` file (or any other `.html` file) in the `src/main/resources/web` directory.
 
-IMPORTANT: This rendering is happening at build time, so you won't be able to access any Qute runtime data in this file. If you want to data, you should add the Qute Web extension (or https://quarkiverse.github.io/quarkiverse-docs/quarkus-renarde/dev/[Renarde extension] for MVC with Qute) and use `src/main/resrouces/templates/` directory instead. The <<bundle-tag>> will also work in this case.
+Combined with the <<bundle-tag>>, this file will be rendered with the scripts and styles tags to include in your html template. This file will be served as the default index file (e.g. http://localhost:8080/).
+
+IMPORTANT: This rendering option is happening at build time, so you won't be able to access any Qute runtime data in this file. If you want to render data (for example in a server-side rendering app with htmx), you should add the Qute Web extension (or https://quarkiverse.github.io/quarkiverse-docs/quarkus-renarde/dev/[Renarde extension] for MVC with Qute) and use `src/main/resources/templates/` directory instead. The <<bundle-tag>> will also work in this case.
 
 == Bundling
 
@@ -278,7 +280,7 @@ To make it easy there are several ways to resolve the bundle files public paths 
 [#bundle-tag]
 === {#bundle /} tag
 
-From any Qute template you can use the `{#bundle /}` tag. examples:
+From any Qute template you can use the `{#bundle /}` tag to help insert the bundled scripts and styles in your html page. examples:
 
 [source,html]
 ----
