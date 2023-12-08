@@ -2,6 +2,7 @@ package io.quarkiverse.web.bundler.deployment.staticresources;
 
 import static io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode.DISABLED;
 import static io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode.RESTART;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +77,8 @@ public class GeneratedStaticResourcesProcessor {
             }
 
             // for vertx http
-            vertxStaticResourcesProducer.produce(new AdditionalStaticResourceBuildItem(staticResource.getPublicPath(), false));
+            vertxStaticResourcesProducer
+                    .produce(new AdditionalStaticResourceBuildItem(prefixWithSlash(staticResource.getPublicPath()), false));
             // for dev/test mode
             if (launchModeBuildItem.getLaunchMode().isDevOrTest()) {
                 Path targetPath = buildDir.toPath().resolve(staticResource.getResourceName());

@@ -409,7 +409,7 @@ class WebBundlerProcessor {
         for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
             final byte[] bytes = webAsset.contentOrReadFromFile();
             final String content = engine.parse(new String(bytes, webAsset.charset())).render();
-            makeWebAssetPublic(staticResourceProducer, webAsset.pathFromWebRoot(config.webRoot()), liveReload,
+            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(webAsset.pathFromWebRoot(config.webRoot())), liveReload,
                     HtmlPageWebAsset.of(webAsset, content));
         }
     }
