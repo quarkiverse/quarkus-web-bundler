@@ -86,12 +86,6 @@ class WebAssetsScannerProcessor {
             entryPointsConfig.put("app", new ConfiguredEntryPoint("app", "app", MAIN_ENTRYPOINT_KEY));
         }
 
-        final EntryPointConfig componentsEntryPoint = config.bundle().get("qute-components");
-        if (componentsEntryPoint != null && componentsEntryPoint.enabled()) {
-            quteTagsAssetsScanners.add(new Scanner(config.fromWebRoot(componentsEntryPoint.effectiveDir("qute-components")),
-                    "glob:**.html", config.charset()));
-        }
-
         final ProjectResourcesScanner resourcesScanner = new ProjectResourcesScanner(allApplicationArchives,
                 extensionArtifacts);
 
@@ -104,9 +98,15 @@ class WebAssetsScannerProcessor {
         final Map<String, List<BundleWebAsset>> bundleAssets = new HashMap<>();
         for (Map.Entry<String, EntryPointConfig> e : entryPointsConfig.entrySet()) {
             if (e.getValue().enabled()) {
+
                 final String entryPointKey = e.getValue().effectiveKey(e.getKey());
                 bundleAssets.putIfAbsent(entryPointKey, new ArrayList<>());
                 final String dirFromWebRoot = config.fromWebRoot(e.getValue().effectiveDir(e.getKey()));
+
+                if (e.getValue().quteTags()) {
+                    quteTagsAssetsScanners.add(new Scanner(dirFromWebRoot,
+                            "glob:**.html", config.charset()));
+                }
                 // The regex is for all files but .html
                 final List<WebAsset> assets = resourcesScanner.scan(dirFromWebRoot, "regex:^(.(?!\\.html$))*$",
                         config.charset());

@@ -235,8 +235,15 @@ public interface WebBundlerConfig {
         @ConfigDocDefault("the bundle map key")
         Optional<String> key();
 
+        /**
+         * Indicate if this directory contains qute tags (as .html files)
+         * This is only available if the Quarkus Qute extension is in the project.
+         */
+        @WithDefault("false")
+        boolean quteTags();
+
         default String effectiveDir(String mapKey) {
-            return dir().filter(not(String::isBlank)).orElse(effectiveKey(mapKey));
+            return dir().filter(not(String::isBlank)).orElse(mapKey);
         }
 
         default String effectiveKey(String mapKey) {

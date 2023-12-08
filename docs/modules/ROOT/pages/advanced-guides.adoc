@@ -130,12 +130,12 @@ This is not always needed but if you need to add specific script and/or style to
 To enable server-side components, add this in the `application.properties`:
 [source,properties]
 ----
-quarkus.web-bundler.bundle.qute-components=true
-quarkus.web-bundler.bundle.qute-components.key=main // <1>
-quarkus.web-bundler.bundle.qute-components.dir=components // <2>
+quarkus.web-bundler.bundle.components=true
+quarkus.web-bundler.bundle.components.key=main // <1>
+quarkus.web-bundler.bundle.components.qute-tags=true // <2>
 ----
 <1> use `main` to have a single merged bundle with the `app` (or remove this line to use `qute-components` as default)
-<2> unless you plan to have another components directory, this is nicer :)
+<2> activate qute-tags support (default is `false`)
 
 Here is a nice convention to define your components: `src/main/resources/web/components/[name]/[name].{html,css,scss,js,ts,...};`. The scripts, styles and assets will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
 
@@ -145,6 +145,8 @@ Example:
 - `src/main/resources/web/components/hello/hello.scss`
 
 This way you can use `{#hello}` in your templates and the scripts & styles will be bundled.
+
+NOTE: You may create different qute components groups to be used in different pages.
 
 [#web-dependencies]
 == Web Dependencies

@@ -30,6 +30,11 @@ public class ConfiguredEntryPoint implements WebBundlerConfig.EntryPointConfig {
         return Optional.of(key);
     }
 
+    @Override
+    public boolean quteTags() {
+        return false;
+    }
+
     public String id() {
         return id;
     }
