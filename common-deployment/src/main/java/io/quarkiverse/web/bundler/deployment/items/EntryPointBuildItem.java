@@ -3,6 +3,7 @@ package io.quarkiverse.web.bundler.deployment.items;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Objects;
 
 import io.quarkus.builder.item.MultiBuildItem;
 
@@ -25,4 +26,18 @@ public final class EntryPointBuildItem extends MultiBuildItem {
         return webAssets;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        EntryPointBuildItem that = (EntryPointBuildItem) o;
+        return Objects.equals(entryPointKey, that.entryPointKey) && Objects.equals(webAssets, that.webAssets);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(entryPointKey, webAssets);
+    }
 }

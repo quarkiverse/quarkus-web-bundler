@@ -1,21 +1,15 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
+import static io.quarkiverse.web.bundler.deployment.StaticWebAssetsProcessor.makePublic;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.UncheckedIOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,7 +17,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +42,6 @@ import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.HtmlTemplatesBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
@@ -69,7 +60,6 @@ import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.util.FileUtil;
-import io.quarkus.qute.*;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
@@ -364,59 +354,8 @@ class WebBundlerProcessor {
     }
 
     @BuildStep
-    void processStaticWebAssets(WebBundlerConfig config,
-            StaticAssetsBuildItem staticAssets,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            LiveReloadBuildItem liveReload) {
-        for (WebAsset webAsset : staticAssets.getWebAssets()) {
-            final String publicPath = webAsset.pathFromWebRoot(config.webRoot());
-            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(publicPath), liveReload, webAsset);
-        }
-    }
-
-    @BuildStep
-    void processHtmlTemplateWebAssets(WebBundlerConfig config,
-            HtmlTemplatesBuildItem htmlTemplates,
-            GeneratedBundleBuildItem generatedBundle,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            LiveReloadBuildItem liveReload) {
-        final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
-        final Bundle.Mapping mapping = new Bundle.Mapping() {
-            @Override
-            public String get(String name) {
-                return bundle.get(name);
-            }
-
-            @Override
-            public Set<String> names() {
-                return bundle.keySet();
-            }
-        };
-        final Engine engine = Engine.builder()
-                .addDefaults()
-                .addNamespaceResolver(new NamespaceResolver.NamespaceResolverImpl("inject", 0, (c) -> {
-                    if (c.getName().equals("bundle")) {
-                        return CompletedStage.of(new Bundle(mapping));
-                    }
-                    return null;
-                }))
-                .addLocator(new WebBundlerTagsLocator())
-                .addSectionHelper(new UserTagSectionHelper.Factory("bundle", "web-bundler/bundle.html"))
-                .addValueResolver(new ReflectionValueResolver())
-                .addParserHook(new Qute.IndexedArgumentsParserHook())
-                .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
-                .build();
-        for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
-            final byte[] bytes = webAsset.contentOrReadFromFile();
-            final String content = engine.parse(new String(bytes, webAsset.charset())).render();
-            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(webAsset.pathFromWebRoot(config.webRoot())), liveReload,
-                    HtmlPageWebAsset.of(webAsset, content));
-        }
-    }
-
-    @BuildStep
     @Record(STATIC_INIT)
-    void initBundler(
+    void initBundleBean(
             BuildProducer<AdditionalBeanBuildItem> additionalBeans,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
             GeneratedBundleBuildItem generatedBundle,
@@ -439,45 +378,6 @@ class WebBundlerProcessor {
                     .handler(recorder.handler())
                     .build());
         }
-    }
-
-    private static void makeWebAssetPublic(
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            String publicPath,
-            LiveReloadBuildItem liveReload,
-            WebAsset webAsset) {
-        handleStaticResource(
-                staticResourceProducer,
-                Set.of(new GeneratedStaticResourceBuildItem.Source(webAsset.resourceName(), webAsset.filePath())),
-                publicPath,
-                webAsset.contentOrReadFromFile(),
-                liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.resourceName()),
-                WatchMode.RESTART);
-    }
-
-    private static void makePublic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, String publicPath,
-            Path file, WatchMode watchMode, boolean changed) {
-        if (!Files.exists(file)) {
-            return;
-        }
-        handleStaticResource(staticResourceProducer, Collections.emptySet(), publicPath, readTemplateContent(file), changed,
-                watchMode);
-    }
-
-    private static void handleStaticResource(
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            Set<GeneratedStaticResourceBuildItem.Source> sources,
-            String publicPath,
-            byte[] content,
-            boolean changed,
-            WatchMode watchMode) {
-        staticResourceProducer.produce(new GeneratedStaticResourceBuildItem(
-                sources,
-                publicPath,
-                content,
-                true,
-                watchMode,
-                changed));
     }
 
     /**
@@ -522,46 +422,4 @@ class WebBundlerProcessor {
         } while (true);
     }
 
-    private static final class WebBundlerTagsLocator implements TemplateLocator {
-        @Override
-        public Optional<TemplateLocation> locate(String id) {
-            if (!id.startsWith("web-bundler/")) {
-                return Optional.empty();
-            }
-            String name = id.replace("web-bundler/", "");
-            try (InputStream templateStream = this.getClass().getResourceAsStream("/templates/tags/" + name)) {
-                if (templateStream == null) {
-                    return Optional.empty();
-                }
-                return Optional.of(new TemplateLocation() {
-                    @Override
-                    public Reader read() {
-                        return new InputStreamReader(templateStream, StandardCharsets.UTF_8);
-                    }
-
-                    @Override
-                    public Optional<Variant> getVariant() {
-                        return Optional.empty();
-                    }
-                });
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-
-    }
-
-    record HtmlPageWebAsset(String resourceName, byte[] content, Charset charset) implements WebAsset {
-
-        static HtmlPageWebAsset of(WebAsset sourceAsset, String content) {
-            return new HtmlPageWebAsset(sourceAsset.resourceName(), content.getBytes(sourceAsset.charset()),
-                    sourceAsset.charset());
-        }
-
-        @Override
-        public Optional<Path> filePath() {
-            return Optional.empty();
-        }
-
-    }
 }

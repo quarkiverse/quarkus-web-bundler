@@ -9,7 +9,7 @@
 
 
 <div class="container-sm">
-    <h1>Hello QWA</h1>
+    <h1>Hello QWB</h1>
     <p id="message">Wait for it...</p>
     <div class="slick-carousel">
         <div><img src="https://picsum.photos/300/200?random=1"></div>
@@ -18,6 +18,15 @@
         <div><img src="https://picsum.photos/300/200?random=4"></div>
         <div><img src="https://picsum.photos/300/200?random=5"></div>
         <div><img src="https://picsum.photos/300/200?random=6"></div>
+    </div>
+    <div>
+        <h2>Configs</h2>
+        <p>{config:boolean('test.boolean')}</p>
+        <p>{config:integer('test.integer')}</p>
+        <p>{config:['test.string']}</p>
+        <p>{config:property('test.string')}</p>
+        <p>{config:test}</p>
+        <p>mode:{build:launchMode}</p>
     </div>
 
   {#bundle tag="script"/}
