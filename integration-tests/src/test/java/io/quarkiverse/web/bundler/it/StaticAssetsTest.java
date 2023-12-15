@@ -1,5 +1,6 @@
 package io.quarkiverse.web.bundler.it;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
@@ -25,6 +26,9 @@ public class StaticAssetsTest {
     @TestHTTPResource("/static/dir/hello.md")
     URL md;
 
+    @TestHTTPResource("/test.html")
+    URL test;
+
     @Test
     void testLogo() throws IOException {
         RestAssured.get(logo)
@@ -47,6 +51,18 @@ public class StaticAssetsTest {
                 .then()
                 .statusCode(200)
                 .body(is(asString("/web/static/hello.txt")));
+    }
+
+    @Test
+    void testHtmlTemplate() throws IOException {
+        RestAssured.get(test)
+                .then()
+                .statusCode(200)
+                .body(containsString("<p>mode:TEST</p>"))
+                .body(containsString("<p>true</p>"))
+                .body(containsString("<p>42</p>"))
+                .body(containsString("<p>hello</p>"))
+                .body(containsString("<p>world</p>"));
     }
 
     private static String asString(String name) throws IOException {

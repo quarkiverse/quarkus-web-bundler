@@ -1,4 +1,4 @@
-package io.quarkiverse.web.bundler.deployment;
+package io.quarkiverse.web.bundler.deployment.items;
 
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.toUnixPath;
 
@@ -19,20 +19,19 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.bundler.deployment.items.DefaultWebAsset;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
+import io.quarkus.builder.item.SimpleBuildItem;
 import io.quarkus.deployment.ApplicationArchive;
 import io.quarkus.fs.util.ZipUtils;
 import io.quarkus.maven.dependency.ResolvedDependency;
 
-public class ProjectResourcesScanner {
+public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
 
-    private static final Logger LOGGER = Logger.getLogger(ProjectResourcesScanner.class);
+    private static final Logger LOGGER = Logger.getLogger(ProjectResourcesScannerBuildItem.class);
 
     Set<ApplicationArchive> allApplicationArchives;
     List<ResolvedDependency> extensionArtifacts;
 
-    public ProjectResourcesScanner(Set<ApplicationArchive> allApplicationArchives,
+    public ProjectResourcesScannerBuildItem(Set<ApplicationArchive> allApplicationArchives,
             List<ResolvedDependency> extensionArtifacts) {
         this.allApplicationArchives = allApplicationArchives;
         this.extensionArtifacts = extensionArtifacts;
@@ -163,28 +162,6 @@ public class ProjectResourcesScanner {
         }
     }
 
-    static class Scanner {
-        private final String dir;
-        private final String pathMatcher;
-
-        private final Charset charset;
-
-        Scanner(String dir, String pathMatcher, Charset charset) {
-            this.dir = dir;
-            this.pathMatcher = pathMatcher;
-            this.charset = charset;
-        }
-
-        public String dir() {
-            return dir;
-        }
-
-        public String pathMatcher() {
-            return pathMatcher;
-        }
-
-        public Charset charset() {
-            return charset;
-        }
+    public record Scanner(String dir, String pathMatcher, Charset charset) {
     }
 }

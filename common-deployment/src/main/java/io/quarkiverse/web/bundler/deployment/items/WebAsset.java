@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.deployment.items;
 
-import static io.quarkiverse.web.bundler.deployment.ProjectResourcesScanner.readTemplateContent;
+import static io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem.readTemplateContent;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
