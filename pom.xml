@@ -12,7 +12,6 @@
   <packaging>pom</packaging>
   <name>Quarkus Web Bundler - Parent</name>
   <modules>
-    <module>sass-compiler</module>
     <module>common-deployment</module>
     <module>runtime</module>
     <module>deployment</module>
@@ -32,7 +31,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.version>3.7.0</quarkus.version>
 
-    <esbuild-java.version>1.1.2</esbuild-java.version>
+    <esbuild-java.version>999-SNAPSHOT</esbuild-java.version>
     <scrimage-core.version>4.1.1</scrimage-core.version>
     <yuicompressor.version>2.4.8</yuicompressor.version>
   </properties>
