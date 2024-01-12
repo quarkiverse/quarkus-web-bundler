@@ -220,6 +220,11 @@ NOTE: I only use `-Pmvnpm-repo` when locking my project or updating mvnpm versio
 
 NOTE: In case of web dependencies versions conflicts, you can set the version to use for this dependency in the project dependencyManagement (even when using the locker).
 
+[#node_modules]
+=== Node Modules for bundling
+
+To deal with Web Dependencies, the Web Bundler manages a node_modules directory. The default location for it is the build direcotry (i.e. `target/node_modules` on Maven). For a good IDE support (detection of imports and types), you may use the project directory instead `quarkus.web-bundler.dependencies.node-modules=node_modules`, the IDE will look recursivelly in parent directories for imports and the Web Bundler too.
+
 
 [#locking]
 === Locking dependencies
