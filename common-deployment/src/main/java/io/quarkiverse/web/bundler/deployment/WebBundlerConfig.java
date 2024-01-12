@@ -84,6 +84,14 @@ public interface WebBundlerConfig {
     WebDependenciesConfig dependencies();
 
     /**
+     * When enabled, Quarkus will create redirections from {bundlePath}/{entryPointKey}.{js,css} to the corresponding file
+     * containing the unique hash.
+     * This is useful for fixed external access to the bundle files (fullstack microservices).
+     */
+    @WithDefault("false")
+    Boolean bundleRedirect();
+
+    /**
      * The default charset
      */
     @WithDefault("UTF-8")
@@ -117,10 +125,17 @@ public interface WebBundlerConfig {
         Optional<String> nodeModules();
 
         /**
-         * If enabled web dependencies will also be served, this is usually not needed as they are already bundled.
+         * Disable this option to allow using runtime web dependencies.
+         * When a runtime scope web dependency is used, the dependency will be present in the target app and served at runtime.
+         * When a compile only scope web dependency is used, the dependency will only be used at build time and will not be
+         * present in the target app.
+         *
+         * WARNING: Maven compile scope is considered as a runtime scope, use 'provided' for compile only. On Gradle,
+         * 'compileOnly' is compile only.
+         *
          */
-        @WithDefault("false")
-        boolean serve();
+        @WithDefault("true")
+        boolean compileOnly();
 
     }
 

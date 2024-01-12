@@ -5,10 +5,9 @@ import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSla
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -22,7 +21,7 @@ import java.util.concurrent.CompletionStage;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.HtmlTemplatesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
@@ -32,10 +31,10 @@ import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.qute.*;
 
-public class HtmlTemplateWebAssetsProcessor {
+public class QuteTemplateWebAssetsProcessor {
     @BuildStep
     void processHtmlTemplateWebAssets(WebBundlerConfig config,
-            HtmlTemplatesBuildItem htmlTemplates,
+            QuteTemplatesBuildItem htmlTemplates,
             GeneratedBundleBuildItem generatedBundle,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             LiveReloadBuildItem liveReload,
@@ -104,24 +103,25 @@ public class HtmlTemplateWebAssetsProcessor {
                 return Optional.empty();
             }
             String name = id.replace("web-bundler/", "");
-            try (InputStream templateStream = this.getClass().getResourceAsStream("/templates/tags/" + name)) {
-                if (templateStream == null) {
+            final URL resource = this.getClass().getResource("/templates/tags/" + name);
+            if (resource == null) {
+                return Optional.empty();
+            }
+            return Optional.of(new TemplateLocation() {
+                @Override
+                public Reader read() {
+                    try {
+                        return new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                @Override
+                public Optional<Variant> getVariant() {
                     return Optional.empty();
                 }
-                return Optional.of(new TemplateLocation() {
-                    @Override
-                    public Reader read() {
-                        return new InputStreamReader(templateStream, StandardCharsets.UTF_8);
-                    }
-
-                    @Override
-                    public Optional<Variant> getVariant() {
-                        return Optional.empty();
-                    }
-                });
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            });
         }
 
     }

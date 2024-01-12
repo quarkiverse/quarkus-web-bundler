@@ -2,8 +2,7 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.StaticWebAssetsProcessor.makePublic;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.*;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
@@ -47,8 +46,8 @@ import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
 import io.quarkiverse.web.bundler.runtime.Bundle;
+import io.quarkiverse.web.bundler.runtime.BundleRedirectHandlerRecorder;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
-import io.quarkiverse.web.bundler.runtime.WebDependenciesBlockerRecorder;
 import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -99,7 +98,7 @@ class WebBundlerProcessor {
     void bundle(WebBundlerConfig config,
             WebDependenciesBuildItem webDependencies,
             List<EntryPointBuildItem> entryPoints,
-            BundleConfigAssetsBuildItem bundleConfigs,
+            Optional<BundleConfigAssetsBuildItem> bundleConfig,
             BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
             LiveReloadBuildItem liveReload,
@@ -137,8 +136,8 @@ class WebBundlerProcessor {
             Files.createDirectories(targetDir);
             LOGGER.debugf("Preparing bundle in %s", targetDir);
 
-            if (!bundleConfigs.getWebAssets().isEmpty()) {
-                for (WebAsset webAsset : bundleConfigs.getWebAssets()) {
+            if (bundleConfig.isPresent()) {
+                for (WebAsset webAsset : bundleConfig.get().getWebAssets()) {
                     if (webAsset.filePath().isPresent()) {
                         final Path targetConfig = targetDir.resolve(webAsset.pathFromWebRoot(config.webRoot()));
                         Files.deleteIfExists(targetConfig);
@@ -369,13 +368,12 @@ class WebBundlerProcessor {
 
     @BuildStep
     @Record(STATIC_INIT)
-    void webDepBlocker(WebBundlerConfig config, BuildProducer<RouteBuildItem> routes, WebDependenciesBlockerRecorder recorder) {
-        if (!config.dependencies().serve()) {
-            routes.produce(RouteBuildItem.builder().orderedRoute("/_static/*", 0)
-                    .handler(recorder.handler())
-                    .build());
-            routes.produce(RouteBuildItem.builder().orderedRoute("/webjars/*", 0)
-                    .handler(recorder.handler())
+    void initBundleRedirect(WebBundlerConfig config, BuildProducer<RouteBuildItem> routes,
+            BundleRedirectHandlerRecorder recorder, GeneratedBundleBuildItem generatedBundle) {
+        if (config.bundleRedirect()) {
+            final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
+            routes.produce(RouteBuildItem.builder().route(join(prefixWithSlash(config.bundlePath()), "*"))
+                    .handler(recorder.handler(bundle))
                     .build());
         }
     }

@@ -40,13 +40,14 @@
     <dependency>
       <groupId>org.mvnpm</groupId>
       <artifactId>bootstrap</artifactId>
-      <scope>runtime</scope>
+      <scope>provided</scope>
       <version>5.3.1</version>
     </dependency>
     <dependency>
       <groupId>org.mvnpm.at.hotwired</groupId>
       <artifactId>stimulus</artifactId>
       <version>3.2.2</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -129,7 +130,9 @@
     <profile>
       <id>locker</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>!unlocked</name>
+        </property>
       </activation>
       <dependencyManagement>
         <dependencies>

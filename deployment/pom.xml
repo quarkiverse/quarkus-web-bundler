@@ -24,17 +24,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.yahoo.platform.yui</groupId>
-      <artifactId>yuicompressor</artifactId>
-      <version>${yuicompressor.version}</version>
-    </dependency>
-    <!--
-    <dependency>
-      <groupId>com.sksamuel.scrimage</groupId>
-      <artifactId>scrimage-core</artifactId>
-      <version>${scrimage-core.version}</version>
-    </dependency>-->
-    <dependency>
       <groupId>io.quarkus.qute</groupId>
       <artifactId>qute-core</artifactId>
     </dependency>
@@ -51,6 +40,11 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5-internal</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

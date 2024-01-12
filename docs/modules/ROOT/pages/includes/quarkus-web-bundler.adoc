@@ -367,18 +367,35 @@ endif::add-copy-button-to-env-var[]
 |`node_modules will be in the build/target directory`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.serve]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.serve[quarkus.web-bundler.dependencies.serve]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.compile-only]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.compile-only[quarkus.web-bundler.dependencies.compile-only]`
 
 
 [.description]
 --
-If enabled web dependencies will also be served, this is usually not needed as they are already bundled.
+Disable this option to allow using runtime web dependencies. When a runtime scope web dependency is used, the dependency will be present in the target app and served at runtime. When a compile only scope web dependency is used, the dependency will only be used at build time and will not be present in the target app. WARNING: Maven compile scope is considered as a runtime scope, use 'provided' for compile only. On Gradle, 'compileOnly' is compile only.
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_SERVE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_COMPILE_ONLY+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_SERVE+++`
+Environment variable: `+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_COMPILE_ONLY+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle-redirect]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle-redirect[quarkus.web-bundler.bundle-redirect]`
+
+
+[.description]
+--
+When enabled, Quarkus will create redirections from ++{++bundlePath++}++/++{++entryPointKey++}++.++{++js,css++}++ to the corresponding file containing the unique hash. This is useful for fixed external access to the bundle files (fullstack microservices).
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLE_REDIRECT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLE_REDIRECT+++`
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
@@ -454,6 +471,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.qute-tags]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.qute-tags[quarkus.web-bundler.bundle."bundle".qute-tags]`
+
 
 [.description]
 --

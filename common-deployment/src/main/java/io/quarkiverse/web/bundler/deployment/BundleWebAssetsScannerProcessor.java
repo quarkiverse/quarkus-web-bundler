@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -141,15 +142,23 @@ class BundleWebAssetsScannerProcessor {
             WebAssetsLookupDevContext context,
             boolean checkIfExists) {
         for (Map.Entry<String, List<BundleWebAsset>> e : context.bundleAssets().entrySet()) {
-            bundles.produce(new EntryPointBuildItem(e.getKey(), checkIfExists ? checkWebAssets(e.getValue()) : e.getValue()));
+            produceWebAssetsWithCheck(checkIfExists, e.getValue(),
+                    webAssets -> bundles.produce(new EntryPointBuildItem(e.getKey(), webAssets)));
         }
 
-        bundleConfigAssets.produce(new BundleConfigAssetsBuildItem(
-                checkIfExists ? checkWebAssets(context.bundleConfigWebAssets()) : context.bundleConfigWebAssets()));
+        produceWebAssetsWithCheck(checkIfExists, context.bundleConfigWebAssets(),
+                webAssets -> bundleConfigAssets.produce(new BundleConfigAssetsBuildItem(webAssets)));
 
-        quteTagsAssets.produce(new QuteTagsBuildItem(
-                checkIfExists ? checkWebAssets(context.quteWebAssets()) : context.quteWebAssets()));
+        produceWebAssetsWithCheck(checkIfExists, context.quteWebAssets(),
+                webAssets -> quteTagsAssets.produce(new QuteTagsBuildItem(webAssets)));
+    }
 
+    private static <T extends WebAsset> void produceWebAssetsWithCheck(boolean checkIfExists, List<T> e,
+            Consumer<List<T>> consumer) {
+        final List<T> webAssets = checkIfExists ? checkWebAssets(e) : e;
+        if (!webAssets.isEmpty()) {
+            consumer.accept(webAssets);
+        }
     }
 
     private static <T extends WebAsset> List<T> checkWebAssets(List<T> webAssets) {
