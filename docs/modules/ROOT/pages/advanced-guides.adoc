@@ -20,6 +20,8 @@ The Web-Bundler is natively integrated with Qute to render html templates at bui
 
 Combined with the <<bundle-tag>>, this file will be rendered with the scripts and styles tags to include in your html template. This file will be served as the default index file (e.g. http://localhost:8080/).
 
+NOTE: You can use the Qute `config:` https://quarkus.io/guides/qute-reference#config[namespace], it will be evaluated a build-time (runtime config will be ignored).
+
 IMPORTANT: This rendering option is happening at build time, so you won't be able to access any Qute runtime data in this file. If you want to render data (for example in a server-side rendering app with htmx), you should add the Qute Web extension (or https://quarkiverse.github.io/quarkiverse-docs/quarkus-renarde/dev/[Renarde extension] for MVC with Qute) and use `src/main/resources/templates/` directory instead. The <<bundle-tag>> will also work in this case.
 
 == Bundling
@@ -222,14 +224,14 @@ NOTE: In case of web dependencies versions conflicts, you can set the version to
 [#locking]
 === Locking dependencies
 
-As the NPM ecosystem is over-using version ranges for dependencies, just a few npm dependencies can lead to a big amount of poms to download in order to get the right versions for your project. This leads to long lasting minutes of downloading poms when cloning or during CI. To solve this problem and also to make your build reproducible it is highly recommended to lock your web dependencies versions.
+As the NPM ecosystem is over-using version ranges for dependencies, just a few npm dependencies can lead to a big amount of poms to download in order to get the right versions for your project. This leads to long lasting minutes of downloading poms when cloning or during CI. To solve this problem and also to make your build reproducible it is highly recommended to lock your web dependencies versions. *This way it will be long only the first time and then it will be fast and reproducible.*
 
 [#maven-locking]
 ==== Locking with Maven (mvnpm Locker Maven Plugin)
 
 As Maven doesn't provide a native version locking system, the mvnpm team has implemented a way to easily generate and use a locking pom.xml (BOM). The locker Maven Plugin will create a version locker BOM for your org.mvnpm and org.webjars dependencies. It is essential as NPM dependencies are over using ranges. After the locking, the quantity of files to download is considerably reduced (better for reproducibility, contributors and CI).
 
-It is easy to set up, https://github.com/mvnpm/locker#lock-your-mvnpm-and-webjars-versions[here is the documentation].
+It is easy to set up and update, https://github.com/mvnpm/locker#lock-your-mvnpm-and-webjars-versions[here is the documentation].
 
 [#gradle-locking]
 ==== Locking with Gradle
