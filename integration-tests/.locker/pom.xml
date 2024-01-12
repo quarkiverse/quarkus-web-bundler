@@ -4,7 +4,7 @@
 
   <groupId>io.quarkiverse.web-bundler</groupId>
   <artifactId>quarkus-web-bundler-integration-tests-locker</artifactId>
-  <version>1.2.0</version>
+  <version>999-SNAPSHOT</version>
   <packaging>pom</packaging>
   <dependencyManagement>
     <dependencies>
