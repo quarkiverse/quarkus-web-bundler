@@ -7,18 +7,18 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.bundler.deployment.items.HtmlTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 
-public class HtmlTemplateAssetsScannerProcessor {
+public class QuteTemplateAssetsScannerProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(HtmlTemplateAssetsScannerProcessor.class);
+    private static final Logger LOGGER = Logger.getLogger(QuteTemplateAssetsScannerProcessor.class);
 
     @BuildStep
-    HtmlTemplatesBuildItem scan(ProjectResourcesScannerBuildItem scanner,
+    QuteTemplatesBuildItem scan(ProjectResourcesScannerBuildItem scanner,
             WebBundlerConfig config,
             LiveReloadBuildItem liveReload)
             throws IOException {
@@ -28,13 +28,13 @@ public class HtmlTemplateAssetsScannerProcessor {
                 && context != null
                 && !hasChanged(config, liveReload, s -> s.substring(config.webRoot().length()).matches("^/.+\\.html$"))) {
             LOGGER.debug("Web bundler html templates scan not needed for live reload");
-            return new HtmlTemplatesBuildItem(context.assets());
+            return new QuteTemplatesBuildItem(context.assets());
         }
         final List<WebAsset> assets = scanner.scan(new ProjectResourcesScannerBuildItem.Scanner(config.webRoot(),
                 "glob:*.html", config.charset()));
         liveReload.setContextObject(HtmlTemplatesContext.class, new HtmlTemplatesContext(assets));
         LOGGER.debugf("Web bundler %d html templates found.", assets.size());
-        return new HtmlTemplatesBuildItem(assets);
+        return new QuteTemplatesBuildItem(assets);
     }
 
     private record HtmlTemplatesContext(List<WebAsset> assets) {

@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import io.quarkus.builder.item.MultiBuildItem;
 
@@ -39,5 +40,13 @@ public final class EntryPointBuildItem extends MultiBuildItem {
     @Override
     public int hashCode() {
         return Objects.hash(entryPointKey, webAssets);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", EntryPointBuildItem.class.getSimpleName() + "[", "]")
+                .add("entryPointKey='" + entryPointKey + "'")
+                .add("webAssets=" + webAssets)
+                .toString();
     }
 }

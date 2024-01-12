@@ -156,7 +156,13 @@ NOTE: You may create different qute components groups to be used in different pa
 The Web Bundler is integrated with NPM dependencies through <<mvnpm>> (default) or <<webjars>>.
 Once added in the pom.xml the dependencies are directly available through import from the scripts and styles.
 
+Using the Web Bundler, Web Dependencies are bundled, there is not point for the jars to be packaged in the resulting app.
+Web Dependencies with `provided` scope (or `compileOnly` with Gradle) will not be packaged in the resulting app.
+
+INFO: By default, the Web Bundler will fail at build time if it detects non compile only Web Dependencies. You can configure xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.dependencies.compile-only[a flag] to allow them but keep in mind that they will be served by Quarkus.
+
 WARNING: If you don't import a Web Dependency from an entry-point (<<indexing>>), it won't be bundled (dead code elimination).
+
 
 [#mvnpm]
 === MVNPM (default)
@@ -175,6 +181,7 @@ Lookup for packages on https://mvnpm.org or https://www.npmjs.com/ then add them
         <groupId>org.mvnpm</groupId> // <1>
         <artifactId>jquery</artifactId> // <2>
         <version>3.7.0</version> // <3>
+        <scope>provided</scope> // <4>
     </dependency>
 </dependencies>
 ...
@@ -183,6 +190,7 @@ Lookup for packages on https://mvnpm.org or https://www.npmjs.com/ then add them
 <1> use `org.mvnpm` or `org.mvnpm.at.something` for `@something/dep`
 <2> All dependencies published on NPM are available
 <3> Any https://www.npmjs.com/package/jquery?activeTab=versions[published NPM version] for your dependency
+<4> Use `provided` scope to avoid having the dependency packaged in the target application
 
 If a package or a version in not yet available in Maven Central:
 
@@ -273,6 +281,7 @@ quarkus.web-bundler.dependencies.type=webjars
     <groupId>org.webjars.npm</groupId>
     <artifactId>jquery</artifactId>
     <version>3.7.0</version>
+    <scope>provided</scope>
 </dependency>
 ----
 

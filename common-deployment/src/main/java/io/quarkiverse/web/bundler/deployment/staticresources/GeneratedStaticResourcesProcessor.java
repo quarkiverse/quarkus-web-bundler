@@ -4,7 +4,6 @@ import static io.quarkiverse.web.bundler.deployment.staticresources.GeneratedSta
 import static io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode.RESTART;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -13,6 +12,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
@@ -26,6 +26,7 @@ import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
+import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.vertx.http.deployment.spi.AdditionalStaticResourceBuildItem;
 
 public class GeneratedStaticResourcesProcessor {
@@ -39,9 +40,14 @@ public class GeneratedStaticResourcesProcessor {
             BuildProducer<AdditionalStaticResourceBuildItem> vertxStaticResourcesProducer,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             CurateOutcomeBuildItem curateOutcome,
+            OutputTargetBuildItem outputTarget,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchModeBuildItem) {
-        final File buildDir = launchModeBuildItem.getLaunchMode().isDevOrTest() ? getBuildDirectory(curateOutcome) : null;
+        if (staticResources.isEmpty()) {
+            return;
+        }
+        final Path buildDir = launchModeBuildItem.getLaunchMode().isDevOrTest() ? getBuildDirectory(outputTarget, curateOutcome)
+                : null;
         final StaticResourcesDevContext staticResourcesDevContext = liveReload
                 .getContextObject(StaticResourcesDevContext.class);
         if (liveReload.isLiveReload() && staticResourcesDevContext != null) {
@@ -51,7 +57,7 @@ public class GeneratedStaticResourcesProcessor {
                 // a build tool clean might be necessary to make sure the static resources are clean
                 if (staticResources.stream().map(GeneratedStaticResourceBuildItem::getResourceName).noneMatch(r::equals)) {
                     try {
-                        Files.deleteIfExists(buildDir.toPath().resolve(r));
+                        Files.deleteIfExists(buildDir.resolve(r));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -81,7 +87,7 @@ public class GeneratedStaticResourcesProcessor {
                     .produce(new AdditionalStaticResourceBuildItem(prefixWithSlash(staticResource.getPublicPath()), false));
             // for dev/test mode
             if (launchModeBuildItem.getLaunchMode().isDevOrTest()) {
-                Path targetPath = buildDir.toPath().resolve(staticResource.getResourceName());
+                Path targetPath = buildDir.resolve(staticResource.getResourceName());
                 // TODO: Change detection could also be done automatically by comparing the content (might be slow) or a hash of it using dev context
                 if (!Files.exists(targetPath) || staticResource.isChanged()) {
                     try {
@@ -98,31 +104,30 @@ public class GeneratedStaticResourcesProcessor {
         liveReload.setContextObject(StaticResourcesDevContext.class, new StaticResourcesDevContext(generatedStaticFiles));
     }
 
-    public static File getBuildDirectory(CurateOutcomeBuildItem curateOutcomeBuildItem) {
-        File buildDir = null;
+    public static Path getBuildDirectory(OutputTargetBuildItem outputTarget, CurateOutcomeBuildItem curateOutcomeBuildItem) {
+        if (Files.exists(outputTarget.getOutputDirectory().resolve("classes/META-INF/resources"))) {
+            return outputTarget.getOutputDirectory().resolve("classes");
+        }
+        if (Files.exists(outputTarget.getOutputDirectory().resolve("resources/main/META-INF/resources"))) {
+            return outputTarget.getOutputDirectory().resolve("resources/main");
+        }
+        Path buildDir = null;
         ArtifactSources src = curateOutcomeBuildItem.getApplicationModel().getAppArtifact().getSources();
         if (src != null) { // shouldn't be null in dev mode
-            Collection<SourceDir> srcDirs = src.getResourceDirs();
-            if (srcDirs.isEmpty()) {
+            Collection<SourceDir> dirs = src.getResourceDirs();
+            if (dirs.isEmpty()) {
                 // in the module has no resources dir?
-                srcDirs = src.getSourceDirs();
+                dirs = src.getSourceDirs();
             }
-            if (!srcDirs.isEmpty()) {
+            if (!dirs.isEmpty()) {
+                final Set<Path> outputDirs = dirs.stream().map(SourceDir::getOutputDir).collect(Collectors.toSet());
                 // pick the first resources output dir
-                Path resourcesOutputDir = srcDirs.iterator().next().getOutputDir();
-                buildDir = resourcesOutputDir.toFile();
-                if (srcDirs.size() > 1) {
+                buildDir = outputDirs.iterator().next();
+                if (outputDirs.size() > 1) {
                     LOGGER.warnf("Multiple resources directories found, using the first one in the list: %s",
-                            resourcesOutputDir);
+                            outputDirs);
                 }
-
             }
-        }
-        if (buildDir == null) {
-            // the module doesn't have any sources nor resources, stick to the build dir
-            buildDir = new File(
-                    curateOutcomeBuildItem.getApplicationModel().getAppArtifact().getWorkspaceModule().getBuildDir(),
-                    "classes");
         }
 
         return buildDir;
