@@ -223,7 +223,7 @@ NOTE: In case of web dependencies versions conflicts, you can set the version to
 [#node_modules]
 === Node Modules for bundling
 
-To deal with Web Dependencies, the Web Bundler manages a node_modules directory. The default location for it is the build direcotry (i.e. `target/node_modules` on Maven). For a good IDE support (detection of imports and types), you may use the project directory instead `quarkus.web-bundler.dependencies.node-modules=node_modules`, the IDE will look recursivelly in parent directories for imports and the Web Bundler too.
+To deal with Web Dependencies, the Web Bundler manages a node_modules directory. The default location for it is the build direcotry (i.e. `target/node_modules` on Maven). For a good IDE support (detection of imports and types), you may use the project directory instead `quarkus.web-bundler.dependencies.node-modules=node_modules` **and add the `node_modules/` to the `.gitignore`**, the IDE will look recursivelly in parent directories for imports and the Web Bundler too.
 
 
 [#locking]
