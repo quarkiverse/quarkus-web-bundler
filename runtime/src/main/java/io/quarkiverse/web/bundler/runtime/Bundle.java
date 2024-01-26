@@ -12,7 +12,7 @@ public class Bundle {
      * Other extensions from the bundle might have duplicate names (but different hash), so we don't include them in the
      * mapping.
      */
-    public static final Set<String> BUNDLE_MAPPING_EXT = Set.of(".js", ".css", ".js.map", ".css.map", ".scss");
+    public static final Set<String> BUNDLE_MAPPING_EXT = Set.of(".js", ".css", ".js.map", ".css.map");
 
     private final Mapping mapping;
 
