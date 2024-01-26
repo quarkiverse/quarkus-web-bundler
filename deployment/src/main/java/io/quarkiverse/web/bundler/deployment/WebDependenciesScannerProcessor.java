@@ -46,7 +46,7 @@ class WebDependenciesScannerProcessor {
     }
 
     private void checkScope(LaunchModeBuildItem launchMode, ResolvedDependency d, WebBundlerConfig config) {
-        if (!launchMode.isTest() && config.dependencies().compileOnly() && d.isRuntimeCp()) {
+        if (!launchMode.getLaunchMode().isDevOrTest() && config.dependencies().compileOnly() && d.isRuntimeCp()) {
             throw new ConfigurationException(
                     ("The Web Bundler is configured to only include compileOnly web dependencies, but %s is set as runtime." +
                             " Use a compile only scope (e.g. provided) or set quarkus.web-bundler.dependencies.compile-only=false to allow runtime web dependencies.")
