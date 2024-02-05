@@ -9,19 +9,9 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,25 +20,14 @@ import org.jboss.logging.Logger;
 
 import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
-import io.mvnpm.esbuild.model.BundleOptions;
-import io.mvnpm.esbuild.model.BundleOptionsBuilder;
-import io.mvnpm.esbuild.model.BundleResult;
-import io.mvnpm.esbuild.model.EsBuildConfig;
-import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
-import io.mvnpm.esbuild.model.WebDependency;
+import io.mvnpm.esbuild.model.*;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
-import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
-import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
-import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.*;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.BundleRedirectHandlerRecorder;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
-import io.quarkiverse.web.bundler.sass.SassBuildTimeCompiler;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.builder.BuildException;
@@ -147,7 +126,6 @@ class WebBundlerProcessor {
             }
 
             final Map<String, EsBuildConfig.Loader> loaders = computeLoaders(config);
-            loaders.put(".scss", EsBuildConfig.Loader.CSS);
             final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
                     .loader(loaders)
                     .publicPath(config.publicBundlePath())
@@ -230,14 +208,6 @@ class WebBundlerProcessor {
                     }
                 }
                 final long startedBundling = Instant.now().toEpochMilli();
-                // SCSS conversion
-                if (!isLiveReload || hasScssChange) {
-                    try (Stream<Path> stream = Files.find(targetDir, Integer.MAX_VALUE,
-                            (p, a) -> !p.toString().contains("node_modules")
-                                    && isCompiledSassFile(p.getFileName().toString()))) {
-                        stream.forEach(p -> convertToScss(p, targetDir));
-                    }
-                }
                 final BundleResult result = Bundler.bundle(options, false);
                 if (!result.result().output().isBlank()) {
                     LOGGER.debugf(result.result().output());
@@ -293,18 +263,6 @@ class WebBundlerProcessor {
             }
         }
         return loaders;
-    }
-
-    static void convertToScss(Path file, Path root) {
-        LOGGER.debugf("Converting %s to css", file);
-        String content = SassBuildTimeCompiler.convertScss(file, root, (s, s2) -> {
-        });
-        try {
-            Files.writeString(file, content, StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     void handleBundleDistDir(WebBundlerConfig config, BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
@@ -376,14 +334,6 @@ class WebBundlerProcessor {
                     .handler(recorder.handler(bundle))
                     .build());
         }
-    }
-
-    /**
-     * Returns true if the given filename (not path) does not start with _
-     * and ends with either .sass or .scss case-insensitive
-     */
-    public static boolean isCompiledSassFile(String filename) {
-        return !filename.startsWith("_") && isSassFile(filename);
     }
 
     public static boolean isImportSassFile(String filename) {
