@@ -49,10 +49,8 @@ Styles can be also be imported from a scss file:
 .web/app/style.scss
 [source,scss]
 ----
-@import "bootstrap/dist/css/bootstrap.css";
+@import "bootstrap/dist/scss/bootstrap.scss";
 ----
-
-WARNING: It is currently not possible to import `scss` from the dependencies (https://github.com/quarkiverse/quarkus-web-bundler/issues/58[more info]).
 
 [#what-is-bundled]
 === What is bundled
@@ -119,8 +117,6 @@ NOTE: For convenience, when using a file located in the static directory (e.g. `
 === SCSS, SASS
 
 You can use scss or sass files out of the box. Local import are supported. Importing partials is also supported begin with `_` (as in `_code.scss` imported with `@import 'code';`).
-
-WARNING: It is currently not possible to import `scss` from the dependencies (https://github.com/quarkiverse/quarkus-web-bundler/issues/58[more info]).
 
 [#qute-components]
 === Server-Side Qute Components
