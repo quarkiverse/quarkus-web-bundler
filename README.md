@@ -1,4 +1,3 @@
-\usepackage{amsmath}
 # Quarkus Web Bundler
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.web-bundler/quarkus-web-bundler)
