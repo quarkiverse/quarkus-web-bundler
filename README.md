@@ -24,7 +24,7 @@ Create full-stack web apps and components with this Quarkus extension. It offers
 
 **How to test my Web App without Jest or similar?**
 
-Use `@QuarkusTest` with [https://docs.quarkiverse.io/quarkus-playwright/dev/](Quarkus Playwright).
+Use `@QuarkusTest` with [Quarkus Playwright](https://docs.quarkiverse.io/quarkus-playwright/dev/).
 It is very easy to create full-stack tests to cover all your scenarios (and re-using all the backend testing data).
 
 **Can I swith from Quinoa to the Web Bundler?**
