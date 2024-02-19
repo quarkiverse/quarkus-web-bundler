@@ -25,3 +25,10 @@ metadata:
   categories:
     - "web"
   status: "experimental"
+  codestart:
+    name: "web-bundler"
+    languages:
+      - "java"
+      - "kotlin"
+      - "scala"
+    artifact: "io.quarkiverse.web-bundler:quarkus-web-bundler:codestarts:jar:${project.version}"

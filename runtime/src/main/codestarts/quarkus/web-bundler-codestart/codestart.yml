@@ -1,0 +1,9 @@
+name: web-bundler-codestart
+ref: web-bundler
+type: code
+tags: extension-codestart
+metadata:
+  title: Web Bundler
+  description: This is a tiny app web-bundler.html to get started with the Web Bundler.
+  path: /web-bundler.html
+  related-guide-section: https://docs.quarkiverse.io/quarkus-web-bundler/dev/
