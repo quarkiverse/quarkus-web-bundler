@@ -5,7 +5,6 @@ import static io.mvnpm.esbuild.model.WebDependency.WebDependencyType.resolveType
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.jboss.logging.Logger;
@@ -37,16 +36,8 @@ class WebDependenciesScannerProcessor {
         if (entryPoints.isEmpty()) {
             return new WebDependenciesBuildItem(List.of());
         }
-        final var stream = StreamSupport.stream(curateOutcome.getApplicationModel()
-                .getDependenciesWithAnyFlag(DependencyFlags.COMPILE_ONLY, DependencyFlags.RUNTIME_CP).spliterator(), false);
-        // workaround for dev-ui deps which are currently not in the COMPILE_ONLY flag even if declared as such in the user project.
-        // They are in the DEPLOYMENT_CP flag and the scope is compile (Gradle) or provided (Maven)
-        // See https://github.com/quarkusio/quarkus/issues/38682
-        final Stream<ResolvedDependency> workaroundStream = StreamSupport
-                .stream(curateOutcome.getApplicationModel().getDependencies(DependencyFlags.DEPLOYMENT_CP).spliterator(), false)
-                .filter(d -> SCOPE_COMPILE.equals(d.getScope()) || SCOPE_PROVIDED.equals(d.getScope()));
-        List<WebDependency> webDeps = Stream.concat(stream, workaroundStream)
-                .distinct()
+        final List<WebDependency> webDeps = StreamSupport.stream(curateOutcome.getApplicationModel()
+                .getDependenciesWithAnyFlag(DependencyFlags.COMPILE_ONLY, DependencyFlags.RUNTIME_CP).spliterator(), false)
                 .filter(Dependency::isJar)
                 .filter(d -> WebDependencyType.anyMatch(d.toCompactCoords()))
                 .peek(d -> checkScope(launchMode, d, config))
