@@ -18,6 +18,7 @@
             <artifactId>quarkus-web-bundler-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
+
     </dependencies>
 
     <build>
