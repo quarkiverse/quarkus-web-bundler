@@ -10,7 +10,7 @@ h|[[quarkus-web-bundler_configuration]]link:#quarkus-web-bundler_configuration[C
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.web-root]]`link:#quarkus-web-bundler_quarkus.web-bundler.web-root[quarkus.web-bundler.web-root]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-web-root]]`link:#quarkus-web-bundler_quarkus-web-bundler-web-root[quarkus.web-bundler.web-root]`
 
 
 [.description]
@@ -27,7 +27,7 @@ endif::add-copy-button-to-env-var[]
 |`web`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.static]]`link:#quarkus-web-bundler_quarkus.web-bundler.static[quarkus.web-bundler.static]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-static]]`link:#quarkus-web-bundler_quarkus-web-bundler-static[quarkus.web-bundler.static]`
 
 
 [.description]
@@ -44,7 +44,7 @@ endif::add-copy-button-to-env-var[]
 |`static`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle-path]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle-path[quarkus.web-bundler.bundle-path]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-path]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-path[quarkus.web-bundler.bundle-path]`
 
 
 [.description]
@@ -61,7 +61,7 @@ endif::add-copy-button-to-env-var[]
 |`static/bundle`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.js]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.js[quarkus.web-bundler.loaders.js]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-js]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-js[quarkus.web-bundler.loaders.js]`
 
 
 [.description]
@@ -78,7 +78,7 @@ endif::add-copy-button-to-env-var[]
 |`js,cjs,mjs`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.jsx]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.jsx[quarkus.web-bundler.loaders.jsx]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-jsx]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-jsx[quarkus.web-bundler.loaders.jsx]`
 
 
 [.description]
@@ -95,7 +95,7 @@ endif::add-copy-button-to-env-var[]
 |`jsx`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.tsx]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.tsx[quarkus.web-bundler.loaders.tsx]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-tsx]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-tsx[quarkus.web-bundler.loaders.tsx]`
 
 
 [.description]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |`tsx`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.ts]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.ts[quarkus.web-bundler.loaders.ts]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-ts]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-ts[quarkus.web-bundler.loaders.ts]`
 
 
 [.description]
@@ -129,7 +129,7 @@ endif::add-copy-button-to-env-var[]
 |`ts,mts,cts`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.css[quarkus.web-bundler.loaders.css]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-css]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-css[quarkus.web-bundler.loaders.css]`
 
 
 [.description]
@@ -146,7 +146,7 @@ endif::add-copy-button-to-env-var[]
 |`css`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.local-css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.local-css[quarkus.web-bundler.loaders.local-css]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-local-css]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-local-css[quarkus.web-bundler.loaders.local-css]`
 
 
 [.description]
@@ -163,7 +163,7 @@ endif::add-copy-button-to-env-var[]
 |`.module.css`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.global-css]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.global-css[quarkus.web-bundler.loaders.global-css]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-global-css]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-global-css[quarkus.web-bundler.loaders.global-css]`
 
 
 [.description]
@@ -180,7 +180,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.file]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.file[quarkus.web-bundler.loaders.file]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-file]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-file[quarkus.web-bundler.loaders.file]`
 
 
 [.description]
@@ -197,7 +197,7 @@ endif::add-copy-button-to-env-var[]
 |`aac,abw,arc,avif,avi,azw,bin,bmp,bz,bz2,cda,csv,yaml,yml,doc,docx,eot,epub,gz,gif,htm,html,ico,ics,jar,jpeg,jpg,jsonld,mid,midi,mp3,mp4,mpeg,mpkg,odp,ods,odt,oga,ogv,ogx,opus,otf,png,pdf,ppt,pptx,rar,rtf,svg,tar,tif,tiff,ttf,vsd,wav,weba,webm,webp,woff,woff2,xhtml,xls,xlsx,xml,xul,zip,3gp,3g2,7z`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.copy]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.copy[quarkus.web-bundler.loaders.copy]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-copy]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-copy[quarkus.web-bundler.loaders.copy]`
 
 
 [.description]
@@ -214,7 +214,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.base64]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.base64[quarkus.web-bundler.loaders.base64]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-base64]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-base64[quarkus.web-bundler.loaders.base64]`
 
 
 [.description]
@@ -231,7 +231,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.binary]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.binary[quarkus.web-bundler.loaders.binary]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-binary]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-binary[quarkus.web-bundler.loaders.binary]`
 
 
 [.description]
@@ -248,7 +248,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.data-url]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.data-url[quarkus.web-bundler.loaders.data-url]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-data-url]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-data-url[quarkus.web-bundler.loaders.data-url]`
 
 
 [.description]
@@ -265,7 +265,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.empty]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.empty[quarkus.web-bundler.loaders.empty]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-empty]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-empty[quarkus.web-bundler.loaders.empty]`
 
 
 [.description]
@@ -282,7 +282,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.text]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.text[quarkus.web-bundler.loaders.text]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-text]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-text[quarkus.web-bundler.loaders.text]`
 
 
 [.description]
@@ -299,7 +299,7 @@ endif::add-copy-button-to-env-var[]
 |`txt`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.loaders.json]]`link:#quarkus-web-bundler_quarkus.web-bundler.loaders.json[quarkus.web-bundler.loaders.json]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-loaders-json]]`link:#quarkus-web-bundler_quarkus-web-bundler-loaders-json[quarkus.web-bundler.loaders.json]`
 
 
 [.description]
@@ -316,7 +316,7 @@ endif::add-copy-button-to-env-var[]
 |`json`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.external-imports]]`link:#quarkus-web-bundler_quarkus.web-bundler.external-imports[quarkus.web-bundler.external-imports]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-external-imports]]`link:#quarkus-web-bundler_quarkus-web-bundler-external-imports[quarkus.web-bundler.external-imports]`
 
 
 [.description]
@@ -333,7 +333,7 @@ endif::add-copy-button-to-env-var[]
 |`{quarkus.http.root-path}static/*`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle-splitting]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle-splitting[quarkus.web-bundler.bundle-splitting]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-splitting]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-splitting[quarkus.web-bundler.bundle-splitting]`
 
 
 [.description]
@@ -350,7 +350,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.node-modules]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.node-modules[quarkus.web-bundler.dependencies.node-modules]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-dependencies-node-modules]]`link:#quarkus-web-bundler_quarkus-web-bundler-dependencies-node-modules[quarkus.web-bundler.dependencies.node-modules]`
 
 
 [.description]
@@ -367,7 +367,7 @@ endif::add-copy-button-to-env-var[]
 |`node_modules will be in the build/target directory`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.dependencies.compile-only]]`link:#quarkus-web-bundler_quarkus.web-bundler.dependencies.compile-only[quarkus.web-bundler.dependencies.compile-only]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-dependencies-compile-only]]`link:#quarkus-web-bundler_quarkus-web-bundler-dependencies-compile-only[quarkus.web-bundler.dependencies.compile-only]`
 
 
 [.description]
@@ -384,7 +384,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle-redirect]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle-redirect[quarkus.web-bundler.bundle-redirect]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-redirect]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-redirect[quarkus.web-bundler.bundle-redirect]`
 
 
 [.description]
@@ -401,7 +401,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.charset]]`link:#quarkus-web-bundler_quarkus.web-bundler.charset[quarkus.web-bundler.charset]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-charset]]`link:#quarkus-web-bundler_quarkus-web-bundler-charset[quarkus.web-bundler.charset]`
 
 
 [.description]
@@ -419,7 +419,7 @@ endif::add-copy-button-to-env-var[]
 |`UTF-8`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle[quarkus.web-bundler.bundle."bundle"]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-bundle]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-bundle[quarkus.web-bundler.bundle."bundle"]`
 
 
 [.description]
@@ -436,7 +436,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.dir[quarkus.web-bundler.bundle."bundle".dir]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-bundle-dir]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-bundle-dir[quarkus.web-bundler.bundle."bundle".dir]`
 
 
 [.description]
@@ -453,7 +453,7 @@ endif::add-copy-button-to-env-var[]
 |`the bundle map key`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.key]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.key[quarkus.web-bundler.bundle."bundle".key]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-bundle-key]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-bundle-key[quarkus.web-bundler.bundle."bundle".key]`
 
 
 [.description]
@@ -470,7 +470,7 @@ endif::add-copy-button-to-env-var[]
 |`the bundle map key`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.qute-tags]]`link:#quarkus-web-bundler_quarkus.web-bundler.bundle.-bundle-.qute-tags[quarkus.web-bundler.bundle."bundle".qute-tags]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-bundle-qute-tags]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-bundle-qute-tags[quarkus.web-bundler.bundle."bundle".qute-tags]`
 
 
 [.description]
