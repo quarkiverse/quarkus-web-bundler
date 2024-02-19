@@ -13,9 +13,9 @@
   <name>Quarkus Web Bundler - Parent</name>
   <modules>
     <module>common-deployment</module>
+    <module>qute-components</module>
     <module>runtime</module>
     <module>deployment</module>
-    <module>qute-components</module>
     <module>docs</module>
   </modules>
   <scm>
@@ -76,7 +76,7 @@
         </property>
       </activation>
       <modules>
-        <module>integration-tests/.locker</module>
+        <module>integration-tests/locker</module>
         <module>integration-tests</module>
       </modules>
     </profile>

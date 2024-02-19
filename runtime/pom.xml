@@ -31,7 +31,7 @@
         <executions>
           <execution>
             <id>generate-codestart-jar</id>
-            <phase>generate-resources</phase>
+            <phase>package</phase>
             <goals>
               <goal>jar</goal>
             </goals>
