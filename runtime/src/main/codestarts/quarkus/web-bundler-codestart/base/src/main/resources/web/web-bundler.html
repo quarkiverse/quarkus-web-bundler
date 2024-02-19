@@ -1,0 +1,41 @@
+<!-- For more information about using html templates,
+see https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#html-templates -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+
+    <!-- All files in the 'src/main/resources/web/static/' directory are served under the '/static/' prefix-->
+    <link rel="icon" type="image/svg+xml" href="/static/logo.svg"/>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Web-Bundler</title>
+
+    <!-- This is replaced by the <script> and <style> html code to include your application.
+    For more information about how to use the {#bundle /} tag,
+    see https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#bundle-tag -->
+    {#bundle /}
+
+</head>
+<body>
+<main class="scene">
+    <section class="intro">
+        A long time ago, in a galaxy far,<br> far away....
+    </section>
+
+    <!-- Change the text to your liking -->
+    <div id="board">
+        <div id="content">
+            <p id="title">Episode II</p>
+            <p id="subtitle">WEB BUNDLER AWAKEN</p>
+            <br>
+            <p>In the vast expanse of the Quarkiverse, a new entity emerges - the Web Bundler. This Quarkus extension is not a destroyer, but a harmonizer, bringing a new perspective to full-stack web apps and components.</p>
+            <p>It offers zero-configuration bundling and minification for your web app scripts (js, ts), web-dependencies (React, Bootstrap, Lit, ...), and styles (css, scss) with source-map included.</p>
+            <p>Web Bundler does not seek to overthrow Quinoa, the trusted ally of many a NodeJedi developers. Instead, it presents a compelling case for those who seek a different path closer to the backend force.</p>
+            <p>So, if you're a developer standing at the crossroads, wondering whether to choose Quinoa or Web Bundler, remember this - both have their strengths, and both can help you create awesome web apps.</p>
+            <p>The choice, as always, is yours.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

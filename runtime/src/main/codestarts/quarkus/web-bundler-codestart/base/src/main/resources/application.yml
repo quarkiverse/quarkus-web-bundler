@@ -1,0 +1,4 @@
+quarkus:
+  web-bundler:
+    dependencies:
+      node-modules: node_modules
