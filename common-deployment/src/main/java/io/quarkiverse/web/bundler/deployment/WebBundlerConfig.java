@@ -136,6 +136,43 @@ public interface WebBundlerConfig {
         @WithDefault("true")
         boolean compileOnly();
 
+        /**
+         * Auto import configuration
+         */
+        AutoImportConfig autoImport();
+
+    }
+
+    interface AutoImportConfig {
+
+        enum Mode {
+            ALL,
+            STYLES,
+            NONE;
+        }
+
+        /**
+         * Enable or disable auto-import of web dependencies:
+         * all: auto-import all web dependencies (scripts and styles)
+         * styles: auto-import only styles web dependencies (scss, sass, css)
+         * none: disable auto-import
+         *
+         * ** Only direct dependencies are auto-imported, not transitive ones.**
+         *
+         * This is using the dependencies package.json (module, main, style, scss, saas fields) to detect the presence of source
+         * scripts and styles:
+         * - For all libraries enriching your html experience (htmx, hypercript, lazyload, ...), you don't necessarily need a
+         * script, auto-import is a comfort.
+         * - For styling libraries (Bootstrap, Semantic, ...), you most likely want to always auto-import the styles.
+         * - For other web libraries (React, Vue, Lit, ...), you will import everything manually in your app scripts.
+         */
+        @WithDefault("none")
+        @WithParentName
+        Mode mode();
+
+        default boolean isEnabled() {
+            return mode() != Mode.NONE;
+        }
     }
 
     interface LoadersConfig {

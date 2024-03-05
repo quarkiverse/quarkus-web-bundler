@@ -4,7 +4,7 @@
   {#if src}
     <script type="module" src="{src}"></script>
   {#else}
-    <!-- no value found for key '{key}' in Bundler mapping !-->
+    <!-- no script found for key '{key}' in Bundler mapping !-->
   {/if}
 {/if}
 {#if key != "chunk"}
@@ -13,7 +13,7 @@
     {#if href}
       <link rel="stylesheet" href="{href}" />
     {#else}
-      <!-- no value found for key '{key}' in Bundler mapping !-->
+      <!-- no style found for key '{key}' in Bundler mapping !-->
     {/if}
   {/if}
 {/if}
