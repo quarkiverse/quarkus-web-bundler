@@ -14,8 +14,6 @@ class WebBundlerQuteTemplateRootProcessor {
             BuildProducer<TemplateRootBuildItem> templateRootProducer,
             WebBundlerConfig config) {
         templateRootProducer.produce(new TemplateRootBuildItem(config.fromWebRoot("templates")));
-        nativeImageResourceDirectoryProducer
-                .produce(new NativeImageResourceDirectoryBuildItem(config.fromWebRoot("templates")));
     }
 
 }
