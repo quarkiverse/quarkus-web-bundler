@@ -10,7 +10,6 @@ class WebBundlerQuteTemplateRootProcessor {
 
     @BuildStep
     void provideWebTemplateRoot(
-            BuildProducer<NativeImageResourceDirectoryBuildItem> nativeImageResourceDirectoryProducer,
             BuildProducer<TemplateRootBuildItem> templateRootProducer,
             WebBundlerConfig config) {
         templateRootProducer.produce(new TemplateRootBuildItem(config.fromWebRoot("templates")));
