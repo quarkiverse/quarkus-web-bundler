@@ -23,7 +23,7 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
-import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
+import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -36,7 +36,7 @@ public class QuteTemplateWebAssetsProcessor {
     void processHtmlTemplateWebAssets(WebBundlerConfig config,
             QuteTemplatesBuildItem htmlTemplates,
             GeneratedBundleBuildItem generatedBundle,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
@@ -72,7 +72,7 @@ public class QuteTemplateWebAssetsProcessor {
             final byte[] bytes = webAsset.contentOrReadFromFile();
             final String content = engine.parse(new String(bytes, webAsset.charset())).render();
             makeWebAssetPublic(staticResourceProducer, prefixWithSlash(webAsset.pathFromWebRoot(config.webRoot())),
-                    HtmlPageWebAsset.of(webAsset, content), true);
+                    HtmlPageWebAsset.of(webAsset, content));
         }
     }
 
