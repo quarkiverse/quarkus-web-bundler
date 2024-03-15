@@ -5,75 +5,50 @@ import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSla
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Set;
 
 import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
-import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
+import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 
 public class StaticWebAssetsProcessor {
 
     @BuildStep
     void processStaticWebAssets(WebBundlerConfig config,
             StaticAssetsBuildItem staticAssets,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            LiveReloadBuildItem liveReload) {
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer) {
         for (WebAsset webAsset : staticAssets.getWebAssets()) {
             final String publicPath = webAsset.pathFromWebRoot(config.webRoot());
-            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(publicPath), liveReload, webAsset);
+            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(publicPath), webAsset);
         }
     }
 
     static void makeWebAssetPublic(
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             String publicPath,
-            LiveReloadBuildItem liveReload,
             WebAsset webAsset) {
-        makeWebAssetPublic(staticResourceProducer, publicPath, webAsset,
-                liveReload.isLiveReload() && liveReload.getChangedResources().contains(webAsset.resourceName()));
-    }
-
-    static void makeWebAssetPublic(
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            String publicPath,
-            WebAsset webAsset,
-            boolean changed) {
         handleStaticResource(
                 staticResourceProducer,
-                Set.of(new GeneratedStaticResourceBuildItem.Source(webAsset.resourceName(), webAsset.filePath())),
                 publicPath,
-                webAsset.contentOrReadFromFile(),
-                changed,
-                GeneratedStaticResourceBuildItem.WatchMode.RESTART);
+                webAsset.contentOrReadFromFile());
     }
 
-    static void makePublic(BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, String publicPath,
-            Path file, GeneratedStaticResourceBuildItem.WatchMode watchMode, boolean changed) {
+    static void makePublic(BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, String publicPath,
+            Path file) {
         if (!Files.exists(file)) {
             return;
         }
-        handleStaticResource(staticResourceProducer, Collections.emptySet(), publicPath, readTemplateContent(file), changed,
-                watchMode);
+        handleStaticResource(staticResourceProducer, publicPath, readTemplateContent(file));
     }
 
     private static void handleStaticResource(
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
-            Set<GeneratedStaticResourceBuildItem.Source> sources,
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             String publicPath,
-            byte[] content,
-            boolean changed,
-            GeneratedStaticResourceBuildItem.WatchMode watchMode) {
-        staticResourceProducer.produce(new GeneratedStaticResourceBuildItem(
-                sources,
+            byte[] content) {
+        staticResourceProducer.produce(new GeneratedWebResourceBuildItem(
                 publicPath,
-                content,
-                true,
-                watchMode,
-                changed));
+                content));
     }
 
 }

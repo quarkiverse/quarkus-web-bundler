@@ -23,8 +23,6 @@ public class WebBundlerTest {
                     List.of(new ArtifactDependency("org.mvnpm", "jquery", null, "jar", "3.7.0", "provided", false)))
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("web")
-                    // For some reason it fails without this
-                    .addAsResource("META-INF/resources/test.txt")
                     .addAsResource("application.properties"));
 
     @Inject

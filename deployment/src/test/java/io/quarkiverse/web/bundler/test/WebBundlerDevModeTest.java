@@ -17,8 +17,6 @@ public class WebBundlerDevModeTest {
     static final QuarkusDevModeTest test = new QuarkusDevModeTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("dev", "web")
-                    // For some reason it fails without this
-                    .addAsResource("META-INF/resources/test.txt")
                     .addAsResource("application.properties"));
 
     @Test

@@ -2,16 +2,28 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.StaticWebAssetsProcessor.makePublic;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.*;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,11 +32,20 @@ import org.jboss.logging.Logger;
 
 import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
-import io.mvnpm.esbuild.model.*;
+import io.mvnpm.esbuild.model.BundleOptions;
+import io.mvnpm.esbuild.model.BundleOptionsBuilder;
+import io.mvnpm.esbuild.model.BundleResult;
+import io.mvnpm.esbuild.model.EsBuildConfig;
+import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
+import io.mvnpm.esbuild.model.WebDependency;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
-import io.quarkiverse.web.bundler.deployment.items.*;
-import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem;
-import io.quarkiverse.web.bundler.deployment.staticresources.GeneratedStaticResourceBuildItem.WatchMode;
+import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
+import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebAsset;
+import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.BundleRedirectHandlerRecorder;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
@@ -78,7 +99,7 @@ class WebBundlerProcessor {
             WebDependenciesBuildItem webDependencies,
             List<EntryPointBuildItem> entryPoints,
             Optional<BundleConfigAssetsBuildItem> bundleConfig,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer,
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
@@ -266,7 +287,7 @@ class WebBundlerProcessor {
     }
 
     void handleBundleDistDir(WebBundlerConfig config, BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
-            BuildProducer<GeneratedStaticResourceBuildItem> staticResourceProducer, Path bundleDir, Long started,
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, Path bundleDir, Long started,
             boolean changed) {
         try {
             Map<String, String> bundle = new HashMap<>();
@@ -287,7 +308,7 @@ class WebBundlerProcessor {
                     if (config.shouldQuarkusServeBundle()) {
                         // The root-path will already be added by the static resources handler
                         final String resourcePath = surroundWithSlashes(config.bundlePath()) + relativePath;
-                        makePublic(staticResourceProducer, resourcePath, path.normalize(), WatchMode.DISABLED, changed);
+                        makePublic(staticResourceProducer, resourcePath, path.normalize());
                     }
                 });
             }
