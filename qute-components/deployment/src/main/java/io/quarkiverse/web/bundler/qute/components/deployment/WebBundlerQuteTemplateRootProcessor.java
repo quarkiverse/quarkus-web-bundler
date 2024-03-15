@@ -3,7 +3,6 @@ package io.quarkiverse.web.bundler.qute.components.deployment;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceDirectoryBuildItem;
 import io.quarkus.qute.deployment.TemplateRootBuildItem;
 
 class WebBundlerQuteTemplateRootProcessor {
