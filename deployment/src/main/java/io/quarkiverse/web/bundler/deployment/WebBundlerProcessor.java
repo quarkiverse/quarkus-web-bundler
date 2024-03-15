@@ -106,9 +106,18 @@ class WebBundlerProcessor {
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
             OutputTargetBuildItem outputTarget) throws BuildException {
-        if ((entryPoints.isEmpty() && !config.dependencies().autoImport().isEnabled()) || webDependencies.isEmpty()) {
-            LOGGER.info("No bundle or dependencies to process");
-            return;
+        if (entryPoints.isEmpty()) {
+            if (!config.dependencies().autoImport().isEnabled()) {
+                LOGGER.warn("Skipping Web-Bundling because no entry-point detected (create one or enable auto-import)");
+                return;
+            } else {
+                if (webDependencies.isEmpty()) {
+                    LOGGER.warn("Skipping Web-Bundling because no Web Dependencies found for auto-import.");
+                    return;
+                } else {
+                    LOGGER.info("No entry points found, it will be generated based on direct Web Dependencies.");
+                }
+            }
         }
         final BundlesBuildContext bundlesBuildContext = liveReload.getContextObject(BundlesBuildContext.class);
         final boolean isLiveReload = liveReload.isLiveReload()
