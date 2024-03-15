@@ -9,14 +9,13 @@ import java.util.stream.StreamSupport;
 
 import org.jboss.logging.Logger;
 
-import io.mvnpm.esbuild.model.WebDependency;
 import io.mvnpm.esbuild.model.WebDependency.WebDependencyType;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
-import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.maven.dependency.DependencyFlags;
 import io.quarkus.maven.dependency.ResolvedDependency;
 import io.quarkus.runtime.configuration.ConfigurationException;
@@ -25,26 +24,23 @@ class WebDependenciesScannerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(WebDependenciesScannerProcessor.class);
 
-    private static final String SCOPE_COMPILE = "compile";
-    private static final String SCOPE_PROVIDED = "provided";
-
     @BuildStep
     WebDependenciesBuildItem collectDependencies(LaunchModeBuildItem launchMode,
             CurateOutcomeBuildItem curateOutcome,
-            WebBundlerConfig config,
-            List<EntryPointBuildItem> entryPoints) {
-        if (entryPoints.isEmpty()) {
+            List<EntryPointBuildItem> entryPoints,
+            WebBundlerConfig config) {
+        if (entryPoints.isEmpty() && !config.dependencies().autoImport().isEnabled()) {
             return new WebDependenciesBuildItem(List.of());
         }
-        final List<WebDependency> webDeps = StreamSupport.stream(curateOutcome.getApplicationModel()
+        final List<Dependency> dependencies = StreamSupport.stream(curateOutcome.getApplicationModel()
                 .getDependenciesWithAnyFlag(DependencyFlags.COMPILE_ONLY, DependencyFlags.RUNTIME_CP).spliterator(), false)
-                .filter(Dependency::isJar)
+                .filter(io.quarkus.maven.dependency.Dependency::isJar)
                 .filter(d -> WebDependencyType.anyMatch(d.toCompactCoords()))
                 .peek(d -> checkScope(launchMode, d, config))
                 .map(WebDependenciesScannerProcessor::toWebDep)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        return new WebDependenciesBuildItem(webDeps);
+        return new WebDependenciesBuildItem(dependencies);
     }
 
     private void checkScope(LaunchModeBuildItem launchMode, ResolvedDependency d, WebBundlerConfig config) {
@@ -56,9 +52,10 @@ class WebDependenciesScannerProcessor {
         }
     }
 
-    private static WebDependency toWebDep(ResolvedDependency d) {
+    private static Dependency toWebDep(ResolvedDependency d) {
         return d.getResolvedPaths().stream().filter(p -> p.getFileName().toString().endsWith(".jar")).findFirst()
-                .map(j -> new WebDependency(d.toCompactCoords(), j, resolveType(d.toCompactCoords()).orElseThrow()))
+                .map(j -> new Dependency(d.toCompactCoords(), j, resolveType(d.toCompactCoords()).orElseThrow(), d.isDirect()))
                 .orElse(null);
     }
+
 }

@@ -4,6 +4,7 @@ import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSl
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -105,8 +106,10 @@ class BundleWebAssetsScannerProcessor {
                         .findAny();
                 for (WebAsset webAsset : assets) {
                     BundleType bundleType = entryPoint
+                            // If it's not the entry point we consider it as a manual asset (imported by the entry point)
                             .map(ep -> webAsset.equals(ep) ? BundleType.ENTRYPOINT : BundleType.MANUAL)
-                            .orElse(BundleType.AUTO);
+                            // When there is no entry point we consider it as a auto asset unless it's a sass import file (_*.sass)
+                            .orElse(isImportSassFile(webAsset.resourceName()) ? BundleType.MANUAL : BundleType.AUTO);
                     bundleAssets.get(entryPointKey).add(new BundleWebAsset(webAsset, bundleType));
                 }
             }
@@ -120,6 +123,16 @@ class BundleWebAssetsScannerProcessor {
                 scanner.scan(bundleConfigAssetsScanners));
         produceWebAssets(bundles, quteTagsAssets, bundleConfigAssets, context, false);
         liveReload.setContextObject(WebAssetsLookupDevContext.class, context);
+    }
+
+    private static boolean isImportSassFile(String resourceName) {
+        final String fileName = Path.of(resourceName).getFileName().toString();
+        return fileName.startsWith("_") && isSassFile(fileName);
+    }
+
+    private static boolean isSassFile(String fileName) {
+        String lc = fileName.toLowerCase();
+        return lc.endsWith(".scss") || lc.endsWith(".sass");
     }
 
     private static boolean isBundleFile(WebBundlerConfig config, String changedResource,

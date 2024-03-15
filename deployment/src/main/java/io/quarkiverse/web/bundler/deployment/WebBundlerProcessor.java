@@ -1,5 +1,6 @@
 package io.quarkiverse.web.bundler.deployment;
 
+import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.MAIN_ENTRYPOINT_KEY;
 import static io.quarkiverse.web.bundler.deployment.StaticWebAssetsProcessor.makePublic;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
@@ -32,12 +33,12 @@ import org.jboss.logging.Logger;
 
 import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
+import io.mvnpm.esbuild.model.AutoEntryPoint.AutoDepsMode;
 import io.mvnpm.esbuild.model.BundleOptions;
 import io.mvnpm.esbuild.model.BundleOptionsBuilder;
 import io.mvnpm.esbuild.model.BundleResult;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
-import io.mvnpm.esbuild.model.WebDependency;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
 import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
@@ -45,6 +46,7 @@ import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.BundleRedirectHandlerRecorder;
@@ -104,8 +106,8 @@ class WebBundlerProcessor {
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
             OutputTargetBuildItem outputTarget) throws BuildException {
-        if (entryPoints.isEmpty()) {
-            LOGGER.info("No bundle to process");
+        if ((entryPoints.isEmpty() && !config.dependencies().autoImport().isEnabled()) || webDependencies.isEmpty()) {
+            LOGGER.info("No bundle or dependencies to process");
             return;
         }
         final BundlesBuildContext bundlesBuildContext = liveReload.getContextObject(BundlesBuildContext.class);
@@ -113,7 +115,7 @@ class WebBundlerProcessor {
                 && bundlesBuildContext != null
                 && bundlesBuildContext.bundleDistDir() != null;
         if (isLiveReload
-                && Objects.equals(webDependencies.getDependencies(), bundlesBuildContext.webDependencies())
+                && Objects.equals(webDependencies.list(), bundlesBuildContext.dependencies())
                 && !liveReload.getChangedResources().contains(config.fromWebRoot("tsconfig.json"))
                 && entryPoints.equals(bundlesBuildContext.entryPoints())
                 && entryPoints.stream().map(EntryPointBuildItem::getWebAssets).flatMap(List::stream)
@@ -125,8 +127,6 @@ class WebBundlerProcessor {
                     null, false);
             return;
         }
-        boolean hasScssChange = isLiveReload
-                && liveReload.getChangedResources().stream().anyMatch(WebBundlerProcessor::isSassFile);
         final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
         final Path nodeModulesDir = resolveNodeModulesDir(config, outputTarget);
         try {
@@ -161,19 +161,18 @@ class WebBundlerProcessor {
             }
             final BundleOptionsBuilder optionsBuilder = new BundleOptionsBuilder()
                     .withWorkDir(targetDir)
-                    .withDependencies(webDependencies.getDependencies())
+                    .withDependencies(webDependencies.list().stream().map(Dependency::toEsBuildWebDependency).toList())
                     .withEsConfig(esBuildConfigBuilder.build())
                     .withNodeModulesDir(nodeModulesDir);
+            final Set<String> directWebDependenciesIds = webDependencies.list().stream().filter(Dependency::direct)
+                    .map(Dependency::id).collect(Collectors.toSet());
             int addedEntryPoints = 0;
+            final AutoDepsMode autoDepsMode = AutoDepsMode.valueOf(config.dependencies().autoImport().mode().toString());
             for (EntryPointBuildItem entryPoint : entryPoints) {
                 final List<String> scripts = new ArrayList<>();
                 for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
                     String destination = webAsset.pathFromWebRoot(config.webRoot());
                     final Path scriptPath = targetDir.resolve(destination);
-                    if (hasScssChange && isSassFile(scriptPath.getFileName().toString())) {
-                        // This scss has been converted to css in the last cycle
-                        Files.deleteIfExists(scriptPath);
-                    }
                     if (!isLiveReload
                             || liveReload.getChangedResources().contains(webAsset.resourceName())
                             || !Files.exists(scriptPath)) {
@@ -185,7 +184,8 @@ class WebBundlerProcessor {
                             Files.copy(webAsset.filePath().orElseThrow(), scriptPath, StandardCopyOption.REPLACE_EXISTING);
                         }
                     }
-                    if (!webAsset.type().equals(MANUAL) && !isImportSassFile(scriptPath.getFileName().toString())) {
+                    // Manual assets are supposed to be imported by the entry point
+                    if (!webAsset.type().equals(MANUAL)) {
                         scripts.add(destination);
                     }
                 }
@@ -201,47 +201,50 @@ class WebBundlerProcessor {
                 }
 
                 if (!scripts.isEmpty()) {
-                    optionsBuilder.addAutoEntryPoint(targetDir, entryPoint.getEntryPointKey(), scripts);
+                    optionsBuilder.addAutoEntryPoint(targetDir, entryPoint.getEntryPointKey(), scripts, autoDepsMode,
+                            directWebDependenciesIds::contains);
                     addedEntryPoints++;
                 }
             }
-            if (addedEntryPoints > 0) {
-                final BundleOptions options = optionsBuilder.build();
-                if (!isLiveReload
-                        || !Objects.equals(webDependencies.getDependencies(), bundlesBuildContext.webDependencies())) {
-                    long startedInstall = Instant.now().toEpochMilli();
-                    if (Bundler.install(targetDir, options)) {
-                        final long duration = Instant.now().minusMillis(startedInstall).toEpochMilli();
-                        if (LOGGER.isDebugEnabled()) {
-                            String deps = webDependencies.getDependencies().stream().map(WebDependency::id)
-                                    .collect(
-                                            Collectors.joining(", "));
-                            LOGGER.infof("%d web dependencies installed in %sms: %s", webDependencies.getDependencies().size(),
-                                    duration, deps);
-                        } else {
-                            LOGGER.infof("%d web Dependencies installed in %sms.", webDependencies.getDependencies().size(),
-                                    duration);
-                        }
-                    } else if (webDependencies.getDependencies().isEmpty()) {
-                        LOGGER.info("No web dependencies to install.");
-                    } else {
-                        LOGGER.info("All web dependencies are already installed.");
-                    }
-                }
-                final long startedBundling = Instant.now().toEpochMilli();
-                final BundleResult result = Bundler.bundle(options, false);
-                if (!result.result().output().isBlank()) {
-                    LOGGER.debugf(result.result().output());
-                }
 
-                handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), startedBundling,
-                        true);
-                liveReload.setContextObject(BundlesBuildContext.class,
-                        new BundlesBuildContext(webDependencies.getDependencies(), entryPoints, result.dist()));
-            } else {
-                liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
-                LOGGER.debugf("No entrypoint found, no bundle generated.");
+            if (addedEntryPoints == 0) {
+                optionsBuilder.addAutoEntryPoint(targetDir, MAIN_ENTRYPOINT_KEY, List.of(), autoDepsMode,
+                        directWebDependenciesIds::contains);
+                LOGGER.info("No custom entry points found, it will be generated based on web dependencies.");
             }
+
+            final BundleOptions options = optionsBuilder.build();
+            if (!isLiveReload
+                    || !Objects.equals(webDependencies.list(), bundlesBuildContext.dependencies())) {
+                long startedInstall = Instant.now().toEpochMilli();
+                if (Bundler.install(targetDir, options)) {
+                    final long duration = Instant.now().minusMillis(startedInstall).toEpochMilli();
+                    if (LOGGER.isDebugEnabled()) {
+                        String deps = webDependencies.list().stream().map(Dependency::id)
+                                .collect(
+                                        Collectors.joining(", "));
+                        LOGGER.infof("%d web dependencies installed in %sms: %s", webDependencies.list().size(),
+                                duration, deps);
+                    } else {
+                        LOGGER.infof("%d web Dependencies installed in %sms.", webDependencies.list().size(),
+                                duration);
+                    }
+                } else if (webDependencies.isEmpty()) {
+                    LOGGER.info("No web dependencies to install.");
+                } else {
+                    LOGGER.info("All web dependencies are already installed.");
+                }
+            }
+            final long startedBundling = Instant.now().toEpochMilli();
+            final BundleResult result = Bundler.bundle(options, false);
+            if (!result.result().output().isBlank()) {
+                LOGGER.debugf(result.result().output());
+            }
+
+            handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), startedBundling,
+                    true);
+            liveReload.setContextObject(BundlesBuildContext.class,
+                    new BundlesBuildContext(webDependencies.list(), entryPoints, result.dist()));
 
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -357,16 +360,7 @@ class WebBundlerProcessor {
         }
     }
 
-    public static boolean isImportSassFile(String filename) {
-        return filename.startsWith("_") && isSassFile(filename);
-    }
-
-    public static boolean isSassFile(String filename) {
-        String lc = filename.toLowerCase();
-        return lc.endsWith(".scss") || lc.endsWith(".sass");
-    }
-
-    public record BundlesBuildContext(List<WebDependency> webDependencies, List<EntryPointBuildItem> entryPoints,
+    public record BundlesBuildContext(List<Dependency> dependencies, List<EntryPointBuildItem> entryPoints,
             Path bundleDistDir) {
 
         public BundlesBuildContext() {

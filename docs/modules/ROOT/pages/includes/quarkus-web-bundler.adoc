@@ -384,6 +384,24 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-dependencies-auto-import]]`link:#quarkus-web-bundler_quarkus-web-bundler-dependencies-auto-import[quarkus.web-bundler.dependencies.auto-import]`
+
+
+[.description]
+--
+Enable or disable auto-import of web dependencies: all: auto-import all web dependencies (scripts and styles) styles: auto-import only styles web dependencies (scss, sass, css) none: disable auto-import ++**++ Only direct dependencies are auto-imported, not transitive ones.++**++ This is using the dependencies package.json (module, main, style, scss, saas fields) to detect the presence of source scripts and styles: - For all libraries enriching your html experience (htmx, hypercript, lazyload, ...), you don't necessarily need a script, auto-import is a comfort. - For styling libraries (Bootstrap, Semantic, ...), you most likely want to always auto-import the styles. - For other web libraries (React, Vue, Lit, ...), you will import everything manually in your app scripts.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_AUTO_IMPORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_DEPENDENCIES_AUTO_IMPORT+++`
+endif::add-copy-button-to-env-var[]
+-- a|
+`all`, `styles`, `none` 
+|`none`
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-redirect]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-redirect[quarkus.web-bundler.bundle-redirect]`
 
 
