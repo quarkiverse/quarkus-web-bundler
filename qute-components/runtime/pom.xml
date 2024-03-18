@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.web-bundler</groupId>
     <artifactId>quarkus-web-bundler-qute-components-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>1.4.0.CR3</version>
   </parent>
   <artifactId>quarkus-web-bundler-qute-components</artifactId>
   <name>Quarkus Web Bundler - Qute Components - Runtime</name>
