@@ -8,3 +8,4 @@ include::./includes/attributes.adoc[]
 - https://github.com/ia3andy/web-bundler-jquery[jQuery, window="_blank"]: Web Bundler, jQuery, Bootstrap
 - https://github.com/ia3andy/bundler-gradle-jquery[Gradle jQuery, window="_blank"]: Gradle, Web Bundler, jQuery, Bootstrap
 - https://github.com/quarkusio/todo-demo-app[TODO Demo App, window="_blank"]: Web Bundler, Lit, Vaadin Web Components
+- https://github.com/ia3andy/quarkus-wb-patternfly-react/[Patternfly Ract]: Web Bundler, Patternfly React
