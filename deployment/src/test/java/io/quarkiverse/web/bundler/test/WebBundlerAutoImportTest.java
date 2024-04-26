@@ -19,12 +19,12 @@ public class WebBundlerAutoImportTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .withConfigurationResource("application-auto.properties")
             .setForcedDependencies(
                     List.of(
                             new ArtifactDependency("org.mvnpm", "jquery", null, "jar", "3.7.0", "provided", false)))
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource("web-auto", "web")
-                    .addAsResource("application-auto.properties", "application.properties"));
+                    .addAsResource("web-auto", "web"));
 
     @Inject
     Bundle bundle;

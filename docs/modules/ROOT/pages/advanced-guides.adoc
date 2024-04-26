@@ -106,9 +106,9 @@ NOTE: By default, as soon as more than one entry-point key is configured, shared
 [#loaders]
 === How is it bundled (Loaders)
 
-Bases on the files extensions, the Web Bundler will use xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.js[pre-configured loaders] to bundle them. For scripts and styles, the default configuration should be enough.
+Bases on the files extensions, the Web Bundler will use xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.bundling.loaders.js[pre-configured loaders] to bundle them. For scripts and styles, the default configuration should be enough.
 
-For other assets (svg, gif, png, jpg, ttf, ...) imported from your scripts and styles using their relative path, you may choose the loader based on the file extension allowing different options (e.g. serving, embedding the file as data-url, binary, base64, ...). By default, they will automatically be copied and served using the xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.loaders.file[file loader].
+For other assets (svg, gif, png, jpg, ttf, ...) imported from your scripts and styles using their relative path, you may choose the loader based on the file extension allowing different options (e.g. serving, embedding the file as data-url, binary, base64, ...). By default, they will automatically be copied and served using the xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.bundling.loaders.file[file loader].
 
 For example, `url('./example.png')` in a style or `import example from './example.png';` in a script will be processed, the file will be copied with a static name and the path will be replaced by the new file static path (e.g. `/static/bundle/assets/example-QH383.png`). The `example` variable will contain the public path to this file to be used in a component img `src` for example.
 
