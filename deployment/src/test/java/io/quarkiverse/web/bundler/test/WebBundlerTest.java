@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import org.hamcrest.Matchers;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -19,17 +20,18 @@ public class WebBundlerTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .withConfigurationResource("application.properties")
             .setForcedDependencies(
                     List.of(new ArtifactDependency("org.mvnpm", "jquery", null, "jar", "3.7.0", "provided", false)))
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource("web")
-                    .addAsResource("application.properties"));
+                    .addAsResource("web"));
 
     @Inject
     Bundle bundle;
 
     @Test
     public void test() {
+
         RestAssured.given()
                 .get("/")
                 .then()
@@ -37,6 +39,7 @@ public class WebBundlerTest {
                 .body(Matchers.containsString("mode:TEST"))
                 .body(Matchers.containsString("<link rel=\"stylesheet\" href=\"" + bundle.style("main") + "\" />"))
                 .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("main") + "\"></script>"));
+
         RestAssured.given()
                 .get(bundle.style("main"))
                 .then()
@@ -50,5 +53,22 @@ public class WebBundlerTest {
                 .then()
                 .statusCode(200)
                 .body(Matchers.equalTo("Hello World!"));
+
+    }
+
+    @Test
+    void testSourceMap() {
+        final String jsMap = bundle.resolve("main.js.map");
+        Assertions.assertNotNull(jsMap);
+        final String cssMap = bundle.resolve("main.css.map");
+        Assertions.assertNotNull(cssMap);
+        RestAssured.given()
+                .get(jsMap)
+                .then()
+                .statusCode(200);
+        RestAssured.given()
+                .get(cssMap)
+                .then()
+                .statusCode(200);
     }
 }

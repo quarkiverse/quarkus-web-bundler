@@ -59,23 +59,9 @@ public interface WebBundlerConfig {
     String bundlePath();
 
     /**
-     * The config for esbuild loaders https://esbuild.github.io/content-types/
+     * Configure bundling options
      */
-    LoadersConfig loaders();
-
-    /**
-     * This defines the list of external paths for esbuild (https://esbuild.github.io/api/#external).
-     * Instead of being bundled, the import will be preserved.
-     */
-    @ConfigDocDefault("{quarkus.http.root-path}static/*")
-    Optional<List<String>> externalImports();
-
-    /**
-     * Enable or disable bundle splitting (https://esbuild.github.io/api/#splitting)
-     * Code shared between multiple entry points is split off into a separate shared file (chunk) that both entry points import
-     */
-    @WithDefault("true")
-    Boolean bundleSplitting();
+    BundlingConfig bundling();
 
     /**
      * Configure how dependencies are collected
@@ -113,6 +99,41 @@ public interface WebBundlerConfig {
 
     default boolean shouldQuarkusServeBundle() {
         return !isExternalBundlePath();
+    }
+
+    interface BundlingConfig {
+        /**
+         * Enable or disable bundle splitting (https://esbuild.github.io/api/#splitting)
+         * Code shared between multiple entry points is split off into a separate shared file (chunk) that both entry points
+         * import
+         */
+        @WithDefault("true")
+        Boolean splitting();
+
+        /**
+         * The config for esbuild loaders https://esbuild.github.io/content-types/
+         */
+        LoadersConfig loaders();
+
+        /**
+         * This defines the list of external paths for esbuild (https://esbuild.github.io/api/#external).
+         * Instead of being bundled, the import will be preserved.
+         */
+        @ConfigDocDefault("{quarkus.http.root-path}static/*")
+        Optional<List<String>> external();
+
+        /**
+         * Configuration for source-map generation (https://esbuild.github.io/api/#sourcemap)
+         */
+        @WithDefault("linked")
+        String sourceMap();
+
+        default boolean sourceMapEnabled() {
+            return "linked".equalsIgnoreCase(sourceMap())
+                    || "true".equalsIgnoreCase(sourceMap())
+                    || "yes".equalsIgnoreCase(sourceMap());
+        }
+
     }
 
     interface WebDependenciesConfig {

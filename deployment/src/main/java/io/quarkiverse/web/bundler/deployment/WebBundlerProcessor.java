@@ -159,15 +159,16 @@ class WebBundlerProcessor {
             final EsBuildConfigBuilder esBuildConfigBuilder = new EsBuildConfigBuilder()
                     .loader(loaders)
                     .publicPath(config.publicBundlePath())
-                    .splitting(config.bundleSplitting())
+                    .splitting(config.bundling().splitting())
                     .minify(launchMode.getLaunchMode().equals(LaunchMode.NORMAL));
-            if (config.externalImports().isPresent()) {
-                for (String e : config.externalImports().get()) {
+            if (config.bundling().external().isPresent()) {
+                for (String e : config.bundling().external().get()) {
                     esBuildConfigBuilder.addExternal(e);
                 }
             } else {
                 esBuildConfigBuilder.addExternal(join(config.httpRootPath(), "static/*"));
             }
+            esBuildConfigBuilder.sourceMap(config.bundling().sourceMapEnabled());
             final BundleOptionsBuilder optionsBuilder = new BundleOptionsBuilder()
                     .withWorkDir(targetDir)
                     .withDependencies(webDependencies.list().stream().map(Dependency::toEsBuildWebDependency).toList())
@@ -283,7 +284,7 @@ class WebBundlerProcessor {
         Map<String, EsBuildConfig.Loader> loaders = new HashMap<>();
         for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
             final Function<LoadersConfig, Optional<Set<String>>> configFn = requireNonNull(LOADER_CONFIGS.get(loader));
-            final Optional<Set<String>> values = configFn.apply(config.loaders());
+            final Optional<Set<String>> values = configFn.apply(config.bundling().loaders());
             if (values.isPresent()) {
                 for (String v : values.get()) {
                     final String ext = v.startsWith(".") ? v : "." + v;
