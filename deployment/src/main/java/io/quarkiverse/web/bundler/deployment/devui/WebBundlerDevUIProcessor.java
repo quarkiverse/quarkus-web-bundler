@@ -1,5 +1,8 @@
 package io.quarkiverse.web.bundler.deployment.devui;
 
+import static io.quarkiverse.web.bundler.deployment.devui.WebDependencyLibrariesBuildItem.WebDependencyLibrary;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
@@ -18,26 +21,33 @@ public class WebBundlerDevUIProcessor {
             List<EntryPointBuildItem> entryPoints,
             WebDependenciesBuildItem webDependencies,
             StaticAssetsBuildItem staticAssets,
-            QuteTemplatesBuildItem htmlAssets) {
+            QuteTemplatesBuildItem htmlAssets,
+            List<WebDependencyLibrariesBuildItem> webDependencyLibrariesBuildItems) {
+
+        List<WebDependencyLibrary> webDependencyLibraries = new ArrayList<>();
+        for (WebDependencyLibrariesBuildItem webDependencyLibrariesBuildItem : webDependencyLibrariesBuildItems) {
+            webDependencyLibraries.addAll(webDependencyLibrariesBuildItem.getWebDependencyLibraries());
+        }
 
         CardPageBuildItem cardPageBuildItem = new CardPageBuildItem();
 
         if (!webDependencies.isEmpty()) {
-            cardPageBuildItem.addBuildTimeData("webDependencies", webDependencies.list());
-            cardPageBuildItem.addPage(Page.tableDataPageBuilder("Web Dependencies")
-                    .icon("font-awesome-solid:table")
-                    .showColumn("id")
-                    .showColumn("type")
-                    .showColumn("direct")
-                    .staticLabel(String.valueOf(webDependencies.list().size()))
-                    .buildTimeDataKey("webDependencies"));
+            // Web Dependency Libraries
+            cardPageBuildItem.addBuildTimeData("webDependencyLibraries", webDependencyLibraries);
+
+            cardPageBuildItem.addPage(Page.webComponentPageBuilder()
+                    .componentLink("qwc-web-bundler-web-dependencies.js")
+                    .title("Web Dependencies")
+                    .icon("font-awesome-brands:square-js")
+                    .staticLabel(String.valueOf(webDependencies.list().size())));
 
         }
 
         if (!entryPoints.isEmpty()) {
             cardPageBuildItem.addBuildTimeData("entryPoints",
                     entryPoints.stream().map(e -> new EntryPoint(e.getEntryPointKey(), e.getWebAssets().stream()
-                            .map(a -> new EntryPointItem(a.webAsset().pathFromWebRoot(config.webRoot()), a.type().label()))
+                            .map(a -> new EntryPointItem(a.webAsset().pathFromWebRoot(config.webRoot()), a.type().label(),
+                                    new String(a.webAsset().contentOrReadFromFile())))
                             .toList()))
                             .toList());
 
@@ -52,23 +62,21 @@ public class WebBundlerDevUIProcessor {
         if (!htmlAssets.getWebAssets().isEmpty()) {
             cardPageBuildItem.addBuildTimeData("htmlAssets", htmlAssets.getWebAssets().stream()
                     .map(s -> new WebAsset(s.pathFromWebRoot(config.webRoot()))).toList());
-            cardPageBuildItem.addPage(Page.tableDataPageBuilder("Html templates")
-                    .icon("font-awesome-solid:table")
-                    .showColumn("path")
-                    .staticLabel(String.valueOf(htmlAssets.getWebAssets().size()))
-                    .buildTimeDataKey("htmlAssets"));
-
+            cardPageBuildItem.addPage(Page.webComponentPageBuilder()
+                    .componentLink("qwc-web-bundler-html-templates.js")
+                    .title("Html templates")
+                    .icon("font-awesome-brands:html5")
+                    .staticLabel(String.valueOf(htmlAssets.getWebAssets().size())));
         }
 
         if (!staticAssets.getWebAssets().isEmpty()) {
             cardPageBuildItem.addBuildTimeData("staticAssets", staticAssets.getWebAssets().stream()
                     .map(s -> new WebAsset(s.pathFromWebRoot(config.webRoot()))).toList());
-            cardPageBuildItem.addPage(Page.tableDataPageBuilder("Static Assets")
-                    .icon("font-awesome-solid:table")
-                    .showColumn("path")
-                    .staticLabel(String.valueOf(staticAssets.getWebAssets().size()))
-                    .buildTimeDataKey("staticAssets"));
-
+            cardPageBuildItem.addPage(Page.webComponentPageBuilder()
+                    .componentLink("qwc-web-bundler-static-assets.js")
+                    .title("Static Assets")
+                    .icon("font-awesome-solid:image")
+                    .staticLabel(String.valueOf(staticAssets.getWebAssets().size())));
         }
 
         cardPageProducer.produce(cardPageBuildItem);
@@ -80,7 +88,7 @@ public class WebBundlerDevUIProcessor {
     record EntryPoint(String key, List<EntryPointItem> items) {
     }
 
-    record EntryPointItem(String path, String type) {
+    record EntryPointItem(String path, String type, String content) {
     }
 
 }
