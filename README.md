@@ -1,4 +1,7 @@
 # Quarkus Web Bundler
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Build](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml/badge.svg)](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml) 
 [![Issues](https://img.shields.io/github/issues/quarkiverse/quarkus-web-bundler)](https://github.com/quarkiverse/quarkus-web-bundler/issues) 
@@ -49,6 +52,21 @@ All the information you need to use Quarkus Web Bundler is in the [user document
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/chrisruffalo"><img src="https://avatars.githubusercontent.com/u/2073493?v=4?s=100" width="100px;" alt="Chris Ruffalo"/><br /><sub><b>Chris Ruffalo</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/commits?author=chrisruffalo" title="Code">💻</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
