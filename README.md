@@ -1,6 +1,6 @@
 # Quarkus Web Bundler
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Build](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml/badge.svg)](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml) 
@@ -66,6 +66,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://selim.co"><img src="https://avatars.githubusercontent.com/u/5699586?v=4?s=100" width="100px;" alt="Selim Dinçer"/><br /><sub><b>Selim Dinçer</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/issues?q=author%3Awowselim" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/blazmrak"><img src="https://avatars.githubusercontent.com/u/25981532?v=4?s=100" width="100px;" alt="blazmrak"/><br /><sub><b>blazmrak</b></sub></a><br /><a href="#mentoring-blazmrak" title="Mentoring">🧑‍🏫</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/nanobreaker"><img src="https://avatars.githubusercontent.com/u/18008535?v=4?s=100" width="100px;" alt="Egor"/><br /><sub><b>Egor</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/issues?q=author%3Ananobreaker" title="Bug reports">🐛</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.presight.se"><img src="https://avatars.githubusercontent.com/u/815040?v=4?s=100" width="100px;" alt="Rasmus Haglund"/><br /><sub><b>Rasmus Haglund</b></sub></a><br /><a href="#ideas-rasmushaglund" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
 </table>
