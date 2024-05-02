@@ -33,7 +33,15 @@
       "contributions": [
         "mentoring"
       ]
-    }
+    },{ "login": "nanobreaker",
+      "name": "Egor",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18008535?v=4",
+      "profile": "https://github.com/nanobreaker",
+      "contributions": [
+        "bug"
+        ]
+      }
+
   ],
   "contributorsPerLine": 7,
   "skipCi": true,
