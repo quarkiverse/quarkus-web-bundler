@@ -54,7 +54,8 @@ class WebDependenciesScannerProcessor {
 
     private static Dependency toWebDep(ResolvedDependency d) {
         return d.getResolvedPaths().stream().filter(p -> p.getFileName().toString().endsWith(".jar")).findFirst()
-                .map(j -> new Dependency(d.toCompactCoords(), j, resolveType(d.toCompactCoords()).orElseThrow(), d.isDirect()))
+                .map(j -> new Dependency(d, d.toCompactCoords(), j, resolveType(d.toCompactCoords()).orElseThrow(),
+                        d.isDirect()))
                 .orElse(null);
     }
 

@@ -1,5 +1,5 @@
 import {LitElement, html, css} from 'lit';
-import {webDependencyLibraries} from 'build-time-data';
+import {webDependencies} from 'build-time-data';
 import '@vaadin/tabs';
 import '@vaadin/grid';
 import '@vaadin/icon';
@@ -34,31 +34,31 @@ export class QwcWebBundlerWebDependencies extends LitElement {
 
     constructor() {
         super();
-        this._webDependencyLibraries = webDependencyLibraries;
-        this._selectedWebDependency = this._webDependencyLibraries[0];
+        this._webDependencies = webDependencies;
+        this._selectedWebDependency = this._webDependencies[0];
     }
 
     render() {
         return html`
                 <vaadin-tabs @selected-changed="${this._tabSelectedChanged}" orientation="vertical">
-                    ${this._webDependencyLibraries.map(webDependency => html`
+                    ${this._webDependencies.map(webDependency => html`
                         <vaadin-tab id="${webDependency.webDependencyName}">
                             ${webDependency.webDependencyName + " (" + webDependency.version + ")"}
                         </vaadin-tab>`)}
                 </vaadin-tabs>
 
-                ${this._renderLibraryAssets(this._selectedWebDependency)}
+                ${this._renderAssets(this._selectedWebDependency)}
         `;
     }
 
     _tabSelectedChanged(e){
-        this._selectedWebDependency = this._webDependencyLibraries[e.detail.value];
+        this._selectedWebDependency = this._webDependencies[e.detail.value];
     }
 
-    _renderLibraryAssets(library) {
+    _renderAssets(dep) {
         const dataProvider = function (params, callback) {
             if (params.parentItem === undefined) {
-                callback(library.rootAsset.children, library.rootAsset.children.length);
+                callback(dep.rootAsset.children, dep.rootAsset.children.length);
             } else {
                 callback(params.parentItem.children, params.parentItem.children.length)
             }

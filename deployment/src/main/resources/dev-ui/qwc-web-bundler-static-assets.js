@@ -72,7 +72,7 @@ export class QwcWebBundlerStaticAssets extends LitElement {
     _renderAsset(){
         if(this._selectedStaticAsset && this._selectedStaticAsset.length > 0){
             return html`<div class="preview">
-                            <img src="/${this._selectedStaticAsset[0].path}"></img>
+                            <img src="${this._selectedStaticAsset[0].path}"></img>
                         </div>
                         ${this._renderLinkOut(this._selectedStaticAsset[0])}`;
         }
@@ -85,7 +85,7 @@ export class QwcWebBundlerStaticAssets extends LitElement {
     }
 
     _navigate(link){
-        window.open("/" + link, '_blank').focus();
+        window.open(link, '_blank').focus();
     }
 }
 

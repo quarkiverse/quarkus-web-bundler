@@ -1,8 +1,7 @@
 package io.quarkiverse.web.bundler.deployment.devui;
 
-import static io.quarkiverse.web.bundler.deployment.devui.WebDependencyLibrariesBuildItem.WebDependencyLibrary;
+import static io.quarkiverse.web.bundler.deployment.devui.WebBundlerDevUIWebDependenciesProcessor.resolveFromRootPath;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
@@ -12,28 +11,25 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
+import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
 
 public class WebBundlerDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     public void createPages(WebBundlerConfig config,
+            HttpBuildTimeConfig httpConfig,
             BuildProducer<CardPageBuildItem> cardPageProducer,
             List<EntryPointBuildItem> entryPoints,
             WebDependenciesBuildItem webDependencies,
             StaticAssetsBuildItem staticAssets,
             QuteTemplatesBuildItem htmlAssets,
-            List<WebDependencyLibrariesBuildItem> webDependencyLibrariesBuildItems) {
-
-        List<WebDependencyLibrary> webDependencyLibraries = new ArrayList<>();
-        for (WebDependencyLibrariesBuildItem webDependencyLibrariesBuildItem : webDependencyLibrariesBuildItems) {
-            webDependencyLibraries.addAll(webDependencyLibrariesBuildItem.getWebDependencyLibraries());
-        }
+            DevUIWebDependenciesBuildItem devUIWebDependencies) {
 
         CardPageBuildItem cardPageBuildItem = new CardPageBuildItem();
 
         if (!webDependencies.isEmpty()) {
             // Web Dependency Libraries
-            cardPageBuildItem.addBuildTimeData("webDependencyLibraries", webDependencyLibraries);
+            cardPageBuildItem.addBuildTimeData("webDependencies", devUIWebDependencies.getWebDependencies());
 
             cardPageBuildItem.addPage(Page.webComponentPageBuilder()
                     .componentLink("qwc-web-bundler-web-dependencies.js")
@@ -46,7 +42,9 @@ public class WebBundlerDevUIProcessor {
         if (!entryPoints.isEmpty()) {
             cardPageBuildItem.addBuildTimeData("entryPoints",
                     entryPoints.stream().map(e -> new EntryPoint(e.getEntryPointKey(), e.getWebAssets().stream()
-                            .map(a -> new EntryPointItem(a.webAsset().pathFromWebRoot(config.webRoot()), a.type().label(),
+                            .map(a -> new EntryPointItem(
+                                    resolveFromRootPath(httpConfig, a.webAsset().pathFromWebRoot(config.webRoot())),
+                                    a.type().label(),
                                     new String(a.webAsset().contentOrReadFromFile())))
                             .toList()))
                             .toList());
@@ -61,7 +59,7 @@ public class WebBundlerDevUIProcessor {
 
         if (!htmlAssets.getWebAssets().isEmpty()) {
             cardPageBuildItem.addBuildTimeData("htmlAssets", htmlAssets.getWebAssets().stream()
-                    .map(s -> new WebAsset(s.pathFromWebRoot(config.webRoot()))).toList());
+                    .map(s -> new WebAsset(resolveFromRootPath(httpConfig, s.pathFromWebRoot(config.webRoot())))).toList());
             cardPageBuildItem.addPage(Page.webComponentPageBuilder()
                     .componentLink("qwc-web-bundler-html-templates.js")
                     .title("Html templates")
@@ -71,7 +69,7 @@ public class WebBundlerDevUIProcessor {
 
         if (!staticAssets.getWebAssets().isEmpty()) {
             cardPageBuildItem.addBuildTimeData("staticAssets", staticAssets.getWebAssets().stream()
-                    .map(s -> new WebAsset(s.pathFromWebRoot(config.webRoot()))).toList());
+                    .map(s -> new WebAsset(resolveFromRootPath(httpConfig, s.pathFromWebRoot(config.webRoot())))).toList());
             cardPageBuildItem.addPage(Page.webComponentPageBuilder()
                     .componentLink("qwc-web-bundler-static-assets.js")
                     .title("Static Assets")

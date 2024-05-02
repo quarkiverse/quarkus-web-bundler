@@ -75,7 +75,7 @@ export class QwcWebBundlerHtmlTemplates extends LitElement {
             return html`<div class="codeBlock">
                             <qui-code-block
                                 mode='html'
-                                src='/${this._selectedHtmlAsset[0].path}'>
+                                src='${this._selectedHtmlAsset[0].path}'>
                             </qui-code-block>
                         </div>
                         ${this._renderLinkOut(this._selectedHtmlAsset[0])}`;
@@ -89,7 +89,7 @@ export class QwcWebBundlerHtmlTemplates extends LitElement {
     }
 
     _navigate(link){
-        window.open("/" + link, '_blank').focus();
+        window.open(link, '_blank').focus();
     }
 }
 

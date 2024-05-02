@@ -1,7 +1,7 @@
 package io.quarkiverse.web.bundler.deployment.devui;
 
-import static io.quarkiverse.web.bundler.deployment.devui.WebDependencyLibrariesBuildItem.WebDependencyAsset;
-import static io.quarkiverse.web.bundler.deployment.devui.WebDependencyLibrariesBuildItem.WebDependencyLibrary;
+import static io.quarkiverse.web.bundler.deployment.devui.DevUIWebDependenciesBuildItem.DevUIWebDependency;
+import static io.quarkiverse.web.bundler.deployment.devui.DevUIWebDependenciesBuildItem.WebDependencyAsset;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -9,89 +9,83 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.util.PathUtils;
 import io.quarkus.bootstrap.classloading.ClassPathElement;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsDevelopment;
-import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.ResolvedDependency;
 import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
 
-public class WebBundlerDevUIJarScanProcessor {
+public class WebBundlerDevUIWebDependenciesProcessor {
 
     private static final String PREFIX = "META-INF/resources/";
     private static final String WEBJARS_PATH = "webjars";
     private static final String MVNPM_PATH = "_static";
 
-    private static final Logger log = Logger.getLogger(WebBundlerDevUIJarScanProcessor.class.getName());
+    private static final Logger log = Logger.getLogger(WebBundlerDevUIWebDependenciesProcessor.class.getName());
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    public void findWebDependenciesAssets(
+    public DevUIWebDependenciesBuildItem findWebDependenciesAssets(
             HttpBuildTimeConfig httpConfig,
-            CurateOutcomeBuildItem curateOutcome,
-            BuildProducer<WebDependencyLibrariesBuildItem> webDependencyLibrariesProducer) {
+            WebDependenciesBuildItem webDependencies) {
+        final List<ClassPathElement> providers = new ArrayList<>();
+        providers.addAll(QuarkusClassLoader.getElements(PREFIX + MVNPM_PATH, false));
+        providers.addAll(QuarkusClassLoader.getElements(PREFIX + WEBJARS_PATH, false));
 
-        final List<WebDependencyLibrary> webJarLibraries = getLibraries(httpConfig, curateOutcome, WEBJARS_PATH);
-        webDependencyLibrariesProducer.produce(new WebDependencyLibrariesBuildItem("webjars", webJarLibraries));
-
-        final List<WebDependencyLibrary> mvnpmLibraries = getLibraries(httpConfig, curateOutcome, MVNPM_PATH);
-        webDependencyLibrariesProducer.produce(new WebDependencyLibrariesBuildItem("mvnpm", mvnpmLibraries));
-
-    }
-
-    private List<WebDependencyLibrary> getLibraries(HttpBuildTimeConfig httpConfig,
-            CurateOutcomeBuildItem curateOutcome, String path) {
-        final List<WebDependencyLibrary> webDependencyLibraries = new ArrayList<>();
-        final List<ClassPathElement> providers = QuarkusClassLoader.getElements(PREFIX + path, false);
         if (!providers.isEmpty()) {
             // Map of webDependency artifact keys to class path elements
-            final Map<ArtifactKey, ClassPathElement> webDependencyKeys = providers.stream()
-                    .filter(provider -> provider.getDependencyKey() != null && provider.isRuntime())
+            final Map<ArtifactKey, ClassPathElement> providersByKeys = providers.stream()
+                    .filter(provider -> provider.getDependencyKey() != null)
                     .collect(Collectors.toMap(ClassPathElement::getDependencyKey, provider -> provider, (a, b) -> b,
                             () -> new HashMap<>(providers.size())));
-            if (!webDependencyKeys.isEmpty()) {
-                // The root path of the application
-                final String rootPath = httpConfig.rootPath;
-                // The root path of the webDependencies
-                final String webDependencyRootPath = (rootPath.endsWith("/")) ? rootPath + path + "/"
-                        : rootPath + "/" + path + "/";
 
-                // For each packaged web dependency, create a WebDependencyLibrary object
-                curateOutcome.getApplicationModel().getDependencies().stream()
-                        .map(dep -> createWebDependencyLibrary(dep, webDependencyRootPath, webDependencyKeys, path))
-                        .filter(Objects::nonNull).forEach(webDependencyLibraries::add);
+            final List<DevUIWebDependency> webJarDeps = new ArrayList<>(webDependencies.list().size());
+            for (WebDependenciesBuildItem.Dependency dependency : webDependencies.list()) {
+                webJarDeps.add(getDep(httpConfig, providersByKeys, dependency));
             }
+            return new DevUIWebDependenciesBuildItem(webJarDeps);
         }
-        return webDependencyLibraries;
+        return new DevUIWebDependenciesBuildItem(List.of());
     }
 
-    private WebDependencyLibrary createWebDependencyLibrary(ResolvedDependency dep,
+    private DevUIWebDependency getDep(HttpBuildTimeConfig httpConfig, Map<ArtifactKey, ClassPathElement> providersByKeys,
+            WebDependenciesBuildItem.Dependency webDependency) {
+        String path = getTypePath(webDependency);
+        final String webDependencyRootPath = PathUtils.addTrailingSlash(resolveFromRootPath(httpConfig, path));
+
+        return createWebDependency(webDependency, webDependencyRootPath, providersByKeys, path);
+    }
+
+    static String resolveFromRootPath(HttpBuildTimeConfig httpConfig, String path) {
+        return PathUtils.join(httpConfig.rootPath, path);
+    }
+
+    private static String getTypePath(WebDependenciesBuildItem.Dependency webDependency) {
+        return switch (webDependency.type()) {
+            case MVNPM -> MVNPM_PATH;
+            case WEBJARS -> WEBJARS_PATH;
+        };
+    }
+
+    private DevUIWebDependency createWebDependency(WebDependenciesBuildItem.Dependency webDep,
             String webDependencyRootPath,
-            Map<ArtifactKey, ClassPathElement> webDependencyKeys,
+            Map<ArtifactKey, ClassPathElement> providersByKeys,
             String path) {
-        // If the dependency is not a runtime class path dependency, return null
-        if (!dep.isRuntimeCp()) {
-            return null;
-        }
-        final ClassPathElement provider = webDependencyKeys.get(dep.getKey());
+        final ResolvedDependency dep = webDep.resolvedDependency();
+        final ClassPathElement provider = providersByKeys.get(dep.getKey());
         if (provider == null) {
             return null;
         }
-        WebDependencyLibrary webDependencyLibrary = provider.apply(tree -> {
+        return provider.apply(tree -> {
             final Path webDependenciesDir = tree.getPath(PREFIX + path);
             final Path nameDir;
             try (Stream<Path> webDependenciesDirPaths = Files.list(webDependenciesDir)) {
@@ -118,16 +112,16 @@ public class WebBundlerDevUIJarScanProcessor {
             }
             try {
                 // Create the asset tree for the web dependency and set it as the root asset
-                var asset = createAssetForLibrary(root, urlBase.toString(), appendRootPart);
-                return new WebDependencyLibrary(provider.getDependencyKey().getArtifactId(), dep.getVersion(), asset);
+                var asset = createAssetForDep(root, urlBase.toString(), appendRootPart);
+                return new DevUIWebDependency(webDep.type().toString(), provider.getDependencyKey().getArtifactId(),
+                        dep.getVersion(), asset);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         });
-        return webDependencyLibrary;
     }
 
-    private WebDependencyAsset createAssetForLibrary(Path rootPath, String urlBase, boolean appendRootPart)
+    private WebDependencyAsset createAssetForDep(Path rootPath, String urlBase, boolean appendRootPart)
             throws IOException {
         //If it is a directory, go deeper, otherwise add the file
         urlBase = appendRootPart ? urlBase + rootPath.getFileName().toString() + "/" : urlBase;
@@ -139,13 +133,13 @@ public class WebBundlerDevUIJarScanProcessor {
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootPath)) {
             for (Path childPath : directoryStream) {
                 if (Files.isDirectory(childPath)) { // If it is a directory, go deeper, otherwise add the file
-                    var childDir = createAssetForLibrary(childPath, urlBase, true);
+                    var childDir = createAssetForDep(childPath, urlBase, true);
                     root.children().add(childDir);
                 } else {
                     var childFile = new WebDependencyAsset(childPath.getFileName().toString(),
                             new LinkedList<>(),
                             true,
-                            urlBase + childPath.getFileName().toString());
+                            urlBase + childPath.getFileName());
                     root.children().add(childFile);
                 }
             }
