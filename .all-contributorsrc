@@ -8,6 +8,24 @@
   "commitConvention": "angular",
   "contributors": [
     {
+      "login": "ia3andy",
+      "name": "Andy Damevin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2223984?v=4",
+      "profile": "https://github.com/ia3andy",
+      "contributions": [
+        "code",
+        "maintenance"
+      ]
+    },
+    {
+      "login": "wowselim",
+      "name": "Selim Dinçer",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5699586?v=4",
+      "profile": "https://selim.co",
+      "contributions": [
+        "question"
+      ]
+    },{
       "login": "blazmrak",
       "name": "blazmrak",
       "avatar_url": "https://avatars.githubusercontent.com/u/25981532?v=4",
