@@ -17,8 +17,8 @@
         "maintenance"
       ]
     },
-  {
-       "login": "phillip-kruger",
+    {
+      "login": "phillip-kruger",
       "name": "Phillip Krüger",
       "avatar_url": "https://avatars.githubusercontent.com/u/6836179?v=4",
       "profile": "http://www.phillip-kruger.com",
@@ -26,7 +26,7 @@
         "code"
       ]
     },
- {
+    {
       "login": "chrisruffalo",
       "name": "Chris Ruffalo",
       "avatar_url": "https://avatars.githubusercontent.com/u/2073493?v=4",
@@ -35,7 +35,7 @@
         "code"
       ]
     },
- {
+    {
       "login": "melloware",
       "name": "Melloware",
       "avatar_url": "https://avatars.githubusercontent.com/u/4399574?v=4",
@@ -52,7 +52,8 @@
       "contributions": [
         "bug"
       ]
-    },{
+    },
+    {
       "login": "blazmrak",
       "name": "blazmrak",
       "avatar_url": "https://avatars.githubusercontent.com/u/25981532?v=4",
@@ -60,15 +61,25 @@
       "contributions": [
         "mentoring"
       ]
-    },{ "login": "nanobreaker",
+    },
+    {
+      "login": "nanobreaker",
       "name": "Egor",
       "avatar_url": "https://avatars.githubusercontent.com/u/18008535?v=4",
       "profile": "https://github.com/nanobreaker",
       "contributions": [
         "bug"
-        ]
-      }
-
+      ]
+    },
+    {
+      "login": "rasmushaglund",
+      "name": "Rasmus Haglund",
+      "avatar_url": "https://avatars.githubusercontent.com/u/815040?v=4",
+      "profile": "https://www.presight.se",
+      "contributions": [
+        "ideas"
+      ]
+    }
   ],
   "contributorsPerLine": 7,
   "skipCi": true,
