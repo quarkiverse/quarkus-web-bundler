@@ -17,13 +17,40 @@
         "maintenance"
       ]
     },
+  {
+       "login": "phillip-kruger",
+      "name": "Phillip Krüger",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6836179?v=4",
+      "profile": "http://www.phillip-kruger.com",
+      "contributions": [
+        "code"
+      ]
+    },
+ {
+      "login": "chrisruffalo",
+      "name": "Chris Ruffalo",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2073493?v=4",
+      "profile": "https://github.com/chrisruffalo",
+      "contributions": [
+        "code"
+      ]
+    },
+ {
+      "login": "melloware",
+      "name": "Melloware",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4399574?v=4",
+      "profile": "https://melloware.com",
+      "contributions": [
+        "infra"
+      ]
+    }
     {
       "login": "wowselim",
       "name": "Selim Dinçer",
       "avatar_url": "https://avatars.githubusercontent.com/u/5699586?v=4",
       "profile": "https://selim.co",
       "contributions": [
-        "question"
+        "bug"
       ]
     },{
       "login": "blazmrak",
