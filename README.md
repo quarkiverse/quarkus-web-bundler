@@ -75,6 +75,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ia3andy"><img src="https://avatars.githubusercontent.com/u/2223984?v=4?s=100" width="100px;" alt="Andy Damevin"/><br /><sub><b>Andy Damevin</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-quinoa/commits?author=ia3andy" title="Code">💻</a> <a href="#maintenance-ia3andy" title="Maintenance">🚧</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://selim.co"><img src="https://avatars.githubusercontent.com/u/5699586?v=4?s=100" width="100px;" alt="Selim Dinçer"/><br /><sub><b>Selim Dinçer</b></sub></a><br /><a href="#question-wowselim" title="Answering Questions">💬</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/blazmrak"><img src="https://avatars.githubusercontent.com/u/25981532?v=4?s=100" width="100px;" alt="blazmrak"/><br /><sub><b>blazmrak</b></sub></a><br /><a href="#mentoring-blazmrak" title="Mentoring">🧑‍🏫</a></td>
     </tr>
   </tbody>
 </table>
