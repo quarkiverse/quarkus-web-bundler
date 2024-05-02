@@ -1,0 +1,26 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "nanobreaker",
+      "name": "Egor",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18008535?v=4",
+      "profile": "https://github.com/nanobreaker",
+      "contributions": [
+        "bug"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "quarkus-web-bundler",
+  "projectOwner": "quarkiverse"
+}
