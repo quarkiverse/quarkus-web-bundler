@@ -1,0 +1,26 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "blazmrak",
+      "name": "blazmrak",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25981532?v=4",
+      "profile": "https://github.com/blazmrak",
+      "contributions": [
+        "mentoring"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "quarkus-web-bundler",
+  "projectOwner": "quarkiverse"
+}
