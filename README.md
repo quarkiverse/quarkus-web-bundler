@@ -1,4 +1,7 @@
 # Quarkus Web Bundler
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Build](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml/badge.svg)](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml) 
 [![Issues](https://img.shields.io/github/issues/quarkiverse/quarkus-web-bundler)](https://github.com/quarkiverse/quarkus-web-bundler/issues) 
@@ -49,6 +52,21 @@ All the information you need to use Quarkus Web Bundler is in the [user document
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://selim.co"><img src="https://avatars.githubusercontent.com/u/5699586?v=4?s=100" width="100px;" alt="Selim Dinçer"/><br /><sub><b>Selim Dinçer</b></sub></a><br /><a href="#question-wowselim" title="Answering Questions">💬</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
