@@ -62,7 +62,7 @@ public class WebBundlerDevUIProcessor {
                     .componentLink("qwc-web-bundler-entry-points.js")
                     .title("Entry Points")
                     .icon("font-awesome-solid:folder-tree")
-                    .staticLabel(String.valueOf(webDependencies.list().size())));
+                    .staticLabel(String.valueOf(entryPointsForDevUI.size())));
 
         }
 
