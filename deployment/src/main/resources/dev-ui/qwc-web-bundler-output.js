@@ -5,7 +5,7 @@ import '@vaadin/grid/vaadin-grid-column.js';
 import '@vaadin/split-layout';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 
-export class QwcWebBundlerStaticAssets extends LitElement {
+export class QwcWebBundlerOutput extends LitElement {
 
     static styles = css`
         :host {
@@ -27,6 +27,9 @@ export class QwcWebBundlerStaticAssets extends LitElement {
             position: absolute;
             top: 5px;
             cursor: pointer;
+        }
+        vaadin-grid {
+            height: 100%;
         }
     `;
 
@@ -60,6 +63,7 @@ export class QwcWebBundlerStaticAssets extends LitElement {
                                 }
                             }}">
                 <vaadin-grid-column ${columnBodyRenderer(this._renderPath, [])}></vaadin-grid-column>
+                <vaadin-grid-column path="type" resizable width="2em"></vaadin-grid-column>
             </vaadin-grid>`;
     }
 
@@ -71,13 +75,38 @@ export class QwcWebBundlerStaticAssets extends LitElement {
 
     _renderAsset(){
         if(this._selectedStaticAsset && this._selectedStaticAsset.length > 0){
-            return html`<div class="preview">
-                            <img src="${this._selectedStaticAsset[0].path}"></img>
+            let fileType = this._getFileType(this._selectedStaticAsset[0].path);
+            if (this._isImage(fileType)) {
+                return html`<div class="preview">
+                            <img src="${this._selectedStaticAsset[0].path}" alt="${this._selectedStaticAsset[0]}"/>
                         </div>
                         ${this._renderLinkOut(this._selectedStaticAsset[0])}`;
+            }
+            return html`<div class="codeBlock">
+                            <qui-code-block
+                                mode='${fileType}' 
+                                content='${this._selectedStaticAsset[0].content}'>
+                            </qui-code-block>
+                        </div>`;
         }
     }
-    
+
+    _isImage(fileType) {
+        const imageExtensionsRegex = /^jpg|jpeg|png|gif|bmp|webp|ico|svg|tif|tiff|svg$/i;
+        return imageExtensionsRegex.test(fileType);
+    }
+
+    _getFileType(filename) {
+        let lastDotIndex = filename.lastIndexOf('.');
+
+        if (lastDotIndex === -1 || lastDotIndex === 0) {
+            return 'js'; // default
+        } else {
+            return filename.substring(lastDotIndex + 1);
+        }
+    }
+
+
     _renderLinkOut(staticAsset){
         return html`<vaadin-icon class="linkOut" 
                         icon="font-awesome-solid:up-right-from-square" 
@@ -89,4 +118,4 @@ export class QwcWebBundlerStaticAssets extends LitElement {
     }
 }
 
-customElements.define('qwc-web-bundler-static-assets', QwcWebBundlerStaticAssets)
+customElements.define('qwc-web-bundler-output', QwcWebBundlerOutput)

@@ -137,7 +137,7 @@ public class WebBundlerDevUIWebDependenciesProcessor {
                     root.children().add(childDir);
                 } else {
                     var childFile = new WebDependencyAsset(childPath.getFileName().toString(),
-                            new LinkedList<>(),
+                            null,
                             true,
                             urlBase + childPath.getFileName());
                     root.children().add(childFile);
@@ -145,7 +145,7 @@ public class WebBundlerDevUIWebDependenciesProcessor {
             }
         }
         // Sort the children by name
-        root.children().sort(Comparator.comparing(WebDependencyAsset::name));
+        root.children().sort(Comparator.comparing(WebDependencyAsset::fileAsset).thenComparing(WebDependencyAsset::name));
         return root;
     }
 

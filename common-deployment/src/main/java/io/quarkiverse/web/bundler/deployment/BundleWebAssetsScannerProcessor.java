@@ -107,7 +107,7 @@ class BundleWebAssetsScannerProcessor {
                 for (WebAsset webAsset : assets) {
                     BundleType bundleType = entryPoint
                             // If it's not the entry point we consider it as a manual asset (imported by the entry point)
-                            .map(ep -> webAsset.equals(ep) ? BundleType.ENTRYPOINT : BundleType.MANUAL)
+                            .map(ep -> webAsset.equals(ep) ? BundleType.INDEX : BundleType.MANUAL)
                             // When there is no entry point we consider it as a auto asset unless it's a sass import file (_*.sass)
                             .orElse(isImportSassFile(webAsset.resourceName()) ? BundleType.MANUAL : BundleType.AUTO);
                     bundleAssets.get(entryPointKey).add(new BundleWebAsset(webAsset, bundleType));

@@ -7,7 +7,8 @@ import java.util.Optional;
 public record BundleWebAsset(WebAsset webAsset, BundleType type) implements WebAsset {
 
     public enum BundleType {
-        ENTRYPOINT("entry-point"), // index.js, index.ts, index.jsx, index.tsx
+        GENERATED_ENTRY_POINT("generated entry-point"), // a named generated entry-point main.js, page1.js
+        INDEX("custom index"), // index.js, index.ts, index.jsx, index.tsx
         MANUAL("available for import"), // Add this to the working directory but do not bundle it (the entrypoint may import it)
         AUTO("auto-imported") // Add this to the working directory and index it automatically as part of the bundle
         ;

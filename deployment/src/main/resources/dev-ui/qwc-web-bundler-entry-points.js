@@ -18,6 +18,10 @@ export class QwcWebBundlerEntryPoints extends LitElement {
             display: flex;
             flex-direction: column;
         }
+
+        vaadin-tabsheet, vaadin-grid, .tab {
+            height: 100%;
+        }
         .splitCode {
             display: flex;
             padding-left: 10px;
@@ -72,7 +76,7 @@ export class QwcWebBundlerEntryPoints extends LitElement {
     _renderEntryPoint(entryPoint) {
 
         return html`
-            <div tab="${entryPoint.key}">
+            <div tab="${entryPoint.key}" class="tab">
                 <vaadin-grid .items="${entryPoint.items}"
                                 theme="compact no-border"
                                 .selectedItems="${this._selectedEntryPoint}"    
@@ -103,7 +107,7 @@ export class QwcWebBundlerEntryPoints extends LitElement {
                                 content='${this._selectedEntryPointContents}'>
                             </qui-code-block>
                         </div>`;
-        }else {                
+        }else {
             return html`<vaadin-progress-bar indeterminate></vaadin-progress-bar>`;
         }
     }

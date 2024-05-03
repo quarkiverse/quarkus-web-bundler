@@ -21,6 +21,10 @@ export class QwcWebBundlerWebDependencies extends LitElement {
             height: 100%;
             width: 100%;
         }
+
+        vaadin-tabs {
+            white-space: nowrap;
+        }
     
         .full-height {
             height: 100%;
@@ -28,14 +32,14 @@ export class QwcWebBundlerWebDependencies extends LitElement {
     `;
 
     static properties = {
-        _webDependencyLibraries: {},
-        _selectedWebDependency: {state: true}
+        _webDependencies: {},
+        _selectedWebDependencies: {state: true}
     };
 
     constructor() {
         super();
         this._webDependencies = webDependencies;
-        this._selectedWebDependency = this._webDependencies[0];
+        this._selectedWebDependencies = this._webDependencies[0];
     }
 
     render() {
@@ -47,12 +51,12 @@ export class QwcWebBundlerWebDependencies extends LitElement {
                         </vaadin-tab>`)}
                 </vaadin-tabs>
 
-                ${this._renderAssets(this._selectedWebDependency)}
+                ${this._renderAssets(this._selectedWebDependencies)}
         `;
     }
 
     _tabSelectedChanged(e){
-        this._selectedWebDependency = this._webDependencies[e.detail.value];
+        this._selectedWebDependencies = this._webDependencies[e.detail.value];
     }
 
     _renderAssets(dep) {
@@ -65,7 +69,7 @@ export class QwcWebBundlerWebDependencies extends LitElement {
         };
 
         return html`
-            <div tab="${library.webDependencyName}" class="tabcontent">
+            <div tab="${dep.webDependencyName}" class="tabcontent">
                 <vaadin-grid .itemHasChildrenPath="${'children'}" .dataProvider="${dataProvider}"
                              theme="compact no-border" class="full-height">
                     <vaadin-grid-tree-column path="name"></vaadin-grid-tree-column>

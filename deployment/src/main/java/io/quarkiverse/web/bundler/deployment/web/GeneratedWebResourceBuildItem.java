@@ -7,14 +7,40 @@ import io.quarkus.runtime.util.HashUtil;
 
 public final class GeneratedWebResourceBuildItem extends MultiBuildItem {
 
+    public enum SourceType {
+        BUILD_TIME_TEMPLATE("build-time template", 1),
+        STATIC_ASSET("static asset", 2),
+        BUNDLED_ASSET("bundled asset", 3),
+        ;
+
+        private String label;
+        private final int order;
+
+        SourceType(String label, int order) {
+            this.label = label;
+            this.order = order;
+        }
+
+        public String label() {
+            return label;
+        }
+
+        public int order() {
+            return order;
+        }
+    }
+
     private final String publicPath;
     private final byte[] content;
     private final String contentHash;
 
-    public GeneratedWebResourceBuildItem(String publicPath, byte[] content) {
+    private final SourceType type;
+
+    public GeneratedWebResourceBuildItem(String publicPath, byte[] content, SourceType type) {
         this.publicPath = publicPath;
         this.content = content;
         this.contentHash = HashUtil.sha512(content);
+        this.type = type;
     }
 
     public String resourceName() {
@@ -31,5 +57,9 @@ public final class GeneratedWebResourceBuildItem extends MultiBuildItem {
 
     public String contentHash() {
         return contentHash;
+    }
+
+    public SourceType type() {
+        return type;
     }
 }
