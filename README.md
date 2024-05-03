@@ -1,7 +1,5 @@
 # Quarkus Web Bundler
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Build](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml/badge.svg)](https://github.com/quarkiverse/quarkus-web-bundler/actions/workflows/build.yml) 
 [![Issues](https://img.shields.io/github/issues/quarkiverse/quarkus-web-bundler)](https://github.com/quarkiverse/quarkus-web-bundler/issues) 
 [![Maven Central](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.web-bundler/quarkus-web-bundler)
