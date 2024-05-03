@@ -24,6 +24,7 @@ import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
+import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -72,7 +73,7 @@ public class QuteTemplateWebAssetsProcessor {
             final byte[] bytes = webAsset.contentOrReadFromFile();
             final String content = engine.parse(new String(bytes, webAsset.charset())).render();
             makeWebAssetPublic(staticResourceProducer, prefixWithSlash(webAsset.pathFromWebRoot(config.webRoot())),
-                    HtmlPageWebAsset.of(webAsset, content));
+                    HtmlPageWebAsset.of(webAsset, content), SourceType.BUILD_TIME_TEMPLATE);
         }
     }
 

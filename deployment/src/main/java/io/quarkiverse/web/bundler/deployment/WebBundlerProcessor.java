@@ -2,6 +2,7 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.MAIN_ENTRYPOINT_KEY;
 import static io.quarkiverse.web.bundler.deployment.StaticWebAssetsProcessor.makePublic;
+import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.GENERATED_ENTRY_POINT;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
@@ -12,6 +13,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,14 +42,10 @@ import io.mvnpm.esbuild.model.BundleResult;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
-import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
-import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
-import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.*;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
+import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.BundleRedirectHandlerRecorder;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
@@ -103,6 +101,7 @@ class WebBundlerProcessor {
             Optional<BundleConfigAssetsBuildItem> bundleConfig,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
+            BuildProducer<GeneratedEntryPointBuildItem> generatedEntryPointProducer,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
             OutputTargetBuildItem outputTarget) throws BuildException {
@@ -123,6 +122,7 @@ class WebBundlerProcessor {
         final boolean isLiveReload = liveReload.isLiveReload()
                 && bundlesBuildContext != null
                 && bundlesBuildContext.bundleDistDir() != null;
+        final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
         if (isLiveReload
                 && Objects.equals(webDependencies.list(), bundlesBuildContext.dependencies())
                 && !liveReload.getChangedResources().contains(config.fromWebRoot("tsconfig.json"))
@@ -134,9 +134,10 @@ class WebBundlerProcessor {
             LOGGER.debug("Bundling not needed for live reload");
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, bundlesBuildContext.bundleDistDir(),
                     null, false);
+            processGeneratedEntryPoints(config, targetDir, generatedEntryPointProducer);
             return;
         }
-        final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+
         final Path nodeModulesDir = resolveNodeModulesDir(config, outputTarget);
         try {
             if (!isLiveReload) {
@@ -253,6 +254,7 @@ class WebBundlerProcessor {
 
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), startedBundling,
                     true);
+            processGeneratedEntryPoints(config, targetDir, generatedEntryPointProducer);
             liveReload.setContextObject(BundlesBuildContext.class,
                     new BundlesBuildContext(webDependencies.list(), entryPoints, result.dist()));
 
@@ -262,6 +264,25 @@ class WebBundlerProcessor {
             liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
             throw e;
         }
+    }
+
+    private void processGeneratedEntryPoints(WebBundlerConfig config, Path targetDir,
+            BuildProducer<GeneratedEntryPointBuildItem> generatedEntryPointProducer) {
+        try (Stream<Path> generatedEPStream = Files.find(targetDir, 1, (path, basicFileAttributes) -> Files.isRegularFile(path)
+                && path.getFileName().toString().toLowerCase().endsWith(".js"))) {
+            generatedEPStream
+                    .forEach(p -> {
+                        final String key = p.getFileName().toString().replace(".js", "");
+                        final DefaultWebAsset wa = new DefaultWebAsset(join(config.webRoot(), p.getFileName().toString()), p,
+                                Charset.defaultCharset());
+                        generatedEntryPointProducer
+                                .produce(new GeneratedEntryPointBuildItem(key, new BundleWebAsset(wa, GENERATED_ENTRY_POINT)));
+                    });
+
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
     }
 
     private static Path resolveNodeModulesDir(WebBundlerConfig config, OutputTargetBuildItem outputTarget) {
@@ -321,7 +342,7 @@ class WebBundlerProcessor {
                     if (config.shouldQuarkusServeBundle()) {
                         // The root-path will already be added by the static resources handler
                         final String resourcePath = surroundWithSlashes(config.bundlePath()) + relativePath;
-                        makePublic(staticResourceProducer, resourcePath, path.normalize());
+                        makePublic(staticResourceProducer, resourcePath, path.normalize(), SourceType.BUNDLED_ASSET);
                     }
                 });
             }

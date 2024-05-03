@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.mvnpm.esbuild.model.WebDependency;
 import io.quarkus.builder.item.SimpleBuildItem;
+import io.quarkus.maven.dependency.ResolvedDependency;
 
 public final class WebDependenciesBuildItem extends SimpleBuildItem {
 
@@ -22,7 +23,8 @@ public final class WebDependenciesBuildItem extends SimpleBuildItem {
         return list.isEmpty();
     }
 
-    public record Dependency(String id, Path path, WebDependency.WebDependencyType type, boolean direct) {
+    public record Dependency(ResolvedDependency resolvedDependency, String id, Path path, WebDependency.WebDependencyType type,
+            boolean direct) {
 
         public WebDependency toEsBuildWebDependency() {
             return WebDependency.of(id, path, type);
