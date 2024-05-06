@@ -22,6 +22,9 @@ export class QwcWebBundlerOutput extends LitElement {
             max-height: 100%;
             max-width: 100%;
         }
+        master-content {
+            min-width: 300px;
+        }
         .linkOut {
             right: 15px;
             position: absolute;

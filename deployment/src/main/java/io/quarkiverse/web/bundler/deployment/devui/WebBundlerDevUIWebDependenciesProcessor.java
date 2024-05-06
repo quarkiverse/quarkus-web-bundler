@@ -128,7 +128,8 @@ public class WebBundlerDevUIWebDependenciesProcessor {
             try {
                 // Create the asset tree for the web dependency and set it as the root asset
                 var asset = createAssetForDep(root, urlBase.toString(), appendRootPart);
-                return new DevUIWebDependency(webDep.type().toString(), provider.getDependencyKey().getArtifactId(),
+                return new DevUIWebDependency(webDep.type().toString(),
+                        provider.getDependencyKey().getGroupId() + ":" + provider.getDependencyKey().getArtifactId(),
                         dep.getVersion(), asset);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
