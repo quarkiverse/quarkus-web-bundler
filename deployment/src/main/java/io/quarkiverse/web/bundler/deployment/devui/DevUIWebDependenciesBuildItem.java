@@ -23,7 +23,7 @@ public final class DevUIWebDependenciesBuildItem extends SimpleBuildItem {
     }
 
     public record DevUIWebDependency(String type,
-            String webDependencyName,
+            String name,
             String version,
             WebDependencyAsset rootAsset) {
     }

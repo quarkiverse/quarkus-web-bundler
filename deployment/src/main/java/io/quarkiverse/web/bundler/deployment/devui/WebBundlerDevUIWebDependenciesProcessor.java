@@ -21,6 +21,7 @@ import io.quarkus.bootstrap.classloading.ClassPathElement;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.ResolvedDependency;
 import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
@@ -36,7 +37,16 @@ public class WebBundlerDevUIWebDependenciesProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     public DevUIWebDependenciesBuildItem findWebDependenciesAssets(
             HttpBuildTimeConfig httpConfig,
+            LiveReloadBuildItem liveReload,
             WebDependenciesBuildItem webDependencies) {
+        final DevUIWebDependenciesContext webDependenciesContext = liveReload
+                .getContextObject(DevUIWebDependenciesContext.class);
+
+        if (liveReload.isLiveReload() && webDependenciesContext != null
+                && webDependenciesContext.dependencies().equals(webDependencies.list())) {
+            return new DevUIWebDependenciesBuildItem(webDependenciesContext.devUIWebDependencies());
+        }
+
         final List<ClassPathElement> providers = new ArrayList<>();
         providers.addAll(QuarkusClassLoader.getElements(PREFIX + MVNPM_PATH, false));
         providers.addAll(QuarkusClassLoader.getElements(PREFIX + WEBJARS_PATH, false));
@@ -50,8 +60,13 @@ public class WebBundlerDevUIWebDependenciesProcessor {
 
             final List<DevUIWebDependency> webJarDeps = new ArrayList<>(webDependencies.list().size());
             for (WebDependenciesBuildItem.Dependency dependency : webDependencies.list()) {
-                webJarDeps.add(getDep(httpConfig, providersByKeys, dependency));
+                final DevUIWebDependency dep = getDep(httpConfig, providersByKeys, dependency);
+                if (dep != null) {
+                    webJarDeps.add(dep);
+                }
             }
+            liveReload.setContextObject(DevUIWebDependenciesContext.class,
+                    new DevUIWebDependenciesContext(webDependencies.list(), webJarDeps));
             return new DevUIWebDependenciesBuildItem(webJarDeps);
         }
         return new DevUIWebDependenciesBuildItem(List.of());
@@ -147,6 +162,11 @@ public class WebBundlerDevUIWebDependenciesProcessor {
         // Sort the children by name
         root.children().sort(Comparator.comparing(WebDependencyAsset::fileAsset).thenComparing(WebDependencyAsset::name));
         return root;
+    }
+
+    public record DevUIWebDependenciesContext(List<WebDependenciesBuildItem.Dependency> dependencies,
+            List<DevUIWebDependency> devUIWebDependencies) {
+
     }
 
 }
