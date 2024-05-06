@@ -31,6 +31,9 @@ export class QwcWebBundlerEntryPoints extends LitElement {
             display: flex;
             width: 100%;
         }
+        master-content {
+            min-width: 300px;
+        }
         .codeBlock qui-code-block{
             width: 100%;
         }
