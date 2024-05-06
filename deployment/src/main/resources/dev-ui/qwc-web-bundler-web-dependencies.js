@@ -46,8 +46,8 @@ export class QwcWebBundlerWebDependencies extends LitElement {
         return html`
                 <vaadin-tabs @selected-changed="${this._tabSelectedChanged}" orientation="vertical">
                     ${this._webDependencies.map(webDependency => html`
-                        <vaadin-tab id="${webDependency.webDependencyName}">
-                            ${webDependency.webDependencyName + " (" + webDependency.version + ")"}
+                        <vaadin-tab id="${webDependency.name}">
+                            ${webDependency.name + " (" + webDependency.version + ")"}
                         </vaadin-tab>`)}
                 </vaadin-tabs>
 
@@ -69,7 +69,7 @@ export class QwcWebBundlerWebDependencies extends LitElement {
         };
 
         return html`
-            <div tab="${dep.webDependencyName}" class="tabcontent">
+            <div tab="${dep.name}" class="tabcontent">
                 <vaadin-grid .itemHasChildrenPath="${'children'}" .dataProvider="${dataProvider}"
                              theme="compact no-border" class="full-height">
                     <vaadin-grid-tree-column path="name"></vaadin-grid-tree-column>
