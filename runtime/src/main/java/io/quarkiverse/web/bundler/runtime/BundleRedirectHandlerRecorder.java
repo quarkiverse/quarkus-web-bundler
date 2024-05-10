@@ -1,6 +1,7 @@
 package io.quarkiverse.web.bundler.runtime;
 
 import java.util.Map;
+import java.util.Objects;
 
 import io.quarkus.runtime.annotations.Recorder;
 import io.vertx.core.Handler;
@@ -13,7 +14,7 @@ public class BundleRedirectHandlerRecorder {
         return event -> {
             final String path = event.normalizedPath();
             final String entryPoint = path.substring(path.lastIndexOf('/') + 1);
-            if (!bundle.containsKey(entryPoint)) {
+            if (!bundle.containsKey(entryPoint) || Objects.equals(bundle.get(entryPoint), path)) {
                 event.next();
                 return;
             }
@@ -23,4 +24,5 @@ public class BundleRedirectHandlerRecorder {
             event.response().end();
         };
     }
+
 }

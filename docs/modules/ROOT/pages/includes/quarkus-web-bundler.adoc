@@ -419,6 +419,23 @@ endif::add-copy-button-to-env-var[]
 |`none`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-browser-live-reload]]`link:#quarkus-web-bundler_quarkus-web-bundler-browser-live-reload[quarkus.web-bundler.browser-live-reload]`
+
+
+[.description]
+--
+Configure browser live-reload in dev-mode. With live-reload, changes in the web-app are automatically triggering a reload of the page in the browser. When changing styles, the changes is applied directly (without reload).
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BROWSER_LIVE_RELOAD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BROWSER_LIVE_RELOAD+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-redirect]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundle-redirect[quarkus.web-bundler.bundle-redirect]`
 
 

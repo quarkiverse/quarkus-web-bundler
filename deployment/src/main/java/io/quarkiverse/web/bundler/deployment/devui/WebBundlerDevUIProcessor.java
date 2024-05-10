@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.deployment.devui;
 
-import static io.quarkiverse.web.bundler.deployment.devui.WebBundlerDevUIWebDependenciesProcessor.resolveFromRootPath;
+import static io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourcesProcessor.resolveFromRootPath;
 
 import java.util.ArrayList;
 import java.util.Comparator;

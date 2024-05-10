@@ -1,8 +1,10 @@
 package io.quarkiverse.web.bundler.runtime;
 
+import java.util.List;
 import java.util.Set;
 
 import io.quarkus.runtime.RuntimeValue;
+import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
 import io.quarkus.vertx.http.runtime.HttpConfiguration;
@@ -32,4 +34,10 @@ public class WebBundlerResourceRecorder {
         return new WebBundlerResourceHandler(handlerConfig, directory,
                 webResources);
     }
+
+    public Handler<RoutingContext> createChangeEventHandler(List<String> added, List<String> removed, List<String> updated,
+            ShutdownContext shutdownContext) {
+        return new ChangeEventHandler(added, removed, updated, shutdownContext);
+    }
+
 }

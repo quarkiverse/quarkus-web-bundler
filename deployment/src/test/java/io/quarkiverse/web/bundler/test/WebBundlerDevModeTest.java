@@ -22,31 +22,31 @@ public class WebBundlerDevModeTest {
     @Test
     public void test() {
         RestAssured.given()
-                .get("/")
+                .get("/foo/bar/")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("Hello Qute Static!"));
         test.modifyResourceFile("web/index.html", s -> s.replace("Hello Qute Static!", "Hello Qute Static! Modified!"));
         RestAssured.given()
-                .get("/")
+                .get("/foo/bar/")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("Hello Qute Static! Modified!"));
         RestAssured.given()
-                .get("/static/bundle/main.js")
+                .get("/foo/bar/static/bundle/main.js")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("console.log(\"Hello World!\");"));
         test.modifyResourceFile("web/app/app.js", s -> s.replace("Hello World!", "Hello World! Modified!"));
         RestAssured.given()
-                .get("/static/bundle/main.js")
+                .get("/foo/bar/static/bundle/main.js")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("console.log(\"Hello World! Modified!\");"));
         test.modifyResourceFile("web/app/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: red;"));
         test.modifyResourceFile("web/app/other.scss", s -> s.replace("color: white;", "color: green;"));
         RestAssured.given()
-                .get("/static/bundle/main.css")
+                .get("/foo/bar/static/bundle/main.css")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("background-color: red;"))

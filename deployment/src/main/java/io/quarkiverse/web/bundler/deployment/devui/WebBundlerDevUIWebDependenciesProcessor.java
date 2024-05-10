@@ -2,6 +2,7 @@ package io.quarkiverse.web.bundler.deployment.devui;
 
 import static io.quarkiverse.web.bundler.deployment.devui.DevUIWebDependenciesBuildItem.DevUIWebDependency;
 import static io.quarkiverse.web.bundler.deployment.devui.DevUIWebDependenciesBuildItem.WebDependencyAsset;
+import static io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourcesProcessor.resolveFromRootPath;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -69,6 +70,7 @@ public class WebBundlerDevUIWebDependenciesProcessor {
                     new DevUIWebDependenciesContext(webDependencies.list(), webJarDeps));
             return new DevUIWebDependenciesBuildItem(webJarDeps);
         }
+        liveReload.setContextObject(DevUIWebDependenciesContext.class, new DevUIWebDependenciesContext());
         return new DevUIWebDependenciesBuildItem(List.of());
     }
 
@@ -78,10 +80,6 @@ public class WebBundlerDevUIWebDependenciesProcessor {
         final String webDependencyRootPath = PathUtils.addTrailingSlash(resolveFromRootPath(httpConfig, path));
 
         return createWebDependency(webDependency, webDependencyRootPath, providersByKeys, path);
-    }
-
-    static String resolveFromRootPath(HttpBuildTimeConfig httpConfig, String path) {
-        return PathUtils.join(httpConfig.rootPath, path);
     }
 
     private static String getTypePath(WebDependenciesBuildItem.Dependency webDependency) {
@@ -165,8 +163,12 @@ public class WebBundlerDevUIWebDependenciesProcessor {
         return root;
     }
 
-    public record DevUIWebDependenciesContext(List<WebDependenciesBuildItem.Dependency> dependencies,
+    record DevUIWebDependenciesContext(List<WebDependenciesBuildItem.Dependency> dependencies,
             List<DevUIWebDependency> devUIWebDependencies) {
+
+        DevUIWebDependenciesContext() {
+            this(null, null);
+        }
 
     }
 

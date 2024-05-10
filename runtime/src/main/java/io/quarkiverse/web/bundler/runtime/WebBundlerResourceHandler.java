@@ -53,9 +53,9 @@ public class WebBundlerResourceHandler implements Handler<RoutingContext> {
         }
         final String path = resolvePath(ctx);
         final String resourcePath = path.endsWith("/") ? path + config.indexPage : path;
-        LOG.debugf("Quinoa is checking: '%s'", resourcePath);
+        LOG.debugf("Web Bundler is checking: '%s'", resourcePath);
         if (webResources.contains(resourcePath)) {
-            LOG.debugf("Quinoa is serving: '%s'", resourcePath);
+            LOG.debugf("Web Bundler is serving: '%s'", resourcePath);
             compressIfNeeded(config, ctx, resourcePath);
             handler.handle(ctx);
         } else {
