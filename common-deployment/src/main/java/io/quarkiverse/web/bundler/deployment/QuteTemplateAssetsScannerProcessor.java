@@ -26,17 +26,18 @@ public class QuteTemplateAssetsScannerProcessor {
         final HtmlTemplatesContext context = liveReload.getContextObject(HtmlTemplatesContext.class);
         if (liveReload.isLiveReload()
                 && context != null
+                && WebBundlerConfig.isEqual(config, context.config())
                 && !hasChanged(config, liveReload, s -> s.substring(config.webRoot().length()).matches("^/.+\\.html$"))) {
             LOGGER.debug("Web bundler html templates scan not needed for live reload");
             return new QuteTemplatesBuildItem(context.assets());
         }
         final List<WebAsset> assets = scanner.scan(new ProjectResourcesScannerBuildItem.Scanner(config.webRoot(),
                 "glob:*.html", config.charset()));
-        liveReload.setContextObject(HtmlTemplatesContext.class, new HtmlTemplatesContext(assets));
+        liveReload.setContextObject(HtmlTemplatesContext.class, new HtmlTemplatesContext(config, assets));
         LOGGER.debugf("Web bundler %d html templates found.", assets.size());
         return new QuteTemplatesBuildItem(assets);
     }
 
-    private record HtmlTemplatesContext(List<WebAsset> assets) {
+    private record HtmlTemplatesContext(WebBundlerConfig config, List<WebAsset> assets) {
     }
 }

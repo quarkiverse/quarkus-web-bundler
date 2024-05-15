@@ -1,5 +1,7 @@
 package io.quarkiverse.web.bundler.deployment.items;
 
+import java.nio.file.Path;
+
 import io.mvnpm.esbuild.model.BundleOptions;
 import io.quarkus.builder.item.SimpleBuildItem;
 
@@ -9,9 +11,12 @@ public final class ReadyForBundlingBuildItem extends SimpleBuildItem {
 
     private final Long started;
 
-    public ReadyForBundlingBuildItem(BundleOptions bundleOptions, Long started) {
+    private final Path distDir;
+
+    public ReadyForBundlingBuildItem(BundleOptions bundleOptions, Long started, Path distDir) {
         this.bundleOptions = bundleOptions;
         this.started = started;
+        this.distDir = distDir;
     }
 
     public Long started() {
@@ -20,5 +25,9 @@ public final class ReadyForBundlingBuildItem extends SimpleBuildItem {
 
     public BundleOptions bundleOptions() {
         return bundleOptions;
+    }
+
+    public Path distDir() {
+        return distDir;
     }
 }

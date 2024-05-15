@@ -1,8 +1,10 @@
 package io.quarkiverse.web.bundler.runtime;
 
-import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+import io.quarkiverse.web.bundler.runtime.devmode.ChangeEventHandler;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -16,6 +18,9 @@ public class WebBundlerResourceRecorder {
 
     private final RuntimeValue<HttpConfiguration> httpConfiguration;
     private final Set<String> compressMediaTypes;
+
+    private static volatile Function<Consumer<Set<String>>, Runnable> hotDeploymentEventHandlerRegister;
+    private static volatile Runnable startWatchScheduler;
 
     public WebBundlerResourceRecorder(RuntimeValue<HttpConfiguration> httpConfiguration,
             HttpBuildTimeConfig httpBuildTimeConfig) {
@@ -35,9 +40,22 @@ public class WebBundlerResourceRecorder {
                 webResources);
     }
 
-    public Handler<RoutingContext> createChangeEventHandler(List<String> added, List<String> removed, List<String> updated,
+    public Handler<RoutingContext> createChangeEventHandler(final String webResourcesDirectory,
+            final Set<String> webResources,
             ShutdownContext shutdownContext) {
-        return new ChangeEventHandler(added, removed, updated, shutdownContext);
+        startWatchScheduler.run();
+        return new ChangeEventHandler(hotDeploymentEventHandlerRegister, webResourcesDirectory,
+                webResources,
+                shutdownContext);
+    }
+
+    public static void setHotDeploymentEventHandlerRegister(
+            Function<Consumer<Set<String>>, Runnable> hotDeploymentEventHandlerRegister) {
+        WebBundlerResourceRecorder.hotDeploymentEventHandlerRegister = hotDeploymentEventHandlerRegister;
+    }
+
+    public static void setStartWatchScheduler(Runnable startWatchScheduler) {
+        WebBundlerResourceRecorder.startWatchScheduler = startWatchScheduler;
     }
 
 }

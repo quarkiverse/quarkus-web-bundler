@@ -4,11 +4,11 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public record DefaultWebAsset(String resourceName, Optional<Path> filePath, byte[] content,
+public record DefaultWebAsset(String resourceName, Optional<Path> filePath, Optional<Path> srcFilePath, byte[] content,
         Charset charset) implements WebAsset {
 
     public DefaultWebAsset(String resourceName, Path filePath, Charset charset) {
-        this(resourceName, Optional.of(filePath), null, charset);
+        this(resourceName, Optional.of(filePath), Optional.empty(), null, charset);
     }
 
 }

@@ -26,7 +26,9 @@ import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
 import io.quarkiverse.web.bundler.deployment.items.*;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
 import io.quarkiverse.web.bundler.deployment.util.PathUtils;
+import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
@@ -35,7 +37,7 @@ import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
 
-class PrepareForBundlingProcessor {
+public class PrepareForBundlingProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(PrepareForBundlingProcessor.class);
 
@@ -56,7 +58,8 @@ class PrepareForBundlingProcessor {
                     entry(EsBuildConfig.Loader.DATAURL, LoadersConfig::dataUrl),
                     entry(EsBuildConfig.Loader.BASE64, LoadersConfig::base64),
                     entry(EsBuildConfig.Loader.BINARY, LoadersConfig::binary));
-    static final String TARGET_DIR_NAME = "web-bundler";
+    public static final String TARGET_DIR_NAME = "web-bundler";
+    public static final String DIST = "dist";
 
     static {
         for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
@@ -73,6 +76,7 @@ class PrepareForBundlingProcessor {
             Optional<BundleConfigAssetsBuildItem> bundleConfig,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
+            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             HttpBuildTimeConfig httpBuildTimeConfig,
             OutputTargetBuildItem outputTarget) {
         if (entryPoints.isEmpty()) {
@@ -94,16 +98,16 @@ class PrepareForBundlingProcessor {
         final boolean isLiveReload = liveReload.isLiveReload()
                 && prepareForBundlingContext != null;
         final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+        final Path distDir = targetDir.resolve(DIST);
+        final long started = Instant.now().toEpochMilli();
         if (isLiveReload
+                && WebBundlerConfig.isEqual(config, prepareForBundlingContext.config())
                 && Objects.equals(installedWebDependencies.list(), prepareForBundlingContext.dependencies())
                 && !liveReload.getChangedResources().contains(config.fromWebRoot("tsconfig.json"))
-                && entryPoints.equals(prepareForBundlingContext.entryPoints())
-                && entryPoints.stream().map(EntryPointBuildItem::getWebAssets).flatMap(List::stream)
-                        .map(WebAsset::resourceName)
-                        .noneMatch(liveReload.getChangedResources()::contains)) {
-            return new ReadyForBundlingBuildItem(prepareForBundlingContext.bundleOptions(), null);
+                && entryPoints.equals(prepareForBundlingContext.entryPoints())) {
+            return new ReadyForBundlingBuildItem(prepareForBundlingContext.bundleOptions(), null, distDir);
         }
-        final long started = Instant.now().toEpochMilli();
+
         try {
             if (!isLiveReload) {
                 FileUtil.deleteDirectory(targetDir);
@@ -124,6 +128,7 @@ class PrepareForBundlingProcessor {
             final Map<String, EsBuildConfig.Loader> loaders = computeLoaders(config);
             final EsBuildConfigBuilder esBuildConfigBuilder = EsBuildConfig.builder()
                     .loader(loaders)
+                    .outDir(PathUtils.join(DIST, config.bundlePath()))
                     .publicPath(config.publicBundlePath())
                     .splitting(config.bundling().splitting())
                     .sourceMap(config.bundling().sourceMapEnabled());
@@ -131,9 +136,11 @@ class PrepareForBundlingProcessor {
                     && config.browserLiveReload();
             if (browserLiveReload) {
                 esBuildConfigBuilder
+                        .preserveSymlinks()
                         .minify(false)
                         .define("process.env.LIVE_RELOAD_PATH",
-                                "\"" + PathUtils.join(httpBuildTimeConfig.rootPath, WEB_BUNDLER_LIVE_RELOAD_PATH) + "\"")
+                                "'" + PathUtils.join(httpBuildTimeConfig.rootPath, WEB_BUNDLER_LIVE_RELOAD_PATH)
+                                        + "'")
                         .fixedEntryNames();
             }
             if (config.bundling().external().isPresent()) {
@@ -166,7 +173,20 @@ class PrepareForBundlingProcessor {
                             Files.write(scriptPath, webAsset.content(), StandardOpenOption.CREATE,
                                     StandardOpenOption.TRUNCATE_EXISTING);
                         } else {
-                            Files.copy(webAsset.filePath().orElseThrow(), scriptPath, StandardCopyOption.REPLACE_EXISTING);
+                            if (browserLiveReload) {
+                                Files.deleteIfExists(scriptPath);
+                                watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
+                                        .setRestartNeeded(webAsset.srcFilePath().isEmpty())
+                                        .setLocation(webAsset.resourceName())
+                                        .build());
+                                if (webAsset.srcFilePath().isPresent()) {
+                                    Files.createSymbolicLink(scriptPath, webAsset.srcFilePath().get());
+                                } else {
+                                    Files.createSymbolicLink(scriptPath, webAsset.filePath().orElseThrow());
+                                }
+                            } else {
+                                Files.copy(webAsset.filePath().orElseThrow(), scriptPath, StandardCopyOption.REPLACE_EXISTING);
+                            }
                         }
                     }
                     // Manual assets are supposed to be imported by the entry point
@@ -210,8 +230,8 @@ class PrepareForBundlingProcessor {
 
             final BundleOptions options = optionsBuilder.build();
             liveReload.setContextObject(PrepareForBundlingContext.class,
-                    new PrepareForBundlingContext(installedWebDependencies.list(), entryPoints, options));
-            return new ReadyForBundlingBuildItem(options, started);
+                    new PrepareForBundlingContext(config, installedWebDependencies.list(), entryPoints, options));
+            return new ReadyForBundlingBuildItem(options, started, distDir);
         } catch (IOException e) {
             liveReload.setContextObject(PrepareForBundlingContext.class, new PrepareForBundlingContext());
             throw new UncheckedIOException(e);
@@ -245,11 +265,12 @@ class PrepareForBundlingProcessor {
         return loaders;
     }
 
-    record PrepareForBundlingContext(List<Dependency> dependencies, List<EntryPointBuildItem> entryPoints,
+    record PrepareForBundlingContext(WebBundlerConfig config, List<Dependency> dependencies,
+            List<EntryPointBuildItem> entryPoints,
             BundleOptions bundleOptions) {
 
         public PrepareForBundlingContext() {
-            this(null, null, null);
+            this(null, null, null, null);
         }
     }
 

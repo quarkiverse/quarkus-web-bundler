@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
-import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
 import io.mvnpm.esbuild.model.*;
 import io.quarkiverse.web.bundler.deployment.items.*;
@@ -29,7 +28,6 @@ import io.quarkiverse.web.bundler.runtime.BundleRedirectHandlerRecorder;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
-import io.quarkus.builder.BuildException;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -46,7 +44,7 @@ class BundlingProcessor {
             ReadyForBundlingBuildItem readyForBundling,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
-            BuildProducer<GeneratedEntryPointBuildItem> generatedEntryPointProducer) throws BuildException {
+            BuildProducer<GeneratedEntryPointBuildItem> generatedEntryPointProducer) {
         if (readyForBundling == null) {
             return;
         }
@@ -59,8 +57,6 @@ class BundlingProcessor {
 
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), startedBundling);
             processGeneratedEntryPoints(config, readyForBundling.bundleOptions().workDir(), generatedEntryPointProducer);
-        } catch (BundleException e) {
-            throw e;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

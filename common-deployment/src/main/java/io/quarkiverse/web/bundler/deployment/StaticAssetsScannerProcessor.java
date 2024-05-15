@@ -26,6 +26,7 @@ public class StaticAssetsScannerProcessor {
         final StaticAssetsContext context = liveReload.getContextObject(StaticAssetsContext.class);
         if (liveReload.isLiveReload()
                 && context != null
+                && WebBundlerConfig.isEqual(config, context.config())
                 && !hasChanged(config, liveReload, s -> s.startsWith(config.fromWebRoot(config.staticDir())))) {
             LOGGER.debug("Web bundler static assets scan not needed for live reload");
             return new StaticAssetsBuildItem(context.assets());
@@ -33,11 +34,11 @@ public class StaticAssetsScannerProcessor {
         final List<WebAsset> assets = scanner
                 .scan(new ProjectResourcesScannerBuildItem.Scanner(config.fromWebRoot(config.staticDir()),
                         "glob:**", config.charset()));
-        liveReload.setContextObject(StaticAssetsContext.class, new StaticAssetsContext(assets));
+        liveReload.setContextObject(StaticAssetsContext.class, new StaticAssetsContext(config, assets));
         LOGGER.debugf("Web bundler %d static assets found.", assets.size());
         return new StaticAssetsBuildItem(assets);
     }
 
-    private record StaticAssetsContext(List<WebAsset> assets) {
+    private record StaticAssetsContext(WebBundlerConfig config, List<WebAsset> assets) {
     }
 }

@@ -26,13 +26,12 @@ import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildI
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem.Scanner;
 import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
+import io.quarkus.bootstrap.workspace.SourceDir;
+import io.quarkus.bootstrap.workspace.WorkspaceModule;
 import io.quarkus.deployment.ApplicationArchive;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
-import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
-import io.quarkus.deployment.builditem.LiveReloadBuildItem;
+import io.quarkus.deployment.builditem.*;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.maven.dependency.ResolvedDependency;
@@ -50,12 +49,26 @@ class BundleWebAssetsScannerProcessor {
     }
 
     @BuildStep
-    ProjectResourcesScannerBuildItem initScanner(ApplicationArchivesBuildItem applicationArchives,
+    ProjectResourcesScannerBuildItem initScanner(LaunchModeBuildItem launchMode,
+            ApplicationArchivesBuildItem applicationArchives,
             CurateOutcomeBuildItem curateOutcome) {
         Set<ApplicationArchive> allApplicationArchives = applicationArchives.getAllApplicationArchives();
         List<ResolvedDependency> extensionArtifacts = curateOutcome.getApplicationModel().getDependencies().stream()
                 .filter(Dependency::isRuntimeExtensionArtifact).collect(Collectors.toList());
-        return new ProjectResourcesScannerBuildItem(allApplicationArchives, extensionArtifacts);
+
+        final List<Path> srcResourcesDirs = launchMode.getLaunchMode().isDevOrTest() ? findSrcResourcesDirs(curateOutcome)
+                : List.of();
+        return new ProjectResourcesScannerBuildItem(allApplicationArchives, extensionArtifacts, srcResourcesDirs);
+    }
+
+    private static List<Path> findSrcResourcesDirs(CurateOutcomeBuildItem curateOutcome) {
+        final List<Path> paths = new ArrayList<>();
+        for (WorkspaceModule workspaceModule : curateOutcome.getApplicationModel().getWorkspaceModules()) {
+            for (SourceDir resourceDir : workspaceModule.getMainSources().getResourceDirs()) {
+                paths.add(resourceDir.getDir());
+            }
+        }
+        return paths;
     }
 
     @BuildStep
@@ -76,9 +89,9 @@ class BundleWebAssetsScannerProcessor {
         final WebAssetsLookupDevContext devContext = liveReload.getContextObject(WebAssetsLookupDevContext.class);
         if (liveReload.isLiveReload()
                 && devContext != null
+                && WebBundlerConfig.isEqual(config, devContext.config())
                 && !hasChanged(config, liveReload, c -> isBundleFile(config, c, entryPointsConfig))) {
             // Project WebAssets shouldn't be changed even if the file is changed as content is not stored
-            // WebAsset from dependencies means we should do a new scan
             LOGGER.debug("Web bundler scan not needed for live reload");
             produceWebAssets(bundles, quteTagsAssets, bundleConfigAssets, devContext, true);
             return;
@@ -118,6 +131,7 @@ class BundleWebAssetsScannerProcessor {
         bundleConfigAssetsScanners.add(new Scanner(config.webRoot(), "glob:tsconfig.json", config.charset()));
 
         final WebAssetsLookupDevContext context = new WebAssetsLookupDevContext(
+                config,
                 bundleAssets,
                 scanner.scan(quteTagsAssetsScanners),
                 scanner.scan(bundleConfigAssetsScanners));
@@ -156,7 +170,9 @@ class BundleWebAssetsScannerProcessor {
             boolean checkIfExists) {
         for (Map.Entry<String, List<BundleWebAsset>> e : context.bundleAssets().entrySet()) {
             produceWebAssetsWithCheck(checkIfExists, e.getValue(),
-                    webAssets -> bundles.produce(new EntryPointBuildItem(e.getKey(), webAssets)));
+                    webAssets -> {
+                        bundles.produce(new EntryPointBuildItem(e.getKey(), webAssets));
+                    });
         }
 
         produceWebAssetsWithCheck(checkIfExists, context.bundleConfigWebAssets(),
@@ -180,7 +196,7 @@ class BundleWebAssetsScannerProcessor {
                         Collectors.toList());
     }
 
-    record WebAssetsLookupDevContext(Map<String, List<BundleWebAsset>> bundleAssets,
+    record WebAssetsLookupDevContext(WebBundlerConfig config, Map<String, List<BundleWebAsset>> bundleAssets,
             List<WebAsset> quteWebAssets, List<WebAsset> bundleConfigWebAssets) {
 
         public List<WebAsset> allWebAssets() {

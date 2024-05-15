@@ -64,6 +64,8 @@ class WebDependenciesProcessor {
                 .getContextObject(InstalledWebDependenciesContext.class);
         final Path nodeModulesDir = resolveNodeModulesDir(config, outputTarget);
         if (liveReload.isLiveReload() && installedWebDependenciesContext != null
+                && WebBundlerConfig.WebDependenciesConfig.isEqual(config.dependencies(),
+                        installedWebDependenciesContext.config().dependencies())
                 && nodeModulesDir.equals(installedWebDependenciesContext.nodeModulesDir())
                 && installedWebDependenciesContext.dependencies().equals(webDependencies.list())) {
             return new InstalledWebDependenciesBuildItem(nodeModulesDir, webDependencies.list());
@@ -89,7 +91,7 @@ class WebDependenciesProcessor {
                 LOGGER.info("All web dependencies are already installed.");
             }
             liveReload.setContextObject(InstalledWebDependenciesContext.class,
-                    new InstalledWebDependenciesContext(nodeModulesDir, webDependencies.list()));
+                    new InstalledWebDependenciesContext(config, nodeModulesDir, webDependencies.list()));
             return new InstalledWebDependenciesBuildItem(nodeModulesDir, webDependencies.list());
         } catch (IOException e) {
             liveReload.setContextObject(InstalledWebDependenciesContext.class, new InstalledWebDependenciesContext());
@@ -146,9 +148,9 @@ class WebDependenciesProcessor {
         } while (true);
     }
 
-    record InstalledWebDependenciesContext(Path nodeModulesDir, List<Dependency> dependencies) {
+    record InstalledWebDependenciesContext(WebBundlerConfig config, Path nodeModulesDir, List<Dependency> dependencies) {
         InstalledWebDependenciesContext() {
-            this(null, List.of());
+            this(null, null, List.of());
         }
     }
 
