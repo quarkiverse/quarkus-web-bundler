@@ -30,11 +30,14 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
 
     Set<ApplicationArchive> allApplicationArchives;
     List<ResolvedDependency> extensionArtifacts;
+    private final List<Path> srcResourcesDirs;
 
     public ProjectResourcesScannerBuildItem(Set<ApplicationArchive> allApplicationArchives,
-            List<ResolvedDependency> extensionArtifacts) {
+            List<ResolvedDependency> extensionArtifacts,
+            List<Path> srcResourcesDirs) {
         this.allApplicationArchives = allApplicationArchives;
         this.extensionArtifacts = extensionArtifacts;
+        this.srcResourcesDirs = srcResourcesDirs;
     }
 
     public List<WebAsset> scan(String dir, String pathMatcher, Charset charset) throws IOException {
@@ -128,16 +131,28 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
                         assetPath = toUnixPath(assetPath);
                     }
                     if (!assetPath.isEmpty()) {
+                        final Path srcFilePath = canReadLater ? findSrc(assetPath) : null;
                         webAssetConsumer.accept(toWebAsset(assetPath,
-                                filePath.normalize(), charset, canReadLater));
+                                filePath.normalize(), srcFilePath, charset, canReadLater));
                     }
                 }
             }
         }
     }
 
-    static WebAsset toWebAsset(String resourcePath, Path filePath, Charset charset, boolean canReadLater) {
-        return new DefaultWebAsset(resourcePath, Optional.of(filePath), canReadLater ? null : readTemplateContent(filePath),
+    Path findSrc(String assetPath) {
+        for (Path srcResourcesDir : this.srcResourcesDirs) {
+            final Path absolutePath = srcResourcesDir.resolve(assetPath);
+            if (Files.isRegularFile(absolutePath)) {
+                return absolutePath;
+            }
+        }
+        return null;
+    }
+
+    static WebAsset toWebAsset(String resourcePath, Path filePath, Path srcFilePath, Charset charset, boolean canReadLater) {
+        return new DefaultWebAsset(resourcePath, Optional.of(filePath), Optional.ofNullable(srcFilePath),
+                canReadLater ? null : readTemplateContent(filePath),
                 charset);
     }
 

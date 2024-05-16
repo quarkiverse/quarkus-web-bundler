@@ -41,10 +41,12 @@ public class WebBundlerTest {
                 .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("main") + "\"></script>"));
 
         RestAssured.given()
+                .basePath("")
                 .get(bundle.style("main"))
                 .then()
                 .statusCode(200);
         RestAssured.given()
+                .basePath("")
                 .get(bundle.script("main"))
                 .then()
                 .statusCode(200);
@@ -63,10 +65,12 @@ public class WebBundlerTest {
         final String cssMap = bundle.resolve("main.css.map");
         Assertions.assertNotNull(cssMap);
         RestAssured.given()
+                .basePath("")
                 .get(jsMap)
                 .then()
                 .statusCode(200);
         RestAssured.given()
+                .basePath("")
                 .get(cssMap)
                 .then()
                 .statusCode(200);

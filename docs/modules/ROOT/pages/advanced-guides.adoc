@@ -224,6 +224,27 @@ NOTE: I only use `-Pmvnpm-repo` when locking my project or updating mvnpm versio
 
 NOTE: In case of web dependencies versions conflicts, you can set the version to use for this dependency in the project dependencyManagement (even when using the locker).
 
+[#browser-live-reload]
+== Browser live-reload
+
+Browser live reload is enabled by default:
+
+- auto-inject a live-reload script in the bundle to watch for changes through sse (server-sent event)
+- supersonic in-page replace for css/scss changes
+- supersonic page refresh for javascript changes
+- watch other Quarkus files such as html, java, ... (unless there is an error in which case a new request is needed)
+
+This is enabled by default. To disable:
+```properties
+quarkus.web-bundler.browser-live-reload=false
+```
+
+When browser-live-reload is enabled:
+
+- bundle files will be fixed (no hashes, i.e. `main.js`)
+- minification is disabled
+
+
 [#node_modules]
 === Node Modules for bundling
 
@@ -288,9 +309,7 @@ After the bundling is done, the bundle files will be served by Quarkus under `{q
 
 This may also be configured with an external URL (e.g. 'https://my.cdn.org/'), in which case, Bundle files will NOT be served by Quarkus and all resolved paths in the bundle and mapping will automatically point to this url (a CDN for example).
 
-In production, it is a good practise to have a hash inserted in the scripts and styles file names (E.g.: `main-XKHKUJNQ.js`) to differentiate builds (make them static). This way they can be cached without a risk of missing the most recent builds.
-
-In the Web Bundler, we also do it in dev mode, this way the app is as close as possible to production. You won't have surprise when deploying a new version of your application.
+In production, it is a good practise to have a hash inserted in the scripts and styles file names (E.g.: `main-XKHKUJNQ.js`) to differentiate builds (make them static). This way they can be cached without a risk of missing the most recent builds. This option is enabled by default in production.
 
 To make it easy there are several ways to resolve the bundle files public paths from the templates and the code.
 

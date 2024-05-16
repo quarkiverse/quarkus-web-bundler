@@ -35,6 +35,8 @@ public interface WebAsset {
 
     String resourceName();
 
+    Optional<Path> srcFilePath();
+
     Optional<Path> filePath();
 
     byte[] content();

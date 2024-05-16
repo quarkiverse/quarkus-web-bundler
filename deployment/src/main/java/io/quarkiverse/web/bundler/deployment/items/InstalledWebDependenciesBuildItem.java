@@ -4,15 +4,21 @@ import java.nio.file.Path;
 import java.util.List;
 
 import io.mvnpm.esbuild.model.WebDependency;
+import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
 import io.quarkus.builder.item.SimpleBuildItem;
-import io.quarkus.maven.dependency.ResolvedDependency;
 
-public final class WebDependenciesBuildItem extends SimpleBuildItem {
+public final class InstalledWebDependenciesBuildItem extends SimpleBuildItem {
 
+    private final Path nodeModulesDir;
     private final List<Dependency> list;
 
-    public WebDependenciesBuildItem(List<Dependency> list) {
+    public InstalledWebDependenciesBuildItem(Path nodeModulesDir, List<Dependency> list) {
         this.list = list;
+        this.nodeModulesDir = nodeModulesDir;
+    }
+
+    public Path nodeModulesDir() {
+        return nodeModulesDir;
     }
 
     public List<Dependency> list() {
@@ -25,14 +31,6 @@ public final class WebDependenciesBuildItem extends SimpleBuildItem {
 
     public List<WebDependency> toEsBuildWebDependencies() {
         return list().stream().map(Dependency::toEsBuildWebDependency).toList();
-    }
-
-    public record Dependency(ResolvedDependency resolvedDependency, String id, Path path, WebDependency.WebDependencyType type,
-            boolean direct) {
-
-        public WebDependency toEsBuildWebDependency() {
-            return WebDependency.of(id, path, type);
-        }
     }
 
 }

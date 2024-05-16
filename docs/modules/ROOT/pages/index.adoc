@@ -8,7 +8,7 @@ No need to install NodeJs, it relies on a Java wrapped version of https://esbuil
 
 * [*] Easy to set up
 * [*] Production build
-* [*] Awesome Dev experience
+* [*] Awesome Dev experience with browser live-reload
 * [*] Integrated with NPM dependencies through xref:advanced-guides.adoc#mvnpm[mvnpm] or xref:advanced-guides.adoc#webjars[WebJars].
 * [*] Build-time index.html rendering with bundled scripts and styles
 * [*] Server Side Qute Components (Qute template + Script + Style)

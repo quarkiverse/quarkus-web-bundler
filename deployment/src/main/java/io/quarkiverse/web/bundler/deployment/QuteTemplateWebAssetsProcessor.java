@@ -139,5 +139,9 @@ public class QuteTemplateWebAssetsProcessor {
             return Optional.empty();
         }
 
+        @Override
+        public Optional<Path> srcFilePath() {
+            return Optional.empty();
+        }
     }
 }
