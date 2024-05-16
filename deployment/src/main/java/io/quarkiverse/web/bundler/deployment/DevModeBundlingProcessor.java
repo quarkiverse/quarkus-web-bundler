@@ -5,15 +5,12 @@ import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.processGen
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
 
@@ -153,29 +150,14 @@ public class DevModeBundlingProcessor {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void callNoRestartChangesConsumers(boolean isSuccess) {
-        try {
-            Field field = RuntimeUpdatesProcessor.INSTANCE.getClass().getDeclaredField("noRestartChangesConsumers"); // replace "fieldName" with the name of the private field
-            field.setAccessible(true);
-            List<Consumer<Set<String>>> noRestartChangesConsumers = (List<Consumer<Set<String>>>) field
-                    .get(RuntimeUpdatesProcessor.INSTANCE);
-            for (Consumer<Set<String>> consumer : noRestartChangesConsumers) {
-                consumer.accept(Set.of(isSuccess ? "web-bundler/build-success" : "web-bundler/build-error"));
-            }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        RuntimeUpdatesProcessor.INSTANCE
+                .notifyExtensions(Set.of(isSuccess ? "web-bundler/build-success" : "web-bundler/build-error"));
     }
 
     private static void resetRemoteProblem() {
         if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() instanceof BundleException) {
-            try {
-                RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(null);
-            } catch (NullPointerException e) {
-                // workaround, it's currently impossible to reset the error without a NPE
-            }
-
+            RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(null);
         }
     }
 
