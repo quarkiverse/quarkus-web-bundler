@@ -28,6 +28,7 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
 
     private static final List<String> IGNORED_SUFFIX = List.of(".map");
     public static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
+    private final String webRoot;
     private final Map<String, Long> lastModifiedMap;
     private final List<Connection> connections = new CopyOnWriteArrayList<>();
     private final ClassLoader cl;
@@ -35,8 +36,9 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
     private final Runnable unRegisterChangeListener;
 
     public ChangeEventHandler(Function<Consumer<Set<String>>, Runnable> registerHandler, String directory,
-            Set<String> webResources, ShutdownContext shutdownContext) {
+            String webRoot, Set<String> webResources, ShutdownContext shutdownContext) {
         this.directory = Path.of(directory);
+        this.webRoot = webRoot;
         this.lastModifiedMap = initLastModifiedMap(webResources);
         this.cl = Thread.currentThread().getContextClassLoader();
         this.unRegisterChangeListener = registerHandler.apply(this::onChange);
@@ -82,7 +84,10 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
 
     private void onChange(Set<String> srcChanges) {
         final boolean isBundlingError = srcChanges.contains("web-bundler/build-error");
-        if (!srcChanges.contains("web-bundler/build-success") && !isBundlingError) {
+        final boolean isWebChange = isBundlingError
+                || srcChanges.contains("web-bundler/build-success")
+                || srcChanges.stream().anyMatch(s -> s.startsWith(webRoot));
+        if (!isWebChange) {
             return;
         }
         final ClassLoader oldCl = Thread.currentThread().getContextClassLoader();

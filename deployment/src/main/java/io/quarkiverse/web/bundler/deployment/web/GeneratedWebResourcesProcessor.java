@@ -65,9 +65,8 @@ public class GeneratedWebResourcesProcessor {
         if (config.browserLiveReload() && readyForBundling != null) {
             routes.produce(RouteBuildItem.builder().route(WEB_BUNDLER_LIVE_RELOAD_PATH)
                     .handler(recorder.createChangeEventHandler(targetDir.dist().toAbsolutePath().toString(),
+                            config.webRoot(),
                             staticResources.stream()
-                                    // FIXME: OTHER CHANGES ARE NOT WATCHED FOR NO
-                                    .filter(w -> w.type() == GeneratedWebResourceBuildItem.SourceType.BUNDLED_ASSET)
                                     .map(GeneratedWebResourceBuildItem::publicPath)
                                     .collect(Collectors.toSet()),
                             shutdownContext))

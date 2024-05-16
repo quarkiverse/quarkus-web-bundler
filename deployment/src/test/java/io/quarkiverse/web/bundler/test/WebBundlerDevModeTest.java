@@ -43,13 +43,13 @@ public class WebBundlerDevModeTest {
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("console.log(\"Hello World! Modified!\");"));
-        test.modifyResourceFile("web/app/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: red;"));
-        test.modifyResourceFile("web/app/other.scss", s -> s.replace("color: white;", "color: green;"));
+        test.modifyResourceFile("web/app/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: #123456;"));
+        test.modifyResourceFile("web/app/other.scss", s -> s.replace("color: #AAAAAA;", "color: #567890;"));
         RestAssured.given()
                 .get("/foo/bar/static/bundle/main.css")
                 .then()
                 .statusCode(200)
-                .body(Matchers.containsString("background-color: red;"))
-                .body(Matchers.containsString("color: green;"));
+                .body(Matchers.containsString("background-color: #123456;"))
+                .body(Matchers.containsString("color: #567890;"));
     }
 }

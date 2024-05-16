@@ -41,10 +41,11 @@ public class WebBundlerResourceRecorder {
     }
 
     public Handler<RoutingContext> createChangeEventHandler(final String webResourcesDirectory,
+            String webRoot,
             final Set<String> webResources,
             ShutdownContext shutdownContext) {
         startWatchScheduler.run();
-        return new ChangeEventHandler(hotDeploymentEventHandlerRegister, webResourcesDirectory,
+        return new ChangeEventHandler(hotDeploymentEventHandlerRegister, webResourcesDirectory, webRoot,
                 webResources,
                 shutdownContext);
     }
