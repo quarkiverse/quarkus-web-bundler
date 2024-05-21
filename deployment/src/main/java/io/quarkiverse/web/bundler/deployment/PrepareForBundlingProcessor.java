@@ -105,6 +105,17 @@ public class PrepareForBundlingProcessor {
                 && Objects.equals(installedWebDependencies.list(), prepareForBundlingContext.dependencies())
                 && !liveReload.getChangedResources().contains(config.fromWebRoot("tsconfig.json"))
                 && entryPoints.equals(prepareForBundlingContext.entryPoints())) {
+            // We need to set non-restart watched file again
+            for (EntryPointBuildItem entryPoint : entryPoints) {
+                for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
+                    if (!webAsset.hasContent() && config.browserLiveReload()) {
+                        watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
+                                .setRestartNeeded(webAsset.srcFilePath().isEmpty())
+                                .setLocation(webAsset.resourceName())
+                                .build());
+                    }
+                }
+            }
             return new ReadyForBundlingBuildItem(prepareForBundlingContext.bundleOptions(), null, distDir);
         }
 
