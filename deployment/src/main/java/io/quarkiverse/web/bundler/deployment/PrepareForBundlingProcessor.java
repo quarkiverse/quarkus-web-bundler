@@ -70,9 +70,17 @@ public class PrepareForBundlingProcessor {
     }
 
     @BuildStep
+    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget) {
+        final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+        final Path distDir = targetDir.resolve(DIST);
+        return new WebBundlerTargetDirBuildItem(targetDir, distDir);
+    }
+
+    @BuildStep
     ReadyForBundlingBuildItem prepareForBundling(WebBundlerConfig config,
             InstalledWebDependenciesBuildItem installedWebDependencies,
             List<EntryPointBuildItem> entryPoints,
+            WebBundlerTargetDirBuildItem targetDir,
             Optional<BundleConfigAssetsBuildItem> bundleConfig,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
@@ -97,8 +105,6 @@ public class PrepareForBundlingProcessor {
                 .getContextObject(PrepareForBundlingContext.class);
         final boolean isLiveReload = liveReload.isLiveReload()
                 && prepareForBundlingContext != null;
-        final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
-        final Path distDir = targetDir.resolve(DIST);
         final long started = Instant.now().toEpochMilli();
         if (isLiveReload
                 && WebBundlerConfig.isEqual(config, prepareForBundlingContext.config())
@@ -116,20 +122,20 @@ public class PrepareForBundlingProcessor {
                     }
                 }
             }
-            return new ReadyForBundlingBuildItem(prepareForBundlingContext.bundleOptions(), null, distDir);
+            return new ReadyForBundlingBuildItem(prepareForBundlingContext.bundleOptions(), null, targetDir.dist());
         }
 
         try {
             if (!isLiveReload) {
-                FileUtil.deleteDirectory(targetDir);
+                FileUtil.deleteDirectory(targetDir.webBundler());
             }
-            Files.createDirectories(targetDir);
+            Files.createDirectories(targetDir.webBundler());
             LOGGER.debugf("Preparing bundle in %s", targetDir);
 
             if (bundleConfig.isPresent()) {
                 for (WebAsset webAsset : bundleConfig.get().getWebAssets()) {
                     if (webAsset.filePath().isPresent()) {
-                        final Path targetConfig = targetDir.resolve(webAsset.pathFromWebRoot(config.webRoot()));
+                        final Path targetConfig = targetDir.webBundler().resolve(webAsset.pathFromWebRoot(config.webRoot()));
                         Files.deleteIfExists(targetConfig);
                         Files.copy(webAsset.filePath().get(), targetConfig);
                     }
@@ -162,7 +168,7 @@ public class PrepareForBundlingProcessor {
                 esBuildConfigBuilder.addExternal(join(config.httpRootPath(), "static/*"));
             }
             final BundleOptionsBuilder optionsBuilder = BundleOptions.builder()
-                    .withWorkDir(targetDir)
+                    .withWorkDir(targetDir.webBundler())
                     .withDependencies(installedWebDependencies.toEsBuildWebDependencies())
                     .withEsConfig(esBuildConfigBuilder.build())
                     .withNodeModulesDir(installedWebDependencies.nodeModulesDir());
@@ -175,7 +181,7 @@ public class PrepareForBundlingProcessor {
                 final List<String> scripts = new ArrayList<>();
                 for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
                     String destination = webAsset.pathFromWebRoot(config.webRoot());
-                    final Path scriptPath = targetDir.resolve(destination);
+                    final Path scriptPath = targetDir.webBundler().resolve(destination);
                     if (!isLiveReload
                             || liveReload.getChangedResources().contains(webAsset.resourceName())
                             || !Files.exists(scriptPath)) {
@@ -218,11 +224,12 @@ public class PrepareForBundlingProcessor {
 
                 if (!scripts.isEmpty()) {
                     if (browserLiveReload) {
-                        Files.write(targetDir.resolve("live-reload.js"), readLiveReloadJs());
+                        Files.write(targetDir.webBundler().resolve("live-reload.js"), readLiveReloadJs());
                         scripts.add("live-reload.js");
                     }
 
-                    optionsBuilder.addAutoEntryPoint(targetDir, entryPoint.getEntryPointKey(), scripts, autoDepsMode,
+                    optionsBuilder.addAutoEntryPoint(targetDir.webBundler(), entryPoint.getEntryPointKey(), scripts,
+                            autoDepsMode,
                             directWebDependenciesIds::contains);
                     addedEntryPoints++;
                 }
@@ -231,10 +238,10 @@ public class PrepareForBundlingProcessor {
             if (addedEntryPoints == 0) {
                 List<String> scripts = new ArrayList<>();
                 if (browserLiveReload) {
-                    Files.write(targetDir.resolve("live-reload.js"), readLiveReloadJs());
+                    Files.write(targetDir.webBundler().resolve("live-reload.js"), readLiveReloadJs());
                     scripts.add("live-reload.js");
                 }
-                optionsBuilder.addAutoEntryPoint(targetDir, MAIN_ENTRYPOINT_KEY, scripts, autoDepsMode,
+                optionsBuilder.addAutoEntryPoint(targetDir.webBundler(), MAIN_ENTRYPOINT_KEY, scripts, autoDepsMode,
                         directWebDependenciesIds::contains);
                 LOGGER.info("No custom entry points found, it will be generated based on web dependencies.");
             }
@@ -242,7 +249,7 @@ public class PrepareForBundlingProcessor {
             final BundleOptions options = optionsBuilder.build();
             liveReload.setContextObject(PrepareForBundlingContext.class,
                     new PrepareForBundlingContext(config, installedWebDependencies.list(), entryPoints, options));
-            return new ReadyForBundlingBuildItem(options, started, distDir);
+            return new ReadyForBundlingBuildItem(options, started, targetDir.dist());
         } catch (IOException e) {
             liveReload.setContextObject(PrepareForBundlingContext.class, new PrepareForBundlingContext());
             throw new UncheckedIOException(e);

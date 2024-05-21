@@ -66,7 +66,7 @@ export class QwcWebBundlerOutput extends LitElement {
                                 }
                             }}">
                 <vaadin-grid-column ${columnBodyRenderer(this._renderPath, [])}></vaadin-grid-column>
-                <vaadin-grid-column path="type" resizable width="2em"></vaadin-grid-column>
+                <vaadin-grid-column path="type" ></vaadin-grid-column>
             </vaadin-grid>`;
     }
 
