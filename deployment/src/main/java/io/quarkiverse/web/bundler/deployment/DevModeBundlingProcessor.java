@@ -54,6 +54,9 @@ public class DevModeBundlingProcessor {
             BuildProducer<GeneratedEntryPointBuildItem> generatedEntryPointProducer,
             LiveReloadBuildItem liveReload,
             CuratedApplicationShutdownBuildItem shutdown) {
+        if (readyForBundling == null) {
+            return;
+        }
         final BundlesBuildContext bundlesBuildContext = liveReload.getContextObject(BundlesBuildContext.class);
         final boolean isLiveReload = liveReload.isLiveReload();
         Watch watch = DevModeBundlingProcessor.watchRef.get();
