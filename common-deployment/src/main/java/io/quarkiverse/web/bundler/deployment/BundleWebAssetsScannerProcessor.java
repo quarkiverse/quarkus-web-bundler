@@ -86,6 +86,7 @@ class BundleWebAssetsScannerProcessor {
         if (!config.bundle().containsKey("app")) {
             entryPointsConfig.put("app", new ConfiguredEntryPoint("app", "app", MAIN_ENTRYPOINT_KEY));
         }
+
         final WebAssetsLookupDevContext devContext = liveReload.getContextObject(WebAssetsLookupDevContext.class);
         if (liveReload.isLiveReload()
                 && devContext != null
