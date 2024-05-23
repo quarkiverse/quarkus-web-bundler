@@ -67,7 +67,6 @@ public class GeneratedWebResourcesProcessor {
                     }
                     cachedHashes.remove(r.publicPath());
                     hashes.put(r.publicPath(), r.contentHash());
-                    notFoundPageProducer.produce(new NotFoundPageDisplayableEndpointBuildItem(r.publicPath()));
                 }
 
             } else {
@@ -75,7 +74,6 @@ public class GeneratedWebResourcesProcessor {
                 for (GeneratedWebResourceBuildItem r : staticResources) {
                     hashes.put(r.publicPath(), r.contentHash());
                     createGeneratedResourceOnDisk(r, distDir);
-                    notFoundPageProducer.produce(new NotFoundPageDisplayableEndpointBuildItem(r.publicPath()));
                 }
             }
 
@@ -83,6 +81,7 @@ public class GeneratedWebResourcesProcessor {
         }
 
         for (GeneratedWebResourceBuildItem staticResource : staticResources) {
+            notFoundPageProducer.produce(new NotFoundPageDisplayableEndpointBuildItem(staticResource.publicPath()));
             // generated resource for prod
             prodResourcesProducer.produce(new GeneratedResourceBuildItem(staticResource.resourceName(),
                     staticResource.content(), false));
