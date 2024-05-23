@@ -8,12 +8,14 @@ function connectToChanges() {
         if (retry > 0) {
             retry = 0;
             // server is back-on, let's reload to get the latest
+            eventSource.close();
             location.reload();
         }
 
         console.debug("connected to web-bundler live-reload");
     };
     eventSource.addEventListener('bundling-error', e => {
+        eventSource.close();
         location.reload();
     });
     eventSource.addEventListener('change', e => {
@@ -40,10 +42,11 @@ function connectToChanges() {
                     }
             }
         }
+        eventSource.close();
         location.reload();
     });
 
-    eventSource.onerror = () => {
+    eventSource.onerror = (e) => {
         // Reconnect on error
         eventSource.close();
         retry++;
@@ -59,4 +62,14 @@ function connectToChanges() {
     };
 }
 
-connectToChanges();
+fetch(process.env.LIVE_RELOAD_PATH)
+    .then(response => {
+        if (response.status === 429) {
+            return Promise.reject(new Error("There are too many live-reload open connections."));
+        }
+        return response;
+    })
+    .then(connectToChanges)
+    .catch(error => {
+        console.error('Error:', error.message);
+    });

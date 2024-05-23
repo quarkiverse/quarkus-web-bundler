@@ -13,8 +13,10 @@ import java.util.function.Function;
 
 import org.jboss.logging.Logger;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.quarkus.runtime.ShutdownContext;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -25,6 +27,7 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
     private static final Logger LOGGER = Logger.getLogger(ChangeEventHandler.class);
 
     private static final List<String> IGNORED_SUFFIX = List.of(".map");
+    public static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
     private final Map<String, Long> lastModifiedMap;
     private final List<Connection> connections = new CopyOnWriteArrayList<>();
     private final ClassLoader cl;
@@ -41,11 +44,18 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
     }
 
     private void onShutdown() {
+        final ClassLoader oldCl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(cl);
-        unRegisterChangeListener.run();
-        for (Connection connection : connections) {
-            closeConnection(connection);
+        try {
+            unRegisterChangeListener.run();
+            for (Connection connection : connections) {
+                closeConnection(connection);
+            }
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldCl);
         }
+
+
     }
 
     private Map<String, Long> initLastModifiedMap(Set<String> webResources) {
@@ -72,27 +82,33 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
         if (!srcChanges.contains("web-bundler/build-success") && !isBundlingError) {
             return;
         }
+        final ClassLoader oldCl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(cl);
-        final Changes changes = computeChanges();
+        try {
+            final Changes changes = computeChanges();
 
-        LOGGER.info(changes);
-        for (Connection connection : connections) {
-            if (!connection.closed().get() && !connection.ctx().response().closed()) {
-                if (isBundlingError) {
-                    connection.ctx.response().write("event: bundling-error\ndata:\n\n");
-                    continue;
-                }
-                if (!changes.added.isEmpty() || !changes.removed.isEmpty() || !changes.updated.isEmpty()) {
-                    // Send an initial SSE event to establish the connection
-                    JsonObject eventData = new JsonObject();
-                    eventData.put("added", new JsonArray(changes.added));
-                    eventData.put("removed", new JsonArray(changes.removed));
-                    eventData.put("updated", new JsonArray(changes.updated));
-                    connection.ctx.response().write("event: change\ndata: " + eventData.encode() + "\n\n");
-                }
+            LOGGER.info(changes);
+            for (Connection connection : connections) {
+                if (!connection.closed().get() && !connection.ctx().response().closed()) {
+                    if (isBundlingError) {
+                        connection.ctx.response().write("event: bundling-error\ndata:\n\n");
+                        continue;
+                    }
+                    if (!changes.added.isEmpty() || !changes.removed.isEmpty() || !changes.updated.isEmpty()) {
+                        // Send an initial SSE event to establish the connection
+                        JsonObject eventData = new JsonObject();
+                        eventData.put("added", new JsonArray(changes.added));
+                        eventData.put("removed", new JsonArray(changes.removed));
+                        eventData.put("updated", new JsonArray(changes.updated));
+                        connection.ctx.response().write("event: change\ndata: " + eventData.encode() + "\n\n");
+                    }
 
+                }
             }
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldCl);
         }
+
     }
 
     private Changes computeChanges() {
@@ -130,8 +146,22 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext routingContext) {
+
+        if (connections.size() > 2) {
+            routingContext.response().setStatusCode(HttpResponseStatus.TOO_MANY_REQUESTS.code());
+            routingContext.response().send();
+            return;
+        }
+
+        final String header = routingContext.request().getHeader(HttpHeaders.ACCEPT);
+        if (header == null || !header.equalsIgnoreCase(MEDIA_TYPE_TEXT_EVENT_STREAM)) {
+            routingContext.response().setStatusCode(HttpResponseStatus.OK.code());
+            routingContext.response().send();
+            return;
+        }
+
         HttpServerResponse response = routingContext.response();
-        response.putHeader("Content-Type", "text/event-stream");
+        response.putHeader("Content-Type", MEDIA_TYPE_TEXT_EVENT_STREAM);
         response.putHeader("Cache-Control", "no-cache");
         response.putHeader("Connection", "keep-alive");
         response.setChunked(true);
@@ -151,7 +181,6 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
         routingContext.request().connection().closeHandler(v -> {
             closeConnection(connection);
         });
-
     }
 
     private void closeConnection(Connection connection) {
