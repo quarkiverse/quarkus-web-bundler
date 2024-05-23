@@ -55,7 +55,6 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
             Thread.currentThread().setContextClassLoader(oldCl);
         }
 
-
     }
 
     private Map<String, Long> initLastModifiedMap(Set<String> webResources) {
