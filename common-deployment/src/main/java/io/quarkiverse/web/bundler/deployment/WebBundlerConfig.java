@@ -6,6 +6,7 @@ import static java.util.function.Predicate.not;
 
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -134,6 +135,25 @@ public interface WebBundlerConfig {
         @WithDefault("linked")
         String sourceMap();
 
+        /**
+         * List of environments for the bundle
+         */
+        Map<String, String> envs();
+
+        default Map<String, String> safeEnvs() {
+            if (envs().isEmpty()) {
+                return Map.of();
+            }
+            return envs()
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(e -> safe(e.getKey()), e -> "'" + safe(e.getValue()) + "'"));
+        }
+
+        static String safe(String v) {
+            return v.replaceAll("^[^a-zA-Z_$]|[^0-9a-zA-Z_$]", "_");
+        }
+
         default boolean sourceMapEnabled() {
             return "linked".equalsIgnoreCase(sourceMap())
                     || "true".equalsIgnoreCase(sourceMap())
@@ -152,6 +172,7 @@ public interface WebBundlerConfig {
             return Objects.equals(c1.splitting(), c2.splitting())
                     && LoadersConfig.isEqual(c1.loaders(), c2.loaders())
                     && Objects.equals(c1.external(), c2.external())
+                    && Objects.equals(c1.envs(), c2.envs())
                     && Objects.equals(c1.sourceMap(), c2.sourceMap());
         }
 

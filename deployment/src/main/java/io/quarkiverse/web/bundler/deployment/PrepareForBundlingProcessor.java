@@ -160,6 +160,9 @@ public class PrepareForBundlingProcessor {
                                         + "'")
                         .fixedEntryNames();
             }
+            if (!config.bundling().envs().isEmpty()) {
+                esBuildConfigBuilder.define(config.bundling().safeEnvs());
+            }
             if (config.bundling().external().isPresent()) {
                 for (String e : config.bundling().external().get()) {
                     esBuildConfigBuilder.addExternal(e);
