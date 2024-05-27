@@ -538,4 +538,21 @@ endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
 
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundling-envs-envs]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundling-envs-envs[quarkus.web-bundler.bundling.envs]`
+
+
+[.description]
+--
+List of environments for the bundle
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLING_ENVS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLING_ENVS+++`
+endif::add-copy-button-to-env-var[]
+--|`Map<String,String>` 
+|
+
 |===
