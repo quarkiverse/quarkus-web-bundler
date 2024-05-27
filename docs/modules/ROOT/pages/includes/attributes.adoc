@@ -1,4 +1,4 @@
-:project-version: 1.5.0.CR6
+:project-version: 1.5.0
 
 :maven-version: 3.8.1+
 
