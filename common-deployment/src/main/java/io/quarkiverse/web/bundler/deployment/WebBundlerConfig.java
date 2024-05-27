@@ -147,11 +147,18 @@ public interface WebBundlerConfig {
             return envs()
                     .entrySet()
                     .stream()
-                    .collect(Collectors.toMap(e -> safe(e.getKey()), e -> "'" + safe(e.getValue()) + "'"));
+                    .collect(Collectors.toMap(e -> safeKey(e.getKey()), e -> "'" + safeValue(e.getValue()) + "'"));
         }
 
-        static String safe(String v) {
+        static String safeKey(String v) {
             return v.replaceAll("^[^a-zA-Z_$]|[^0-9a-zA-Z_$]", "_");
+        }
+
+        static String safeValue(String v) {
+            if (v.contains("'")) {
+                throw new IllegalArgumentException("Single quote ' must not be used in bundling environment values");
+            }
+            return v;
         }
 
         default boolean sourceMapEnabled() {
