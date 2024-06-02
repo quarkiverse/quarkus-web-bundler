@@ -539,7 +539,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundling-envs-envs]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundling-envs-envs[quarkus.web-bundler.bundling.envs]`
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundling-envs-envs]]`link:#quarkus-web-bundler_quarkus-web-bundler-bundling-envs-envs[quarkus.web-bundler.bundling.envs."envs"]`
 
 
 [.description]
@@ -547,12 +547,13 @@ a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler
 List of environments for the bundle
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLING_ENVS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_BUNDLING_ENVS__ENVS_+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLING_ENVS+++`
+Environment variable: `+++QUARKUS_WEB_BUNDLER_BUNDLING_ENVS__ENVS_+++`
 endif::add-copy-button-to-env-var[]
---|`Map<String,String>` 
+--|link:https://docs.oracle.com/javase/8/docs/api/java/lang/String.html[String]
+ 
 |
 
 |===

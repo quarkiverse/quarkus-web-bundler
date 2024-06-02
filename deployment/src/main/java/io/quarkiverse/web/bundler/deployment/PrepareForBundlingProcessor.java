@@ -58,7 +58,7 @@ public class PrepareForBundlingProcessor {
                     entry(EsBuildConfig.Loader.DATAURL, LoadersConfig::dataUrl),
                     entry(EsBuildConfig.Loader.BASE64, LoadersConfig::base64),
                     entry(EsBuildConfig.Loader.BINARY, LoadersConfig::binary));
-    public static final String TARGET_DIR_NAME = "web-bundler";
+    public static final String TARGET_DIR_NAME = "web-bundler/";
     public static final String DIST = "dist";
 
     static {
@@ -70,8 +70,9 @@ public class PrepareForBundlingProcessor {
     }
 
     @BuildStep
-    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget) {
-        final Path targetDir = outputTarget.getOutputDirectory().resolve(TARGET_DIR_NAME);
+    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode) {
+        final String targetDirName = TARGET_DIR_NAME + launchMode.getLaunchMode().getDefaultProfile();
+        final Path targetDir = outputTarget.getOutputDirectory().resolve(targetDirName);
         final Path distDir = targetDir.resolve(DIST);
         return new WebBundlerTargetDirBuildItem(targetDir, distDir);
     }
