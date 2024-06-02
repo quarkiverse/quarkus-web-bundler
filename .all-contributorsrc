@@ -88,6 +88,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Frank12B",
+      "name": "Frank12B",
+      "avatar_url": "https://avatars.githubusercontent.com/u/16815635?v=4",
+      "profile": "https://github.com/Frank12B",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
