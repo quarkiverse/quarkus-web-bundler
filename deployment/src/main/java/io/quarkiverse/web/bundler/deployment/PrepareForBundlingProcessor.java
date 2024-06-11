@@ -70,10 +70,18 @@ public class PrepareForBundlingProcessor {
     }
 
     @BuildStep
-    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode) {
+    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode,
+            LiveReloadBuildItem liveReload) {
         final String targetDirName = TARGET_DIR_NAME + launchMode.getLaunchMode().getDefaultProfile();
         final Path targetDir = outputTarget.getOutputDirectory().resolve(targetDirName);
         final Path distDir = targetDir.resolve(DIST);
+        if (!liveReload.isLiveReload()) {
+            try {
+                FileUtil.deleteDirectory(targetDir);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
         return new WebBundlerTargetDirBuildItem(targetDir, distDir);
     }
 
@@ -115,7 +123,7 @@ public class PrepareForBundlingProcessor {
             // We need to set non-restart watched file again
             for (EntryPointBuildItem entryPoint : entryPoints) {
                 for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
-                    if (!webAsset.hasContent() && config.browserLiveReload()) {
+                    if (webAsset.isFile() && config.browserLiveReload()) {
                         watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
                                 .setRestartNeeded(webAsset.srcFilePath().isEmpty())
                                 .setLocation(webAsset.resourceName())
@@ -127,19 +135,14 @@ public class PrepareForBundlingProcessor {
         }
 
         try {
-            if (!isLiveReload) {
-                FileUtil.deleteDirectory(targetDir.webBundler());
-            }
             Files.createDirectories(targetDir.webBundler());
             LOGGER.debugf("Preparing bundle in %s", targetDir);
-
+            final boolean browserLiveReload = launchMode.getLaunchMode().equals(LaunchMode.DEVELOPMENT)
+                    && config.browserLiveReload();
             if (bundleConfig.isPresent()) {
                 for (WebAsset webAsset : bundleConfig.get().getWebAssets()) {
-                    if (webAsset.filePath().isPresent()) {
-                        final Path targetConfig = targetDir.webBundler().resolve(webAsset.pathFromWebRoot(config.webRoot()));
-                        Files.deleteIfExists(targetConfig);
-                        Files.copy(webAsset.filePath().get(), targetConfig);
-                    }
+                    final Path targetConfig = targetDir.webBundler().resolve(webAsset.pathFromWebRoot(config.webRoot()));
+                    createAsset(watchedFiles, webAsset, targetConfig, browserLiveReload);
                 }
             }
 
@@ -150,8 +153,7 @@ public class PrepareForBundlingProcessor {
                     .publicPath(config.publicBundlePath())
                     .splitting(config.bundling().splitting())
                     .sourceMap(config.bundling().sourceMapEnabled());
-            final boolean browserLiveReload = launchMode.getLaunchMode().equals(LaunchMode.DEVELOPMENT)
-                    && config.browserLiveReload();
+
             if (browserLiveReload) {
                 esBuildConfigBuilder
                         .preserveSymlinks()
@@ -189,26 +191,7 @@ public class PrepareForBundlingProcessor {
                     if (!isLiveReload
                             || liveReload.getChangedResources().contains(webAsset.resourceName())
                             || !Files.exists(scriptPath)) {
-                        Files.createDirectories(scriptPath.getParent());
-                        if (webAsset.hasContent()) {
-                            Files.write(scriptPath, webAsset.content(), StandardOpenOption.CREATE,
-                                    StandardOpenOption.TRUNCATE_EXISTING);
-                        } else {
-                            if (browserLiveReload) {
-                                Files.deleteIfExists(scriptPath);
-                                watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
-                                        .setRestartNeeded(webAsset.srcFilePath().isEmpty())
-                                        .setLocation(webAsset.resourceName())
-                                        .build());
-                                if (webAsset.srcFilePath().isPresent()) {
-                                    Files.createSymbolicLink(scriptPath, webAsset.srcFilePath().get());
-                                } else {
-                                    Files.createSymbolicLink(scriptPath, webAsset.filePath().orElseThrow());
-                                }
-                            } else {
-                                Files.copy(webAsset.filePath().orElseThrow(), scriptPath, StandardCopyOption.REPLACE_EXISTING);
-                            }
-                        }
+                        createAsset(watchedFiles, webAsset, scriptPath, browserLiveReload);
                     }
                     // Manual assets are supposed to be imported by the entry point
                     if (!webAsset.type().equals(MANUAL)) {
@@ -258,6 +241,31 @@ public class PrepareForBundlingProcessor {
             liveReload.setContextObject(PrepareForBundlingContext.class, new PrepareForBundlingContext());
             throw new UncheckedIOException(e);
         }
+    }
+
+    static void createAsset(BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles, WebAsset webAsset, Path targetPath,
+            boolean browserLiveReload) throws IOException {
+        Files.createDirectories(targetPath.getParent());
+        if (!webAsset.isFile()) {
+            Files.write(targetPath, webAsset.resource().content(), StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
+        } else {
+            if (browserLiveReload) {
+                createSymbolicLink(watchedFiles, webAsset, targetPath);
+            } else {
+                Files.copy(webAsset.resource().path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+    }
+
+    static void createSymbolicLink(BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles, WebAsset webAsset,
+            Path targetPath) throws IOException {
+        Files.deleteIfExists(targetPath);
+        watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
+                .setRestartNeeded(webAsset.srcFilePath().isEmpty())
+                .setLocation(webAsset.resourceName())
+                .build());
+        Files.createSymbolicLink(targetPath, webAsset.srcFilePath().orElse(webAsset.resource().path()));
     }
 
     private byte[] readLiveReloadJs() throws IOException {

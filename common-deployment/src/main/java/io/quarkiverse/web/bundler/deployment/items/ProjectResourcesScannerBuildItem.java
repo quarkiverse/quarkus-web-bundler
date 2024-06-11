@@ -151,8 +151,9 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
     }
 
     static WebAsset toWebAsset(String resourcePath, Path filePath, Path srcFilePath, Charset charset, boolean canReadLater) {
-        return new DefaultWebAsset(resourcePath, Optional.of(filePath), Optional.ofNullable(srcFilePath),
-                canReadLater ? null : readTemplateContent(filePath),
+        return new DefaultWebAsset(resourcePath,
+                canReadLater ? new WebAsset.Resource(filePath) : new WebAsset.Resource(readTemplateContent(filePath)),
+                Optional.ofNullable(srcFilePath),
                 charset);
     }
 

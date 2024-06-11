@@ -192,7 +192,7 @@ class BundleWebAssetsScannerProcessor {
     }
 
     private static <T extends WebAsset> List<T> checkWebAssets(List<T> webAssets) {
-        return webAssets.stream().filter(w -> w.filePath().isPresent() && Files.isRegularFile(w.filePath().get()))
+        return webAssets.stream().filter(w -> w.isFile() && Files.isRegularFile(w.resource().path()))
                 .collect(
                         Collectors.toList());
     }

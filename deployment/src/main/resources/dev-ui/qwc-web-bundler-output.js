@@ -38,13 +38,16 @@ export class QwcWebBundlerOutput extends LitElement {
 
     static properties = {
         _staticAssets: {},
-        _selectedStaticAsset: {state: true}
+        _selectedStaticAsset: {state: true},
+        _selectedStaticAssetContent: {state: true}
     };
 
     constructor() {
         super();
         this._staticAssets = staticAssets;
-        this._selectedStaticAsset = this._staticAssets.slice(0, 1); // Select the first item by default
+        this._selectedStaticAsset = this._staticAssets[0]; // Select the first item by default
+        this._selectedStaticAssetContent = null;
+        this._fetchContent();
     }
 
     render() {
@@ -54,15 +57,25 @@ export class QwcWebBundlerOutput extends LitElement {
                     </vaadin-split-layout>`;
     }
 
+    _fetchContent() {
+        if(this._selectedStaticAsset) {
+            fetch(this._selectedStaticAsset.path)
+                .then(r => r.text())
+                .then(t => this._selectedStaticAssetContent = t);
+        }
+
+    }
+
     _renderStaticAssets(){
         return html`
             <vaadin-grid .items="${this._staticAssets}"
                             theme="compact no-border"
-                            .selectedItems="${this._selectedStaticAsset}"    
+                            .selectedItems="${[this._selectedStaticAsset]}"    
                             @active-item-changed="${(e) => {
                                 const item = e.detail.value;
                                 if(item){
-                                    this._selectedStaticAsset = [item];
+                                    this._selectedStaticAsset = item;
+                                    this._fetchContent();
                                 }
                             }}">
                 <vaadin-grid-column ${columnBodyRenderer(this._renderPath, [])}></vaadin-grid-column>
@@ -77,20 +90,24 @@ export class QwcWebBundlerOutput extends LitElement {
     }
 
     _renderAsset(){
-        if(this._selectedStaticAsset && this._selectedStaticAsset.length > 0){
-            let fileType = this._getFileType(this._selectedStaticAsset[0].path);
+        if(this._selectedStaticAsset){
+            let fileType = this._getFileType(this._selectedStaticAsset.path);
             if (this._isImage(fileType)) {
                 return html`<div class="preview">
-                            <img src="${this._selectedStaticAsset[0].path}" alt="${this._selectedStaticAsset[0]}"/>
+                            <img src="${this._selectedStaticAsset.path}" alt="${this._selectedStaticAsset}"/>
                         </div>
-                        ${this._renderLinkOut(this._selectedStaticAsset[0])}`;
+                        ${this._renderLinkOut(this._selectedStaticAsset)}`;
             }
-            return html`<div class="codeBlock">
+            if(this._selectedStaticAssetContent) {
+                return html`<div class="codeBlock">
                             <qui-code-block
                                 mode='${fileType}' 
-                                content='${this._selectedStaticAsset[0].content}'>
+                                content='${this._selectedStaticAssetContent}'>
                             </qui-code-block>
                         </div>`;
+            } else {
+                return html`<vaadin-progress-bar indeterminate></vaadin-progress-bar>`;
+            }
         }
     }
 

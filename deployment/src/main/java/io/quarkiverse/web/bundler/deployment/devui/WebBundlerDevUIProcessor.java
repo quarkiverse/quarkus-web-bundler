@@ -47,7 +47,7 @@ public class WebBundlerDevUIProcessor {
                 .collect(
                         Collectors.toMap(GeneratedEntryPointBuildItem::key,
                                 e -> new EntryPointItem(e.webAsset().pathFromWebRoot(config.webRoot()),
-                                        e.webAsset().type().label(), new String(e.webAsset().contentOrReadFromFile())),
+                                        e.webAsset().type().label()),
                                 (a, b) -> b));
 
         if (!entryPoints.isEmpty()) {
@@ -69,9 +69,7 @@ public class WebBundlerDevUIProcessor {
         if (!generatedWebResources.isEmpty()) {
             final List<WebAsset> assets = generatedWebResources.stream()
                     .sorted(Comparator.comparing(w -> w.type().order()))
-                    .map(w -> new WebAsset(resolveFromRootPath(httpConfig, w.publicPath()), w.type().label(),
-                            new String(w.content())))
-
+                    .map(w -> new WebAsset(resolveFromRootPath(httpConfig, w.publicPath()), w.type().label()))
                     .toList();
 
             cardPageBuildItem.addBuildTimeData("staticAssets", assets);
@@ -94,19 +92,18 @@ public class WebBundlerDevUIProcessor {
         list.addAll(e.getWebAssets().stream()
                 .map(a -> new EntryPointItem(
                         a.webAsset().pathFromWebRoot(config.webRoot()),
-                        a.type().label(),
-                        new String(a.webAsset().contentOrReadFromFile())))
+                        a.type().label()))
                 .toList());
         return list;
     }
 
-    record WebAsset(String path, String type, String content) {
+    record WebAsset(String path, String type) {
     }
 
     record EntryPoint(String key, List<EntryPointItem> items) {
     }
 
-    record EntryPointItem(String path, String type, String content) {
+    record EntryPointItem(String path, String type) {
     }
 
 }

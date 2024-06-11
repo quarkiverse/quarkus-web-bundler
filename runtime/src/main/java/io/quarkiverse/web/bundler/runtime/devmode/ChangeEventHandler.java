@@ -68,7 +68,11 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
                 if (matches(IGNORED_SUFFIX, relativePath)) {
                     continue;
                 }
-                map.put(webResource, Files.getLastModifiedTime(directory.resolve(relativePath)).toMillis());
+                final Path file = directory.resolve(relativePath);
+                if (!Files.isRegularFile(file)) {
+                    continue;
+                }
+                map.put(webResource, Files.getLastModifiedTime(file).toMillis());
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);

@@ -1,8 +1,8 @@
 package io.quarkiverse.web.bundler.deployment.items;
 
-import static io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem.readTemplateContent;
-
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -14,32 +14,47 @@ public interface WebAsset {
         return resourceName().substring(root.endsWith("/") ? root.length() : root.length() + 1);
     }
 
-    default byte[] readContentFromFile() {
-        return readTemplateContent(filePath().orElseThrow());
-    }
-
-    default byte[] contentOrReadFromFile() {
-        return hasContent() ? content() : readContentFromFile();
-    }
-
-    default boolean hasContent() {
-        return this.content() != null;
-    }
-
-    default boolean matches(String glob) {
-        if (!filePath().isPresent()) {
-            return false;
-        }
-        return filePath().get().getFileSystem().getPathMatcher(glob).matches(filePath().get());
+    default boolean isFile() {
+        return this.resource().isFile();
     }
 
     String resourceName();
 
     Optional<Path> srcFilePath();
 
-    Optional<Path> filePath();
-
-    byte[] content();
+    Resource resource();
 
     Charset charset();
+
+    record Resource(byte[] content, Path path) {
+
+        public Resource(byte[] content) {
+            this(content, null);
+        }
+
+        public Resource(Path path) {
+            this(null, path);
+        }
+
+        public Resource(byte[] content, Path path) {
+            if (content != null && path != null) {
+                throw new IllegalArgumentException(
+                        "if a resource has content, it means the Path should be null has it is only meant for content which can't be read anymore");
+            }
+            this.content = content;
+            this.path = path;
+        }
+
+        public byte[] contentOrReadFromFile() {
+            try {
+                return isFile() ? Files.readAllBytes(path()) : content();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public boolean isFile() {
+            return path != null;
+        }
+    }
 }
