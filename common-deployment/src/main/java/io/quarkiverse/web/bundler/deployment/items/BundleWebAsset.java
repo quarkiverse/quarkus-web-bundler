@@ -30,18 +30,13 @@ public record BundleWebAsset(WebAsset webAsset, BundleType type) implements WebA
     }
 
     @Override
-    public Optional<Path> filePath() {
-        return webAsset.filePath();
-    }
-
-    @Override
     public Optional<Path> srcFilePath() {
         return webAsset.srcFilePath();
     }
 
     @Override
-    public byte[] content() {
-        return webAsset.content();
+    public Resource resource() {
+        return webAsset.resource();
     }
 
     @Override

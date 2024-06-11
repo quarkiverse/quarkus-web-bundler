@@ -3,6 +3,8 @@ package io.quarkiverse.web.bundler.qute.components.deployment;
 import static io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 import org.jboss.logging.Logger;
@@ -34,9 +36,14 @@ class WebBundlerQuteComponentsProcessor {
         final Map<String, String> templates = new HashMap<>();
         final List<String> tags = new ArrayList<>();
         for (WebAsset webAsset : quteTags.get().getWebAssets()) {
-            final String tag = webAsset.filePath().get().getFileName().toString();
+            final String tag = webAsset.resource().path().getFileName().toString();
             final String tagName = tag.contains(".") ? tag.substring(0, tag.indexOf('.')) : tag;
-            templates.put(WEB_BUNDLER_ID_PREFIX + tagName, new String(webAsset.readContentFromFile(), webAsset.charset()));
+            try {
+                templates.put(WEB_BUNDLER_ID_PREFIX + tagName,
+                        Files.readString(webAsset.resource().path(), webAsset.charset()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             tags.add(tagName);
         }
         additionalBeans.produce(new AdditionalBeanBuildItem(WebBundlerQuteEngineObserver.class));

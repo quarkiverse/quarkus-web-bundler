@@ -2,8 +2,8 @@ package io.quarkiverse.web.bundler.deployment.web;
 
 import static io.quarkiverse.web.bundler.runtime.WebBundlerResourceHandler.META_INF_WEB;
 
+import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkus.builder.item.MultiBuildItem;
-import io.quarkus.runtime.util.HashUtil;
 
 public final class GeneratedWebResourceBuildItem extends MultiBuildItem {
 
@@ -31,15 +31,12 @@ public final class GeneratedWebResourceBuildItem extends MultiBuildItem {
     }
 
     private final String publicPath;
-    private final byte[] content;
-    private final String contentHash;
-
+    private final WebAsset.Resource resource;
     private final SourceType type;
 
-    public GeneratedWebResourceBuildItem(String publicPath, byte[] content, SourceType type) {
+    public GeneratedWebResourceBuildItem(String publicPath, WebAsset.Resource resource, SourceType type) {
         this.publicPath = publicPath;
-        this.content = content;
-        this.contentHash = HashUtil.sha512(content);
+        this.resource = resource;
         this.type = type;
     }
 
@@ -51,12 +48,8 @@ public final class GeneratedWebResourceBuildItem extends MultiBuildItem {
         return publicPath;
     }
 
-    public byte[] content() {
-        return content;
-    }
-
-    public String contentHash() {
-        return contentHash;
+    public WebAsset.Resource resource() {
+        return resource;
     }
 
     public SourceType type() {

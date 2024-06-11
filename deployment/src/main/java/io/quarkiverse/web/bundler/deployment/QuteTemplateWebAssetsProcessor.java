@@ -70,7 +70,7 @@ public class QuteTemplateWebAssetsProcessor {
                 .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
                 .build();
         for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
-            final byte[] bytes = webAsset.contentOrReadFromFile();
+            final byte[] bytes = webAsset.resource().contentOrReadFromFile();
             final String content = engine.parse(new String(bytes, webAsset.charset())).render();
             makeWebAssetPublic(staticResourceProducer, prefixWithSlash(webAsset.pathFromWebRoot(config.webRoot())),
                     HtmlPageWebAsset.of(webAsset, content), SourceType.BUILD_TIME_TEMPLATE);
@@ -135,8 +135,8 @@ public class QuteTemplateWebAssetsProcessor {
         }
 
         @Override
-        public Optional<Path> filePath() {
-            return Optional.empty();
+        public Resource resource() {
+            return new Resource(content());
         }
 
         @Override

@@ -42,23 +42,18 @@ export class QwcWebBundlerEntryPoints extends LitElement {
     static properties = {
         _entryPoints: {},
         _selectedEntryPoint: {state: true},
-        _selectedEntryPointContents: {state: true}
     };
 
     constructor() {
         super();
         this._entryPoints = entryPoints;
         if(this._entryPoints.length>0){
-            this._selectedEntryPoint = this._entryPoints[0].items.slice(0, 1); // Select the first item by default
-            this._selectedEntryPointContents = this._selectedEntryPoint[0].content;
+            this._selectedEntryPoint = this._entryPoints[0].items[0]; // Select the first item by default
         }
     }
 
     render() {
-        return html`<vaadin-split-layout style="height: 100%; width: 100%;max-width: 100%;">
-                        <master-content>${this._renderEntryPoints()}</master-content>
-                        <detail-content class="splitCode">${this._renderCode()}</detail-content>
-                    </vaadin-split-layout>`;
+        return this._renderEntryPoints();
     }
 
     _renderEntryPoints(){
@@ -82,12 +77,11 @@ export class QwcWebBundlerEntryPoints extends LitElement {
             <div tab="${entryPoint.key}" class="tab">
                 <vaadin-grid .items="${entryPoint.items}"
                                 theme="compact no-border"
-                                .selectedItems="${this._selectedEntryPoint}"    
+                                .selectedItems="${[this._selectedEntryPoint]}"    
                                 @active-item-changed="${(e) => {
                                     const item = e.detail.value;
                                     if(item){
-                                        this._selectedEntryPoint = [item];
-                                        this._selectedEntryPointContents = this._selectedEntryPoint[0].content;
+                                        this._selectedEntryPoint = item;
                                     }
                                 }}">
                     <vaadin-grid-column header="Path" ${columnBodyRenderer(this._renderPath, [])} resizable auto-width></vaadin-grid-column>
@@ -100,19 +94,6 @@ export class QwcWebBundlerEntryPoints extends LitElement {
         return html`
             <code>${entryPoint.path}</code>
         `;
-    }
-
-    _renderCode(){
-        if(this._selectedEntryPointContents){
-            return html`<div class="codeBlock">
-                            <qui-code-block
-                                mode='${this._getFileType(this._selectedEntryPoint[0].path)}' 
-                                content='${this._selectedEntryPointContents}'>
-                            </qui-code-block>
-                        </div>`;
-        }else {
-            return html`<vaadin-progress-bar indeterminate></vaadin-progress-bar>`;
-        }
     }
 
     _getFileType(filename) {
