@@ -18,6 +18,15 @@
       ]
     },
     {
+      "login": "edewit",
+      "name": "Erik Jan de Wit",
+      "avatar_url": "https://avatars.githubusercontent.com/u/51133?v=4",
+      "profile": "http://blog.nerdin.ch",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
       "login": "phillip-kruger",
       "name": "Phillip Krüger",
       "avatar_url": "https://avatars.githubusercontent.com/u/6836179?v=4",
@@ -78,15 +87,6 @@
       "profile": "https://www.presight.se",
       "contributions": [
         "ideas"
-      ]
-    },
-    {
-      "login": "edewit",
-      "name": "Erik Jan de Wit",
-      "avatar_url": "https://avatars.githubusercontent.com/u/51133?v=4",
-      "profile": "http://blog.nerdin.ch",
-      "contributions": [
-        "code"
       ]
     },
     {
