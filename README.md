@@ -53,6 +53,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ia3andy"><img src="https://avatars.githubusercontent.com/u/2223984?v=4?s=100" width="100px;" alt="Andy Damevin"/><br /><sub><b>Andy Damevin</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/commits?author=ia3andy" title="Code">💻</a> <a href="#maintenance-ia3andy" title="Maintenance">🚧</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://blog.nerdin.ch"><img src="https://avatars.githubusercontent.com/u/51133?v=4?s=100" width="100px;" alt="Erik Jan de Wit"/><br /><sub><b>Erik Jan de Wit</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/commits?author=edewit" title="Code">💻</a></td>
+      
       <td align="center" valign="top" width="14.28%"><a href="http://www.phillip-kruger.com"><img src="https://avatars.githubusercontent.com/u/6836179?v=4?s=100" width="100px;" alt="Phillip Krüger"/><br /><sub><b>Phillip Krüger</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/commits?author=phillip-kruger" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/chrisruffalo"><img src="https://avatars.githubusercontent.com/u/2073493?v=4?s=100" width="100px;" alt="Chris Ruffalo"/><br /><sub><b>Chris Ruffalo</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/commits?author=chrisruffalo" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://melloware.com"><img src="https://avatars.githubusercontent.com/u/4399574?v=4?s=100" width="100px;" alt="Melloware"/><br /><sub><b>Melloware</b></sub></a><br /><a href="#infra-melloware" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
@@ -62,7 +64,6 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://www.presight.se"><img src="https://avatars.githubusercontent.com/u/815040?v=4?s=100" width="100px;" alt="Rasmus Haglund"/><br /><sub><b>Rasmus Haglund</b></sub></a><br /><a href="#ideas-rasmushaglund" title="Ideas, Planning, & Feedback">🤔</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="http://blog.nerdin.ch"><img src="https://avatars.githubusercontent.com/u/51133?v=4?s=100" width="100px;" alt="Erik Jan de Wit"/><br /><sub><b>Erik Jan de Wit</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/commits?author=edewit" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Frank12B"><img src="https://avatars.githubusercontent.com/u/16815635?v=4?s=100" width="100px;" alt="Frank12B"/><br /><sub><b>Frank12B</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-web-bundler/commits?author=Frank12B" title="Documentation">📖</a></td>
     </tr>
   </tbody>
