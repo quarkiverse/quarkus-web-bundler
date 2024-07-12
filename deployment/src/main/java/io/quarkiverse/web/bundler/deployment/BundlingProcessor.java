@@ -2,9 +2,7 @@ package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.StaticWebAssetsProcessor.makePublic;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.GENERATED_ENTRY_POINT;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.surroundWithSlashes;
+import static io.quarkiverse.web.bundler.deployment.util.PathUtils.*;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
 import java.io.IOException;
@@ -89,7 +87,7 @@ class BundlingProcessor {
             StringBuilder mappingString = new StringBuilder();
             try (Stream<Path> stream = Files.find(bundleDir, 20, (p, i) -> Files.isRegularFile(p))) {
                 stream.forEach(path -> {
-                    final String relativePath = bundleDir.relativize(path).toString();
+                    final String relativePath = toUnixPath(bundleDir.relativize(path).toString());
                     final String key = relativePath.replaceAll("-[^-.]+\\.", ".");
                     final String publicBundleAssetPath = join(config.publicBundlePath(), relativePath);
                     final String fileName = path.getFileName().toString();
