@@ -49,7 +49,8 @@ public class WebBundlerTest {
                 .basePath("")
                 .get(bundle.script("main"))
                 .then()
-                .statusCode(200);
+                .statusCode(200)
+                .body(Matchers.containsString("hello world in test mode"));
         RestAssured.given()
                 .get("/static/hello.txt")
                 .then()

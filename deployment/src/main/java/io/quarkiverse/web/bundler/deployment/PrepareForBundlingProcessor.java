@@ -60,6 +60,7 @@ public class PrepareForBundlingProcessor {
                     entry(EsBuildConfig.Loader.BINARY, LoadersConfig::binary));
     public static final String TARGET_DIR_NAME = "web-bundler/";
     public static final String DIST = "dist";
+    private static final String LAUNCH_MODE_ENV = "LAUNCH_MODE";
 
     static {
         for (EsBuildConfig.Loader loader : EsBuildConfig.Loader.values()) {
@@ -152,8 +153,8 @@ public class PrepareForBundlingProcessor {
                     .outDir(PathUtils.join(DIST, config.bundlePath()))
                     .publicPath(config.publicBundlePath())
                     .splitting(config.bundling().splitting())
-                    .sourceMap(config.bundling().sourceMapEnabled());
-
+                    .sourceMap(config.bundling().sourceMapEnabled())
+                    .define(LAUNCH_MODE_ENV, "'" + launchMode.getLaunchMode().name() + "'");
             if (browserLiveReload) {
                 esBuildConfigBuilder
                         .preserveSymlinks()
