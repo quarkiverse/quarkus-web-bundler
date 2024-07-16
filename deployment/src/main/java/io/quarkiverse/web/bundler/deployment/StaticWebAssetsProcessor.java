@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.PrepareForBundlingProcessor.createSymbolicLink;
+import static io.quarkiverse.web.bundler.deployment.PrepareForBundlingProcessor.createSymbolicLinkOrFallback;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 
 import java.io.IOException;
@@ -39,7 +39,7 @@ public class StaticWebAssetsProcessor {
                 } else {
                     if (browserLiveReload) {
                         Files.createDirectories(targetPath.getParent());
-                        createSymbolicLink(watchedFileBuildItemProducer, webAsset, targetPath);
+                        createSymbolicLinkOrFallback(watchedFileBuildItemProducer, webAsset, targetPath);
                         makePublic(staticResourceProducer, prefixWithSlash(publicPath), targetPath, SourceType.STATIC_ASSET);
                     } else {
                         // We can read the file

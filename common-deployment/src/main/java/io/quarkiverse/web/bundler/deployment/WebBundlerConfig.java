@@ -456,7 +456,6 @@ public interface WebBundlerConfig {
         }
 
         return Objects.equals(c1.webRoot(), c2.webRoot())
-                && Objects.equals(c1.bundle(), c2.bundle())
                 && Objects.equals(c1.staticDir(), c2.staticDir())
                 && Objects.equals(c1.bundlePath(), c2.bundlePath())
                 && BundlingConfig.isEqual(c1.bundling(), c2.bundling())
