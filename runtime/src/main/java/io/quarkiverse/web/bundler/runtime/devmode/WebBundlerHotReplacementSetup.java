@@ -34,16 +34,24 @@ public class WebBundlerHotReplacementSetup implements HotReplacementSetup {
 
     private void startWatchScheduler() {
         if (scheduler == null) {
+            context.addPreScanStep(() -> {
+                // Make sure we don't scan when another scan is running
+                if (nextUpdate != Long.MAX_VALUE) {
+                    nextUpdate = System.currentTimeMillis() + 1000;
+                }
+            });
             scheduler = EXECUTOR.scheduleAtFixedRate(() -> {
                 try {
                     if (context.getDeploymentProblem() == null) {
                         // Let's not scan when there is a deployment problem
-                        // and wait for another request to trigger the scan
+                        // and wait for another request to trigger the scan`
                         if (System.currentTimeMillis() > nextUpdate) {
+                            // Make sure we don't call scan more than once
+                            nextUpdate = Long.MAX_VALUE;
                             if (context.doScan(false)) {
-                                LOGGER.debug("App restarted from watcher, let's wait 5s before watching again");
-                                // If we have restarted, let's wait 5s before another scan
-                                nextUpdate = System.currentTimeMillis() + 5000;
+                                LOGGER.debug("App restarted from watcher, let's wait 3s before watching again");
+                                // If we have restarted, let's wait 3s before another scan
+                                nextUpdate = System.currentTimeMillis() + 3000;
                             } else {
                                 nextUpdate = System.currentTimeMillis() + 1000;
                             }
@@ -51,7 +59,8 @@ public class WebBundlerHotReplacementSetup implements HotReplacementSetup {
                     }
 
                 } catch (Exception e) {
-                    throw new IllegalStateException(e);
+                    nextUpdate = System.currentTimeMillis() + 3000;
+                    throw new RuntimeException(e);
                 }
             }, 500, 500, TimeUnit.MILLISECONDS);
         }
@@ -62,12 +71,13 @@ public class WebBundlerHotReplacementSetup implements HotReplacementSetup {
     public void close() {
         HotReplacementSetup.super.close();
         if (scheduler != null) {
-            scheduler.cancel(false);
+            scheduler.cancel(true);
             scheduler = null;
         }
     }
 
     private void noRestartChanges(Set<String> strings) {
+        nextUpdate = System.currentTimeMillis() + 1000;
         for (Consumer<Set<String>> changeEventListener : changeEventListeners) {
             changeEventListener.accept(strings);
         }

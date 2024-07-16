@@ -46,6 +46,14 @@ class BundlingProcessor {
         if (readyForBundling == null) {
             return;
         }
+        bundleAndProcess(config, readyForBundling, staticResourceProducer, generatedBundleProducer,
+                generatedEntryPointProducer);
+    }
+
+    static BundleResult bundleAndProcess(WebBundlerConfig config, ReadyForBundlingBuildItem readyForBundling,
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
+            BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
+            BuildProducer<GeneratedEntryPointBuildItem> generatedEntryPointProducer) {
         try {
             final long startedBundling = Instant.now().toEpochMilli();
             final BundleResult result = Bundler.bundle(readyForBundling.bundleOptions(), false);
@@ -55,6 +63,7 @@ class BundlingProcessor {
 
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(), startedBundling);
             processGeneratedEntryPoints(config, readyForBundling.bundleOptions().workDir(), generatedEntryPointProducer);
+            return result;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -1,15 +1,12 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.handleBundleDistDir;
-import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.processGeneratedEntryPoints;
+import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.logging.Logger;
@@ -18,6 +15,7 @@ import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
 import io.mvnpm.esbuild.Watch;
 import io.mvnpm.esbuild.model.BundleOptions;
+import io.mvnpm.esbuild.model.BundleResult;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedEntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
@@ -39,8 +37,6 @@ public class DevModeBundlingProcessor {
     private static final AtomicReference<Watch> watchRef = new AtomicReference<>();
 
     private static final AtomicReference<BundleException> bundleExceptionRef = new AtomicReference<>();
-    private static final AtomicReference<CountDownLatch> WAITER = new AtomicReference<>();
-    private static volatile long lastBundling = 0;
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void watch(WebBundlerConfig config,
@@ -57,38 +53,38 @@ public class DevModeBundlingProcessor {
         final BundlesBuildContext bundlesBuildContext = liveReload.getContextObject(BundlesBuildContext.class);
         final boolean isLiveReload = liveReload.isLiveReload();
         Watch watch = DevModeBundlingProcessor.watchRef.get();
-        if (isLiveReload && devService != null) {
-            boolean shouldShutdownTheBroker = bundlesBuildContext == null
-                    || watch == null
-                    || !watch.isAlive()
-                    || !WebBundlerConfig.isEqual(config, bundlesBuildContext.config());
-            if (!shouldShutdownTheBroker) {
-                try {
-                    if (readyForBundling.started() == null) {
-                        watch.updateEntries(readyForBundling.bundleOptions().entries());
-                        // We should just wait for the change to happen
-                        waitForBundling(readyForBundling);
-                    }
+        if (readyForBundling.started() == null) {
+            // no changes
+            boolean isRestartWatchNeeded = readyForBundling.enabledBundlingWatch() && (watch == null || !watch.isAlive());
+            if (!isRestartWatchNeeded) {
+                if (watch != null && watch.isAlive()) {
                     devServices.produce(devService.toBuildItem());
-                    final BundlesBuildContext newBundlesBuildContext = new BundlesBuildContext(readyForBundling.bundleOptions(),
-                            config, watch.dist());
-                    liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
-                    handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, watch.dist(),
-                            readyForBundling.started());
-                    processGeneratedEntryPoints(config, readyForBundling.bundleOptions().workDir(),
-                            generatedEntryPointProducer);
-                } catch (IOException e) {
-                    shutdownDevService();
-                    liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
-                    throw new UncheckedIOException(e);
-                } catch (Exception e) {
-                    shutdownDevService();
-                    liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
-                    throw e;
                 }
+                final BundlesBuildContext newBundlesBuildContext = new BundlesBuildContext(readyForBundling.bundleOptions(),
+                        bundlesBuildContext.bundleDistDir());
+                liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
+                handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer,
+                        bundlesBuildContext.bundleDistDir(),
+                        readyForBundling.started());
+                processGeneratedEntryPoints(config, readyForBundling.bundleOptions().workDir(),
+                        generatedEntryPointProducer);
                 return;
             }
+        }
+
+        if (watch != null) {
             shutdownDevService();
+        }
+
+        if (!readyForBundling.enabledBundlingWatch()) {
+            // We use normal bundling when watch is not enabled
+            final BundleResult bundleResult = bundleAndProcess(config, readyForBundling, staticResourceProducer,
+                    generatedBundleProducer,
+                    generatedEntryPointProducer);
+            final BundlesBuildContext newBundlesBuildContext = new BundlesBuildContext(readyForBundling.bundleOptions(),
+                    bundleResult.dist());
+            liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
+            return;
         }
 
         if (!isLiveReload) {
@@ -108,7 +104,6 @@ public class DevModeBundlingProcessor {
                     return;
                 }
                 LOGGER.debugf("New bundling event received: %s", r);
-                lastBundling = Instant.now().toEpochMilli();
                 if (!r.isSuccess()) {
                     bundleExceptionRef.set(r.bundleException());
                     RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(r.bundleException());
@@ -120,10 +115,6 @@ public class DevModeBundlingProcessor {
                     shutdownDevService();
                 }
                 callNoRestartChangesConsumers(r.isSuccess());
-                final CountDownLatch countDownLatch = WAITER.get();
-                if (countDownLatch != null) {
-                    countDownLatch.countDown();
-                }
             }, false);
             watchRef.set(watch);
             devService = new DevServicesResultBuildItem.RunningDevService(
@@ -133,7 +124,7 @@ public class DevModeBundlingProcessor {
                 throw watch.firstBuildResult().bundleException();
             }
             final BundlesBuildContext newBundlesBuildContext = new BundlesBuildContext(readyForBundling.bundleOptions(),
-                    config, watch.dist());
+                    watch.dist());
             liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, watch.dist(),
                     readyForBundling.started());
@@ -176,46 +167,11 @@ public class DevModeBundlingProcessor {
         }
     }
 
-    private void waitForBundling(ReadyForBundlingBuildItem readyForBundling) {
-        if (readyForBundling.started() != null) {
-            if (lastBundling > readyForBundling.started()) {
-                LOGGER.debug("Bundling done, no need to wait");
-            } else {
-                final CountDownLatch latch = new CountDownLatch(1);
-                final CountDownLatch existingLatch = WAITER.getAndSet(latch);
-                WAITER.set(latch);
-                LOGGER.info("Bundling started...");
-                try {
-                    latch.await();
-                    LOGGER.debug("Bundling completed!");
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    shutdownDevService();
-                    throw new RuntimeException(e);
-                } finally {
-                    if (existingLatch != null) {
-                        // this will always countdown the previous latch,
-                        // it has no effect if it was already done
-                        existingLatch.countDown();
-                    }
-                }
-            }
-        }
-
-        final BundleException bundleException = bundleExceptionRef.get();
-        if (bundleException != null) {
-            shutdownDevService();
-            throw bundleException;
-        }
-
-    }
-
     record BundlesBuildContext(BundleOptions bundleOptions,
-            WebBundlerConfig config,
             Path bundleDistDir) {
 
         public BundlesBuildContext() {
-            this(null, null, null);
+            this(null, null);
         }
     }
 }
