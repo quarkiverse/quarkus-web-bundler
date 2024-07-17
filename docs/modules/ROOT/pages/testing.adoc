@@ -1,0 +1,50 @@
+= Quarkus image:logo.svg[width=25em] Web Bundler - Testing
+
+include::./includes/attributes.adoc[]
+
+== With end-to-end testing
+
+The Web Bundler is a really good fit with e2e testing using extensions such as https://docs.quarkiverse.io/quarkus-playwright/dev/index.html[Quarkus Playwright]. This way you can very easilly test your full-stack application as a box and taking advantage of all the Quarkus dev services.
+
+Example:
+[source,java]
+----
+@QuarkusTest
+@WithPlaywright
+public class WithDefaultPlaywrightTest {
+
+    @InjectPlaywright
+    BrowserContext context;
+
+    @TestHTTPResource("/")
+    URL index;
+
+    @Test
+    public void testIndex() {
+        final Page page = context.newPage();
+        Response response = page.navigate(index.toString());
+        Assertions.assertEquals("OK", response.statusText());
+
+        page.waitForLoadState();
+
+        String title = page.title();
+        Assertions.assertEquals("My Awesome App", title);
+
+        // Make sure the web app is loaded and hits the backend
+        final ElementHandle quinoaEl = page.waitForSelector(".toast-body.received");
+        String greeting = quinoaEl.innerText();
+        Assertions.assertEquals("Hello from RESTEasy Reactive", greeting);
+    }
+}
+----
+
+
+
+== With UI component testing
+
+It is currently https://github.com/quarkiverse/quarkus-web-bundler/issues/110#issuecomment-1821501878[not possible to run javascript tests] with the Web Bundler.
+
+If you want to do UI component testing with Quarkus, here two solutions:
+
+* Switch to https://github.com/quarkiverse/quarkus-quinoa/[Quinoa] as it will allow to use the NPM ecosystem for testing.
+* Extract components which need to be tested in a npm published library, then you can use it from the web bundler through https://mvnpm.org[mvnpm.org].
