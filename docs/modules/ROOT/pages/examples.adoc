@@ -2,10 +2,20 @@
 
 include::./includes/attributes.adoc[]
 
+== Demos
+
 - https://github.com/ia3andy/quarkus-blast[Quarkus Blast, window="_blank"]: Web Bundler, Renarde, htmx, hyperscript, Bootstrap
 - https://github.com/ia3andy/quarkus-bundler-react[React, window="_blank"]: Web Bundler, React, React Bootstrap
 - https://github.com/ia3andy/renotes[Renotes, window="_blank"]: Web Bundler, Renarde, htmx, Bootstrap
 - https://github.com/ia3andy/web-bundler-jquery[jQuery, window="_blank"]: Web Bundler, jQuery, Bootstrap
 - https://github.com/ia3andy/bundler-gradle-jquery[Gradle jQuery, window="_blank"]: Gradle, Web Bundler, jQuery, Bootstrap
 - https://github.com/quarkusio/todo-demo-app[TODO Demo App, window="_blank"]: Web Bundler, Lit, Vaadin Web Components
-- https://github.com/ia3andy/quarkus-wb-patternfly-react/[Patternfly Ract]: Web Bundler, Patternfly React
+- https://github.com/ia3andy/quarkus-wb-patternfly-react/[Patternfly React]: Web Bundler, Patternfly React
+- https://github.com/ia3andy/htmx-todo[Htmx Todo]: Web Bundler, Renarde, Htmx
+
+== Real world
+
+- https://code.quarkus.io[code.quarkus.io, window="_blank"]: Web Bundler, React https://github.com/quarkusio/code.quarkus.io[image:github.svg[width=20px]]
+- https://mvnpm.org[mvnpm.org, window="_blank"]: Web Bundler, Lit as a SPA https://github.com/mvnpm/mvnpm[image:github.svg[width=20px]]
+- https://rivieradev.fr/[rivieradev.fr, window="_blank"]: Web Bundler, Renarde https://github.com/FroMage/RivieraDEV-Quarkus[image:github.svg[width=20px]]
+- https://quarkus.io/guides[quarkus.io/guides, window="_blank"]: Search full-stack web-component with Lit & Web Bundler https://github.com/quarkusio/search.quarkus.io[image:github.svg[width=20px]]
