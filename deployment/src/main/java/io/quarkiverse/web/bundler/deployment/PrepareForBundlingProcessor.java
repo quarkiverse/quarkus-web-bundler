@@ -10,10 +10,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
@@ -280,7 +277,7 @@ public class PrepareForBundlingProcessor {
                         .setRestartNeeded(false)
                         .setLocation(webAsset.resourceName())
                         .build());
-            } catch (UnsupportedOperationException e) {
+            } catch (FileSystemException e) {
                 enableBundlingWatch = false;
                 LOGGER.warn(
                         "Creating a symbolic link was not authorized on this system. It is required by the Web Bundler to allow filesystem watch. As a result, Web Bundler live-reload will use a scheduler as a fallback.\n\nTo resolve this issue, please add the necessary permissions to allow symbolic link creation.");
