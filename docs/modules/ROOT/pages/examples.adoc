@@ -4,18 +4,48 @@ include::./includes/attributes.adoc[]
 
 == Demos
 
-- https://github.com/ia3andy/quarkus-blast[Quarkus Blast, window="_blank"]: Web Bundler, Renarde, htmx, hyperscript, Bootstrap
-- https://github.com/ia3andy/quarkus-bundler-react[React, window="_blank"]: Web Bundler, React, React Bootstrap
-- https://github.com/ia3andy/renotes[Renotes, window="_blank"]: Web Bundler, Renarde, htmx, Bootstrap
-- https://github.com/ia3andy/web-bundler-jquery[jQuery, window="_blank"]: Web Bundler, jQuery, Bootstrap
-- https://github.com/ia3andy/bundler-gradle-jquery[Gradle jQuery, window="_blank"]: Gradle, Web Bundler, jQuery, Bootstrap
-- https://github.com/quarkusio/todo-demo-app[TODO Demo App, window="_blank"]: Web Bundler, Lit, Vaadin Web Components
-- https://github.com/ia3andy/quarkus-wb-patternfly-react/[Patternfly React]: Web Bundler, Patternfly React
-- https://github.com/ia3andy/htmx-todo[Htmx Todo]: Web Bundler, Renarde, Htmx
+
+All those demos application enjoy the Web Bundler:
+
+=== Renarde
+
+https://github.com/ia3andy/htmx-todo[image:github.svg[width=20px]] A Todo using with Renarde and Htmx
+
+https://github.com/ia3andy/quarkus-blast[image:github.svg[width=20px]] An example board game with OIDC login using Renarde, htmx, Hyperscript and Bootstrap
+
+https://github.com/ia3andy/renotes[image:github.svg[width=20px]] A Note taking app with Markdown support using Renarde, htmx and Bootstrap
+
+== Lit
+
+https://github.com/quarkusio/todo-demo-app[image:github.svg[width=20px]] A Todo Demo application using Lit and Vaadin Web Components
+
+https://github.com/ia3andy/star-rating[image:github.svg[width=20px]]: A Star Rating full-stack web component using Lit
+
+=== React
+
+https://github.com/ia3andy/quarkus-bundler-react[image:github.svg[width=20px]] A minimalist demo SPA with React Bootstrap
+
+https://github.com/ia3andy/quarkus-wb-patternfly-react/[image:github.svg[width=20px]] A minimalist demo SPA with Patternfly React
+
+
+== JQuery
+
+https://github.com/ia3andy/web-bundler-jquery[image:github.svg[width=20px]] A JQuery example with Bootstrap
+
+https://github.com/ia3andy/bundler-gradle-jquery[image:github.svg[width=20px]] The same on top of Gradle
+
+
+
 
 == Real world
 
-- https://code.quarkus.io[code.quarkus.io, window="_blank"]: Web Bundler, React https://github.com/quarkusio/code.quarkus.io[image:github.svg[width=20px]]
-- https://mvnpm.org[mvnpm.org, window="_blank"]: Web Bundler, Lit as a SPA https://github.com/mvnpm/mvnpm[image:github.svg[width=20px]]
-- https://rivieradev.fr/[rivieradev.fr, window="_blank"]: Web Bundler, Renarde https://github.com/FroMage/RivieraDEV-Quarkus[image:github.svg[width=20px]]
-- https://quarkus.io/guides[quarkus.io/guides, window="_blank"]: Search full-stack web-component with Lit & Web Bundler https://github.com/quarkusio/search.quarkus.io[image:github.svg[width=20px]]
+The Web Bundler is also used in production applications:
+
+https://github.com/quarkusio/code.quarkus.io[image:github.svg[width=20px]] The Code Quarkus app generator, a single page app made with React: https://code.quarkus.io[code.quarkus.io, window="_blank"]
+
+https://github.com/mvnpm/mvnpm[image:github.svg[width=20px]] The mvnpm single page app made with Lit: https://mvnpm.org[mvnpm.org, window="_blank"]
+
+https://github.com/FroMage/RivieraDEV-Quarkus[image:github.svg[width=20px]] The Riviera Dev Conference website made with Renarde (MVC): https://rivieradev.fr/[rivieradev.fr, window="_blank"]
+
+https://github.com/quarkusio/search.quarkus.io[image:github.svg[width=20px]]
+ Quarkus guides search is a Lit full-stack web-component https://quarkus.io/guides[quarkus.io/guides, window="_blank"]
