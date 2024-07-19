@@ -15,7 +15,7 @@ https://github.com/ia3andy/quarkus-blast[image:github.svg[width=20px]] An exampl
 
 https://github.com/ia3andy/renotes[image:github.svg[width=20px]] A Note taking app with Markdown support using Renarde, htmx and Bootstrap
 
-== Lit
+=== Lit
 
 https://github.com/quarkusio/todo-demo-app[image:github.svg[width=20px]] A Todo Demo application using Lit and Vaadin Web Components
 
@@ -28,7 +28,7 @@ https://github.com/ia3andy/quarkus-bundler-react[image:github.svg[width=20px]] A
 https://github.com/ia3andy/quarkus-wb-patternfly-react/[image:github.svg[width=20px]] A minimalist demo SPA with Patternfly React
 
 
-== JQuery
+=== JQuery
 
 https://github.com/ia3andy/web-bundler-jquery[image:github.svg[width=20px]] A JQuery example with Bootstrap
 
