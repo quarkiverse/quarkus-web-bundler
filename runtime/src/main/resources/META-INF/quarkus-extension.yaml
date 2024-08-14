@@ -24,6 +24,7 @@ metadata:
   guide: https://docs.quarkiverse.io/quarkus-web-bundler/dev/
   categories:
     - "web"
+  status: "stable"
   codestart:
     name: "web-bundler"
     languages:
