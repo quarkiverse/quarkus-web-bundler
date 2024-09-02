@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -39,7 +40,7 @@ import io.quarkus.maven.dependency.ResolvedDependency;
 class BundleWebAssetsScannerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(BundleWebAssetsScannerProcessor.class);
-
+    public static AtomicBoolean enableBundlingWatch = new AtomicBoolean(true);
     private static final String FEATURE = "web-bundler";
     public static final String MAIN_ENTRYPOINT_KEY = "main";
 
@@ -97,7 +98,9 @@ class BundleWebAssetsScannerProcessor {
             produceWebAssets(bundles, quteTagsAssets, bundleConfigAssets, devContext, true);
             return;
         }
+
         LOGGER.debug("Web bundler scan started");
+        enableBundlingWatch.set(true);
         final List<Scanner> quteTagsAssetsScanners = new ArrayList<>();
         final List<Scanner> bundleConfigAssetsScanners = new ArrayList<>();
 

@@ -1,6 +1,7 @@
 package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.MAIN_ENTRYPOINT_KEY;
+import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.enableBundlingWatch;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourcesProcessor.WEB_BUNDLER_LIVE_RELOAD_PATH;
@@ -37,8 +38,6 @@ import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
 public class PrepareForBundlingProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(PrepareForBundlingProcessor.class);
-    public static volatile boolean enableBundlingWatch = true;
-
     private static final Map<EsBuildConfig.Loader, Function<LoadersConfig, Optional<Set<String>>>> LOADER_CONFIGS = Map
             .ofEntries(
                     entry(EsBuildConfig.Loader.JS, LoadersConfig::js),
@@ -122,7 +121,7 @@ public class PrepareForBundlingProcessor {
                 && entryPoints.stream().map(EntryPointBuildItem::getWebAssets).flatMap(List::stream)
                         .map(WebAsset::resourceName)
                         .noneMatch(liveReload.getChangedResources()::contains)) {
-            if (config.browserLiveReload() && enableBundlingWatch) {
+            if (config.browserLiveReload() && enableBundlingWatch.get()) {
                 // We need to set non-restart watched file again
                 for (EntryPointBuildItem entryPoint : entryPoints) {
                     for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
@@ -136,9 +135,8 @@ public class PrepareForBundlingProcessor {
                 }
             }
             return new ReadyForBundlingBuildItem(prepareForBundlingContext.bundleOptions(), null, targetDir.dist(),
-                    enableBundlingWatch);
+                    enableBundlingWatch.get());
         }
-        enableBundlingWatch = true;
 
         try {
             Files.createDirectories(targetDir.webBundler());
@@ -242,7 +240,7 @@ public class PrepareForBundlingProcessor {
             final BundleOptions options = optionsBuilder.build();
             liveReload.setContextObject(PrepareForBundlingContext.class,
                     new PrepareForBundlingContext(config, installedWebDependencies.list(), entryPoints, options));
-            return new ReadyForBundlingBuildItem(options, started, targetDir.dist(), enableBundlingWatch);
+            return new ReadyForBundlingBuildItem(options, started, targetDir.dist(), enableBundlingWatch.get());
         } catch (IOException e) {
             liveReload.setContextObject(PrepareForBundlingContext.class, new PrepareForBundlingContext());
             throw new UncheckedIOException(e);
@@ -256,7 +254,7 @@ public class PrepareForBundlingProcessor {
             Files.write(targetPath, webAsset.resource().content(), StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
         } else {
-            if (browserLiveReload && enableBundlingWatch) {
+            if (browserLiveReload && enableBundlingWatch.get()) {
                 createSymbolicLinkOrFallback(watchedFiles, webAsset, targetPath);
             } else {
                 Files.copy(webAsset.resource().path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
@@ -278,15 +276,18 @@ public class PrepareForBundlingProcessor {
                         .setLocation(webAsset.resourceName())
                         .build());
             } catch (FileSystemException e) {
-                enableBundlingWatch = false;
-                LOGGER.warn(
-                        "Creating a symbolic link was not authorized on this system. It is required by the Web Bundler to allow filesystem watch. As a result, Web Bundler live-reload will use a scheduler as a fallback.\n\nTo resolve this issue, please add the necessary permissions to allow symbolic link creation.");
+                if (enableBundlingWatch.getAndSet(false)) {
+                    LOGGER.warn(
+                            "Creating a symbolic link was not authorized on this system. It is required by the Web Bundler to allow filesystem watch. As a result, Web Bundler live-reload will use a scheduler as a fallback.\n\nTo resolve this issue, please add the necessary permissions to allow symbolic link creation.");
+                }
+
                 Files.copy(webAsset.resource().path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
             }
         } else {
-            LOGGER.warn(
-                    "The sources are necessary by the Web Bundler to allow filesystem watch. Web Bundler live-reload will use a scheduler as a fallback");
-            enableBundlingWatch = false;
+            if (enableBundlingWatch.getAndSet(false)) {
+                LOGGER.warn(
+                        "The sources are necessary by the Web Bundler to allow filesystem watch. Web Bundler live-reload will use a scheduler as a fallback");
+            }
             Files.copy(webAsset.resource().path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
