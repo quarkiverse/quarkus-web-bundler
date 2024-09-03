@@ -40,9 +40,9 @@ import io.quarkus.maven.dependency.ResolvedDependency;
 class BundleWebAssetsScannerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(BundleWebAssetsScannerProcessor.class);
-    public static AtomicBoolean enableBundlingWatch = new AtomicBoolean(true);
     private static final String FEATURE = "web-bundler";
     public static final String MAIN_ENTRYPOINT_KEY = "main";
+    public static AtomicBoolean enableBundlingWatch = new AtomicBoolean(true);
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -100,7 +100,7 @@ class BundleWebAssetsScannerProcessor {
         }
 
         LOGGER.debug("Web bundler scan started");
-        enableBundlingWatch.set(true);
+
         final List<Scanner> quteTagsAssetsScanners = new ArrayList<>();
         final List<Scanner> bundleConfigAssetsScanners = new ArrayList<>();
 
