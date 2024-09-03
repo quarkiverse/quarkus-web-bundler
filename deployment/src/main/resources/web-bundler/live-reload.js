@@ -1,14 +1,13 @@
-let retry = 0;
+let isReco = false;
 
 console.log("web-bundler live-reload is enabled");
 
 function connectToChanges() {
+    console.debug("connecting to web-bundler live-reload: " + isReco)
     const eventSource = new EventSource(process.env.LIVE_RELOAD_PATH);
     eventSource.onopen = () => {
-        if (retry > 0) {
-            retry = 0;
+        if (isReco) {
             // server is back-on, let's reload to get the latest
-            eventSource.close();
             location.reload();
         }
 
@@ -42,23 +41,12 @@ function connectToChanges() {
                     }
             }
         }
-        eventSource.close();
         location.reload();
     });
 
     eventSource.onerror = (e) => {
-        // Reconnect on error
-        eventSource.close();
-        retry++;
-        if (retry > 40) {
-            console.error("web-bundler live-reload connection lost");
-            return;
-        }
-        if (retry > 10) { // increase the interval after 10 attempts (~5s)
-            setTimeout(connectToChanges, 1000);
-            return;
-        }
-        setTimeout(connectToChanges, 500);
+        console.debug("web-bundler live-reload connection lost");
+        isReco = true;
     };
 }
 
