@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -25,6 +26,7 @@ import io.vertx.ext.web.RoutingContext;
 public class ChangeEventHandler implements Handler<RoutingContext> {
 
     private static final Logger LOGGER = Logger.getLogger(ChangeEventHandler.class);
+    private static final String NL = "\n";
 
     private static final List<String> IGNORED_SUFFIX = List.of(".map");
     public static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
@@ -108,7 +110,12 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
                         eventData.put("added", new JsonArray(changes.added));
                         eventData.put("removed", new JsonArray(changes.removed));
                         eventData.put("updated", new JsonArray(changes.updated));
-                        connection.ctx.response().write("event: change\ndata: " + eventData.encode() + "\n\n");
+                        StringBuilder b = new StringBuilder();
+                        writeField(b, "id", String.valueOf(connection.counter().getAndIncrement()));
+                        writeField(b, "event", "change");
+                        writeField(b, "data", eventData.encode());
+                        b.append(NL);
+                        connection.ctx.response().write(b.toString());
                     }
 
                 }
@@ -117,6 +124,11 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
             Thread.currentThread().setContextClassLoader(oldCl);
         }
 
+    }
+
+    private static void writeField(StringBuilder sb, String field, String value) {
+        // We shouldn't have any new lines in values for this service
+        sb.append(field).append(": ").append(value.replaceAll("\\v", "")).append(NL);
     }
 
     private Changes computeChanges() {
@@ -173,17 +185,27 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
         response.putHeader("Cache-Control", "no-cache");
         response.putHeader("Connection", "keep-alive");
         response.setChunked(true);
-        response.write("event: connect\ndata: Connected\n\n");
+        AtomicInteger counter = new AtomicInteger();
+        StringBuilder connect = new StringBuilder();
+        writeField(connect, "id", String.valueOf(counter.getAndIncrement()));
+        writeField(connect, "event", "connect");
+        writeField(connect, "data", "Connected");
+        connect.append(NL);
+        response.write(connect.toString());
 
         final long timerId = routingContext.vertx().setPeriodic(30000, id -> {
             if (routingContext.response().closed()) {
                 routingContext.vertx().cancelTimer(id);
                 return;
             }
-            response.write("event: ping\n\n");
+            StringBuilder ping = new StringBuilder();
+            writeField(ping, "id", String.valueOf(counter.getAndIncrement()));
+            writeField(ping, "event", "ping");
+            ping.append(NL);
+            response.write(ping.toString());
         });
 
-        final Connection connection = new Connection(routingContext, timerId);
+        final Connection connection = new Connection(routingContext, timerId, counter);
         connections.add(connection);
 
         routingContext.request().connection().closeHandler(v -> {
@@ -210,9 +232,9 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
         return false;
     }
 
-    record Connection(RoutingContext ctx, long timerId, AtomicBoolean closed) {
-        Connection(RoutingContext ctx, long timerId) {
-            this(ctx, timerId, new AtomicBoolean(false));
+    record Connection(RoutingContext ctx, long timerId, AtomicInteger counter, AtomicBoolean closed) {
+        Connection(RoutingContext ctx, long timerId, AtomicInteger counter) {
+            this(ctx, timerId, counter, new AtomicBoolean(false));
         }
     }
 
