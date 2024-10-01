@@ -24,7 +24,7 @@
     </dependency>
     <dependency>
       <groupId>io.mvnpm</groupId>
-      <artifactId>esbuild-java</artifactId>
+      <artifactId>esbuild-java-bundle-scss</artifactId>
       <version>${esbuild-java.version}</version>
     </dependency>
     <dependency>
