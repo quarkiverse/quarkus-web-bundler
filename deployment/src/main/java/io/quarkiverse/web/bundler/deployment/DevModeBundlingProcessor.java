@@ -118,7 +118,7 @@ public class DevModeBundlingProcessor {
             }, false);
             watchRef.set(watch);
             devService = new DevServicesResultBuildItem.RunningDevService(
-                    DEV_SERVICE_NAME, null, watch::stop, new HashMap<>());
+                    DEV_SERVICE_NAME, null, watch::close, new HashMap<>());
             devServices.produce(devService.toBuildItem());
             if (!watch.firstBuildResult().isSuccess()) {
                 throw watch.firstBuildResult().bundleException();
