@@ -3,6 +3,7 @@ package io.quarkiverse.web.bundler.deployment;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -19,14 +20,10 @@ import java.util.stream.Collectors;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.EntryPointConfig;
-import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
+import io.quarkiverse.web.bundler.deployment.items.*;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType;
-import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem.Scanner;
-import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
+import io.quarkiverse.web.bundler.deployment.util.PathUtils;
 import io.quarkus.bootstrap.workspace.SourceDir;
 import io.quarkus.bootstrap.workspace.WorkspaceModule;
 import io.quarkus.deployment.ApplicationArchive;
@@ -42,6 +39,7 @@ class BundleWebAssetsScannerProcessor {
     private static final Logger LOGGER = Logger.getLogger(BundleWebAssetsScannerProcessor.class);
     private static final String FEATURE = "web-bundler";
     public static final String MAIN_ENTRYPOINT_KEY = "main";
+    public static final String APP_KEY = "app";
     public static AtomicBoolean enableBundlingWatch = new AtomicBoolean(true);
 
     @BuildStep
@@ -84,8 +82,8 @@ class BundleWebAssetsScannerProcessor {
         watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
                 .setLocationPredicate(s -> s.startsWith(config.webRoot())).setRestartNeeded(true).build());
         Map<String, EntryPointConfig> entryPointsConfig = new HashMap<>(config.bundle());
-        if (!config.bundle().containsKey("app")) {
-            entryPointsConfig.put("app", new ConfiguredEntryPoint("app", "app", MAIN_ENTRYPOINT_KEY));
+        if (!config.bundle().containsKey(APP_KEY)) {
+            entryPointsConfig.put(APP_KEY, new ConfiguredEntryPoint(APP_KEY, APP_KEY, MAIN_ENTRYPOINT_KEY));
         }
 
         final WebAssetsLookupDevContext devContext = liveReload.getContextObject(WebAssetsLookupDevContext.class);
@@ -130,6 +128,15 @@ class BundleWebAssetsScannerProcessor {
                     bundleAssets.get(entryPointKey).add(new BundleWebAsset(webAsset, bundleType));
                 }
             }
+        }
+
+        if (bundleAssets.size() == 1 && bundleAssets.get(MAIN_ENTRYPOINT_KEY) != null
+                && bundleAssets.get(MAIN_ENTRYPOINT_KEY).isEmpty()) {
+            // Let's create an empty app javascript when there is nothing provided
+            bundleAssets.get(MAIN_ENTRYPOINT_KEY)
+                    .add(new BundleWebAsset(new DefaultWebAsset(PathUtils.join(config.webRoot(), "app/app.js"),
+                            new WebAsset.Resource("".getBytes(StandardCharsets.UTF_8)), Optional.empty(),
+                            StandardCharsets.UTF_8), BundleType.AUTO));
         }
 
         bundleConfigAssetsScanners.add(new Scanner(config.webRoot(), "glob:tsconfig.json", config.charset()));
