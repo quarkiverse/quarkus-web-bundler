@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.web-bundler</groupId>
     <artifactId>quarkus-web-bundler-parent</artifactId>
-    <version>1.8.0</version>
+    <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-web-bundler-integration-tests</artifactId>
   <name>Quarkus Web Bundler - Integration Tests</name>
