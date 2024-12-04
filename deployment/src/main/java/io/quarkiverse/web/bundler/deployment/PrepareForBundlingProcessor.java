@@ -113,6 +113,7 @@ public class PrepareForBundlingProcessor {
         final boolean isLiveReload = liveReload.isLiveReload()
                 && prepareForBundlingContext != null;
         final long started = Instant.now().toEpochMilli();
+        boolean shouldWatch = config.browserLiveReload() && enableBundlingWatch.get();
         if (isLiveReload
                 && WebBundlerConfig.isEqual(config, prepareForBundlingContext.config())
                 && Objects.equals(installedWebDependencies.list(), prepareForBundlingContext.dependencies())
@@ -121,7 +122,7 @@ public class PrepareForBundlingProcessor {
                 && entryPoints.stream().map(EntryPointBuildItem::getWebAssets).flatMap(List::stream)
                         .map(WebAsset::resourceName)
                         .noneMatch(liveReload.getChangedResources()::contains)) {
-            if (config.browserLiveReload() && enableBundlingWatch.get()) {
+            if (shouldWatch) {
                 // We need to set non-restart watched file again
                 for (EntryPointBuildItem entryPoint : entryPoints) {
                     for (BundleWebAsset webAsset : entryPoint.getWebAssets()) {
@@ -135,7 +136,7 @@ public class PrepareForBundlingProcessor {
                 }
             }
             return new ReadyForBundlingBuildItem(prepareForBundlingContext.bundleOptions(), null, targetDir.dist(),
-                    enableBundlingWatch.get());
+                    shouldWatch);
         }
 
         try {
@@ -240,7 +241,7 @@ public class PrepareForBundlingProcessor {
             final BundleOptions options = optionsBuilder.build();
             liveReload.setContextObject(PrepareForBundlingContext.class,
                     new PrepareForBundlingContext(config, installedWebDependencies.list(), entryPoints, options));
-            return new ReadyForBundlingBuildItem(options, started, targetDir.dist(), enableBundlingWatch.get());
+            return new ReadyForBundlingBuildItem(options, started, targetDir.dist(), shouldWatch);
         } catch (IOException e) {
             liveReload.setContextObject(PrepareForBundlingContext.class, new PrepareForBundlingContext());
             throw new UncheckedIOException(e);

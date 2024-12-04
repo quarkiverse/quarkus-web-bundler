@@ -144,6 +144,9 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
         for (Path srcResourcesDir : this.srcResourcesDirs) {
             final Path absolutePath = srcResourcesDir.resolve(assetPath);
             if (Files.isRegularFile(absolutePath)) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debugf("found source for %s in %s", assetPath, absolutePath);
+                }
                 return absolutePath;
             }
         }
