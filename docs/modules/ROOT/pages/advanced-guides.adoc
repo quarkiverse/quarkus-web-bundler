@@ -16,13 +16,34 @@ There are 2 ways to add static files (fonts, images, music, video, ...) to your 
 [#html-templates]
 == html templates rendering
 
-The Web-Bundler is natively integrated with Qute to render html templates at build-time (this won't affect runtime). This way you may create SPA out of the box.  For this, just provide an `index.html` file (or any other `.html` file) in the `src/main/resources/web` directory.
+The Web-Bundler is natively integrated with https://quarkus.io/guides/qute-reference[Qute Template Engine] to render html templates at build-time (this won't affect runtime). This way you may create SPA out of the box.  For this, just provide an `index.html` file (or any other `.html` file) in the `src/main/resources/web` directory.
 
 Combined with the <<bundle-tag>>, this file will be rendered with the scripts and styles tags to include in your html template. This file will be served as the default index file (e.g. http://localhost:8080/).
 
 NOTE: You can use the Qute `config:` https://quarkus.io/guides/qute-reference#config[namespace], it will be evaluated a build-time (runtime config will be ignored).
 
-IMPORTANT: This rendering option is happening at build time, so you won't be able to access any Qute runtime data in this file. If you want to render data (for example in a server-side rendering app with htmx), you should add the Qute Web extension (or https://quarkiverse.github.io/quarkiverse-docs/quarkus-renarde/dev/[Renarde extension] for MVC with Qute) and use `src/main/resources/templates/` directory instead. The <<bundle-tag>> will also work in this case.
+*Why is the directory different from other Qute app (i.e. `src/main/resources/templates/`)?*
+
+When used in `src/main/resources/web` the rendering is happening at build time (and doesn't require Qute at runtime). It only offers partial support, so you won't be able to access any Qute runtime data in this file. If you want to render data (for example in a server-side rendering app with htmx), you should add the https://github.com/quarkiverse/quarkus-qute-web[Qute Web] extension (or https://quarkiverse.github.io/quarkiverse-docs/quarkus-renarde/dev/[Renarde extension] for MVC with Qute) and use `src/main/resources/templates/` directory instead. The <<bundle-tag>> will also work with Quarkus Qute.
+
+[#web-live-coding]
+== Web Live-Coding
+
+The Web Bundler enable browser live coding for development. This is done through a small injected https://github.com/quarkiverse/quarkus-web-bundler/blob/main/deployment/src/main/resources/web-bundler/live-reload.js[script] (only in dev-mode). This script will listen for changes from the server.
+
+In this mode, script and styles will be watched by esbuild and won't require any restart from Quarkus.
+
+The page will be:
+
+- hot-reloaded (no refresh) when a style is modified (css, scss).
+- refreshed when a js, template or java file is modified.
+
+When web live coding is enabled, to allow it to work properly, minification and bundle hashes are disabled in dev-mode.
+
+NOTE: templates and java change can take a bit longer (1s) to be detected as there is no file-system watch implemented in Quarkus yet.
+
+
+This can be disabled through xref:config-reference.adoc#quarkus-web-bundler_quarkus-web-bundler-browser-live-reload[browser-live-reload config].
 
 == Bundling
 

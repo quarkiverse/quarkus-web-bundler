@@ -13,7 +13,7 @@
   <name>Quarkus Web Bundler - Parent</name>
   <modules>
     <module>common-deployment</module>
-    <module>qute-components</module>    
+    <module>qute-components</module>
     <module>runtime</module>
     <module>deployment</module>
   </modules>
@@ -28,7 +28,7 @@
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <esbuild-java.version>1.5.1</esbuild-java.version>
+    <esbuild-java.version>1.5.2</esbuild-java.version>
     <quarkus.version>3.12.0</quarkus.version>
     <scrimage-core.version>4.1.1</scrimage-core.version>
   </properties>

@@ -30,29 +30,9 @@ For instance, with Maven, add the following dependency to your POM file:
 </dependency>
 ----
 
-== Usage
+Plug the bundle in your index.html template (xref:advanced-guides.adoc#html-templates[More info on this]):
 
-Add your web resources in `src/main/resources/web`:
-
-* `app/&#42;&#42;`: App scripts (js, ts, jsx, tsx, ...), styles (css, scss, sass) and assets (svg, jpg, gif, png, ...), to be *bundled* and served under http://localhost:8080/static/bundle/
-* `static/&#42;&#42;`: Any static file to be *served* without change under http://localhost:8080/static/
-
-Add xref:advanced-guides.adoc#web-dependencies[Web Dependencies] to the pom *and import them* (scripts and styles):
-
-.web/app/script.js
-[source,javascript]
-----
-import $ from 'jquery';
-import 'bootstrap/dist/css/bootstrap.css';
-
-$('.hello').innerText('Hello');
-----
-
-WARNING: If you don't import a Web Dependency, it won't be bundled (dead code elimination).
-
-Install the bundle in your index.html template:
-
-.web/index.html
+.src/main/resources/web/index.html
 [source,html]
 ----
 <html>
@@ -75,6 +55,26 @@ Will compile into something looking like this:
 </html>
 ----
 
-You are all set, enjoy!
+You are all set, enjoy web live coding!
 
 NOTE: By default `{#bundle /}` inserts both script and style tags for `main`, this is xref:advanced-guides.adoc#bundle-tag[configurable].
+
+== Adding Scripts, Styles and Web Dependencies
+
+Add your web resources in `src/main/resources/web`:
+
+* `app/&#42;&#42;`: App scripts (js, ts, jsx, tsx, ...), styles (css, scss, sass) and assets (svg, jpg, gif, png, ...), to be *bundled* and served under http://localhost:8080/static/bundle/
+* `static/&#42;&#42;`: Any static file to be *served* without change under http://localhost:8080/static/
+
+Add xref:advanced-guides.adoc#web-dependencies[Web Dependencies] to the pom *and import them* (scripts and styles):
+
+.web/app/script.js
+[source,javascript]
+----
+import $ from 'jquery';
+import 'bootstrap/dist/css/bootstrap.css';
+
+$('.hello').innerText('Hello');
+----
+
+WARNING: If you don't import a Web Dependency, it won't be bundled (dead code elimination).
