@@ -18,6 +18,11 @@
             <artifactId>quarkus-web-bundler-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.web-bundler</groupId>
+            <artifactId>quarkus-web-bundler-qute-components-deployment</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
     </dependencies>
 
