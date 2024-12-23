@@ -106,7 +106,10 @@ public class DevModeBundlingProcessor {
                 LOGGER.debugf("New bundling event received: %s", r);
                 if (!r.isSuccess()) {
                     bundleExceptionRef.set(r.bundleException());
-                    RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(r.bundleException());
+                    if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() != null) {
+                        RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(r.bundleException());
+                    }
+
                 } else {
                     resetRemoteProblem();
                     bundleExceptionRef.set(null);
