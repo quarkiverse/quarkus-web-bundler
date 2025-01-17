@@ -49,15 +49,15 @@ Will compile into something looking like this:
 <html>
 <head>
       ...
-      <script type="text/javascript" src="/static/main-XKHKUJNQ.js"></script>
-      <link rel="stylesheet" media="screen" href="/static/main-TLNDARM3.css">
+      <script type="text/javascript" src="/static/app-XKHKUJNQ.js"></script>
+      <link rel="stylesheet" media="screen" href="/static/app-TLNDARM3.css">
 </head>
 </html>
 ----
 
 You are all set, enjoy web live coding!
 
-NOTE: By default `{#bundle /}` inserts both script and style tags for `main`, this is xref:advanced-guides.adoc#bundle-tag[configurable].
+NOTE: By default `{#bundle /}` inserts both script and style tags for `app`, this is xref:advanced-guides.adoc#bundle-tag[configurable].
 
 == Adding Scripts, Styles and Web Dependencies
 

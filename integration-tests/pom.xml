@@ -57,7 +57,7 @@
     <dependency>
       <groupId>io.quarkiverse.playwright</groupId>
       <artifactId>quarkus-playwright</artifactId>
-      <version>2.1.3</version>
+      <version>${quarkus-playwright.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

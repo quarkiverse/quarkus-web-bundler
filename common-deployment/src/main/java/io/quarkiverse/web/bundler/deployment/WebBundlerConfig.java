@@ -8,6 +8,8 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import jakarta.validation.constraints.Pattern;
+
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -16,36 +18,84 @@ import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
-import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigMapping(prefix = "quarkus.web-bundler")
 @ConfigRoot(phase = ConfigPhase.BUILD_TIME)
 public interface WebBundlerConfig {
+    String DIR_NAME_PATTERN = "^[a-zA-Z0-9._-]{1,255}$";
+    String DEFAULT_ENTRY_POINT_KEY = "app";
+    String IGNORED_FILES = "glob:**.DS_Store,glob:**Thumbs.db";
+
     /**
      * The directory in the resources which serves as root for the web assets
      */
     @WithDefault("web")
     String webRoot();
 
-    default String fromWebRoot(String dir) {
+    default String prefixWithWebRoot(String dir) {
         return join(webRoot(), dir);
+    }
+
+    /**
+     * The directory in the project root dir which contains web assets (relative to the project root)
+     */
+    @WithDefault("web")
+    Optional<String> projectWebDir();
+
+    /**
+     * Add new ignored files to the default list.
+     * <p>
+     * The ignored files (relative to the web directory).
+     *
+     */
+    Optional<List<String>> ignoredFiles();
+
+    /**
+     * The default ignored files (relative to the web directory) include:
+     * <ul>
+     * <li><code>.DS_Store</code></li>
+     * <li><code>Thumbs.db</code></li>
+     * </ul>
+     *
+     */
+    @WithDefault(IGNORED_FILES)
+    List<String> defaultIgnoredFiles();
+
+    default List<String> getEffectiveIgnoredFiles(List<String> moreIgnoredFiles) {
+        List<String> ignored = new ArrayList<>(defaultIgnoredFiles());
+        ignoredFiles().ifPresent(ignored::addAll);
+        ignored.addAll(moreIgnoredFiles);
+        return ignored;
+    }
+
+    default List<String> getEntryPointIgnoredFiles() {
+        return getEffectiveIgnoredFiles(List.of("glob:**.html"));
+    }
+
+    default List<String> getRootEntryPointIgnoredFiles() {
+        return getEffectiveIgnoredFiles(List.of("glob:templates/**", "glob:public/**", "glob:static/**", "glob:**.html"));
+    }
+
+    default List<String> getEffectiveIgnoredFiles() {
+        return getEffectiveIgnoredFiles(List.of());
     }
 
     /**
      * Bundle entry points config for scripts and styles
      */
-    @ConfigDocDefault("if not overridden, by default, 'app' directory will be bundled with 'main' as entry point key")
+    @ConfigDocDefault("if not overridden, by default, 'app' directory will be bundled.")
     Map<String, EntryPointConfig> bundle();
 
-    /**
-     * Resources located in {quarkus.web-bundler.web-root}/{quarkus.web-bundler.static} will be served by Quarkus.
-     * This directory path is also used as prefix for serving
-     * (e.g. {quarkus.web-bundler.web-root}/static/foo.png will be served on {quarkus.http.root-path}/static/foo.png)
-     */
-    @WithName("static")
-    @WithDefault("static")
-    String staticDir();
+    default Map<String, EntryPointConfig> bundleWithDefault(boolean appDir) {
+        if (!bundle().isEmpty()) {
+            return bundle();
+        }
+        Map<String, EntryPointConfig> conf = new HashMap<>(bundle());
+        conf.put(DEFAULT_ENTRY_POINT_KEY, new ConfiguredEntryPoint(appDir ? DEFAULT_ENTRY_POINT_KEY : "",
+                DEFAULT_ENTRY_POINT_KEY, DEFAULT_ENTRY_POINT_KEY));
+        return conf;
+    }
 
     /**
      * When configured with an internal path (e.g. 'foo/bar'), Bundle files will be served on this path by Quarkus (prefixed by
@@ -167,22 +217,6 @@ public interface WebBundlerConfig {
                     || "yes".equalsIgnoreCase(sourceMap());
         }
 
-        static boolean isEqual(BundlingConfig c1, BundlingConfig c2) {
-
-            if (c1 == c2) {
-                return true;
-            }
-            if (c1 == null || c2 == null) {
-                return false;
-            }
-
-            return Objects.equals(c1.splitting(), c2.splitting())
-                    && LoadersConfig.isEqual(c1.loaders(), c2.loaders())
-                    && Objects.equals(c1.external(), c2.external())
-                    && Objects.equals(c1.envs(), c2.envs())
-                    && Objects.equals(c1.sourceMap(), c2.sourceMap());
-        }
-
     }
 
     interface WebDependenciesConfig {
@@ -198,10 +232,9 @@ public interface WebBundlerConfig {
          * When a runtime scope web dependency is used, the dependency will be present in the target app and served at runtime.
          * When a compile only scope web dependency is used, the dependency will only be used at build time and will not be
          * present in the target app.
-         *
+         * <p>
          * WARNING: Maven compile scope is considered as a runtime scope, use 'provided' for compile only. On Gradle,
          * 'compileOnly' is compile only.
-         *
          */
         @WithDefault("true")
         boolean compileOnly();
@@ -211,20 +244,6 @@ public interface WebBundlerConfig {
          */
         AutoImportConfig autoImport();
 
-        static boolean isEqual(WebDependenciesConfig c1, WebDependenciesConfig c2) {
-
-            if (c1 == c2) {
-                return true;
-            }
-            if (c1 == null || c2 == null) {
-                return false;
-            }
-
-            return Objects.equals(c1.nodeModules(), c2.nodeModules())
-                    && Objects.equals(c1.compileOnly(), c2.compileOnly())
-                    && AutoImportConfig.isEqual(c1.autoImport(), c2.autoImport());
-        }
-
     }
 
     interface AutoImportConfig {
@@ -232,7 +251,7 @@ public interface WebBundlerConfig {
         enum Mode {
             ALL,
             STYLES,
-            NONE;
+            NONE
         }
 
         /**
@@ -240,9 +259,9 @@ public interface WebBundlerConfig {
          * all: auto-import all web dependencies (scripts and styles)
          * styles: auto-import only styles web dependencies (scss, sass, css)
          * none: disable auto-import
-         *
+         * <p>
          * ** Only direct dependencies are auto-imported, not transitive ones.**
-         *
+         * <p>
          * This is using the dependencies package.json (module, main, style, scss, saas fields) to detect the presence of source
          * scripts and styles:
          * - For all libraries enriching your html experience (htmx, hypercript, lazyload, ...), you don't necessarily need a
@@ -258,17 +277,6 @@ public interface WebBundlerConfig {
             return mode() != Mode.NONE;
         }
 
-        static boolean isEqual(AutoImportConfig c1, AutoImportConfig c2) {
-
-            if (c1 == c2) {
-                return true;
-            }
-            if (c1 == null || c2 == null) {
-                return false;
-            }
-
-            return Objects.equals(c1.mode(), c2.mode());
-        }
     }
 
     interface LoadersConfig {
@@ -358,32 +366,6 @@ public interface WebBundlerConfig {
         @WithDefault("json")
         Optional<Set<String>> json();
 
-        static boolean isEqual(LoadersConfig c1, LoadersConfig c2) {
-
-            if (c1 == c2) {
-                return true;
-            }
-            if (c1 == null || c2 == null) {
-                return false;
-            }
-
-            return Objects.equals(c1.js(), c2.js())
-                    && Objects.equals(c1.jsx(), c2.jsx())
-                    && Objects.equals(c1.tsx(), c2.tsx())
-                    && Objects.equals(c1.ts(), c2.ts())
-                    && Objects.equals(c1.css(), c2.css())
-                    && Objects.equals(c1.localCss(), c2.localCss())
-                    && Objects.equals(c1.globalCss(), c2.globalCss())
-                    && Objects.equals(c1.file(), c2.file())
-                    && Objects.equals(c1.copy(), c2.copy())
-                    && Objects.equals(c1.base64(), c2.base64())
-                    && Objects.equals(c1.binary(), c2.binary())
-                    && Objects.equals(c1.dataUrl(), c2.dataUrl())
-                    && Objects.equals(c1.empty(), c2.empty())
-                    && Objects.equals(c1.text(), c2.text())
-                    && Objects.equals(c1.json(), c2.json());
-        }
-
     }
 
     interface EntryPointConfig {
@@ -400,6 +382,7 @@ public interface WebBundlerConfig {
          * The directory for this entry point under the web root.
          */
         @ConfigDocDefault("the bundle map key")
+        @Pattern(regexp = DIR_NAME_PATTERN)
         Optional<String> dir();
 
         /**
@@ -416,52 +399,13 @@ public interface WebBundlerConfig {
         boolean quteTags();
 
         default String effectiveDir(String mapKey) {
-            return dir().filter(not(String::isBlank)).orElse(mapKey);
+            return dir().orElse(mapKey);
         }
 
         default String effectiveKey(String mapKey) {
             return key().filter(not(String::isBlank)).orElse(mapKey);
         }
 
-        static boolean isEqual(EntryPointConfig c1, EntryPointConfig c2) {
-
-            if (c1 == c2) {
-                return true;
-            }
-            if (c1 == null || c2 == null) {
-                return false;
-            }
-
-            return Objects.equals(c1.enabled(), c2.enabled())
-                    && Objects.equals(c1.dir(), c2.dir())
-                    && Objects.equals(c1.key(), c2.key())
-                    && Objects.equals(c1.quteTags(), c2.quteTags());
-        }
-
-    }
-
-    static boolean isEqual(WebBundlerConfig c1, WebBundlerConfig c2) {
-
-        if (c1 == c2) {
-            return true;
-        }
-        if (c1 == null || c2 == null) {
-            return false;
-        }
-
-        for (Map.Entry<String, EntryPointConfig> entry : c1.bundle().entrySet()) {
-            if (!EntryPointConfig.isEqual(entry.getValue(), c2.bundle().get(entry.getKey()))) {
-                return false;
-            }
-        }
-
-        return Objects.equals(c1.webRoot(), c2.webRoot())
-                && Objects.equals(c1.staticDir(), c2.staticDir())
-                && Objects.equals(c1.bundlePath(), c2.bundlePath())
-                && BundlingConfig.isEqual(c1.bundling(), c2.bundling())
-                && WebDependenciesConfig.isEqual(c1.dependencies(), c2.dependencies())
-                && Objects.equals(c1.bundleRedirect(), c2.bundleRedirect())
-                && Objects.equals(c1.charset(), c2.charset());
     }
 
 }

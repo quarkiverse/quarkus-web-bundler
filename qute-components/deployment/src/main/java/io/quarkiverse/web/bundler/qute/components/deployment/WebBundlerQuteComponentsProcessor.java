@@ -1,55 +1,64 @@
 package io.quarkiverse.web.bundler.qute.components.deployment;
 
-import static io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteContextRecorder.WEB_BUNDLER_ID_PREFIX;
-import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
-
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
+import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
-import io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteContextRecorder;
-import io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteEngineObserver;
-import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
-import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
+import io.quarkus.qute.deployment.TemplatePathBuildItem;
 
 class WebBundlerQuteComponentsProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(WebBundlerQuteComponentsProcessor.class);
 
     @BuildStep
-    @Record(STATIC_INIT)
-    void initQuteTags(
-            BuildProducer<AdditionalBeanBuildItem> additionalBeans,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            WebBundlerQuteContextRecorder recorder,
-            Optional<QuteTagsBuildItem> quteTags) {
-        if (quteTags.isEmpty()) {
-            return;
+    QuteTagsBuildItem scan(ProjectResourcesScannerBuildItem scanner,
+            WebBundlerConfig config,
+            BuildProducer<GeneratedResourceBuildItem> generatedResourceProducer,
+            BuildProducer<NativeImageResourceBuildItem> nativeImageResourceProducer,
+            BuildProducer<TemplatePathBuildItem> templatePathProducer)
+            throws IOException {
+
+        LOGGER.debug("Web Bundler scan - Qute Web Components: start");
+        List<ProjectResourcesScannerBuildItem.Scanner> quteTagsAssetsScanners = new ArrayList<>();
+        for (Map.Entry<String, WebBundlerConfig.EntryPointConfig> entryPoint : config.bundleWithDefault(true).entrySet()
+                .stream()
+                .filter(e -> e.getValue().quteTags()).toList()) {
+            final String dir = entryPoint.getValue().effectiveDir(entryPoint.getKey());
+            quteTagsAssetsScanners.add(new ProjectResourcesScannerBuildItem.Scanner(dir,
+                    "glob:**.html", config.getEffectiveIgnoredFiles(), config.charset()));
         }
-        final Map<String, String> templates = new HashMap<>();
-        final List<String> tags = new ArrayList<>();
-        for (WebAsset webAsset : quteTags.get().getWebAssets()) {
-            final String tag = webAsset.resource().path().getFileName().toString();
-            final String tagName = tag.contains(".") ? tag.substring(0, tag.indexOf('.')) : tag;
-            try {
-                templates.put(WEB_BUNDLER_ID_PREFIX + tagName,
-                        Files.readString(webAsset.resource().path(), webAsset.charset()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            tags.add(tagName);
+
+        final List<WebAsset> assets = scanner
+                .scan(quteTagsAssetsScanners);
+        LOGGER.debugf(
+                "Web Bundler scan - Qute Web Components: %d found.", assets.size());
+        for (WebAsset asset : assets) {
+            final String tag = Path.of(asset.webPath()).getFileName().toString();
+            final String templateId = "tags/%s".formatted(tag);
+            final String templateResource = "templates/" + templateId;
+            generatedResourceProducer
+                    .produce(new GeneratedResourceBuildItem(
+                            templateResource,
+                            asset.content()));
+            nativeImageResourceProducer.produce(new NativeImageResourceBuildItem(templateResource));
+            templatePathProducer.produce(TemplatePathBuildItem.builder()
+                    .fullPath(asset.path())
+                    .content(new String(asset.content(), asset.charset()))
+                    .path(templateId)
+                    .extensionInfo("web-bundler")
+                    .build());
         }
-        additionalBeans.produce(new AdditionalBeanBuildItem(WebBundlerQuteEngineObserver.class));
-        syntheticBeans.produce(SyntheticBeanBuildItem.configure(WebBundlerQuteContextRecorder.WebBundlerQuteContext.class)
-                .supplier(recorder.createContext(tags, templates))
-                .done());
+        return new QuteTagsBuildItem(assets);
     }
 
 }

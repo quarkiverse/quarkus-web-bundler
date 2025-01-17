@@ -37,17 +37,17 @@ public class WebBundlerTest {
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("mode:TEST"))
-                .body(Matchers.containsString("<link rel=\"stylesheet\" href=\"" + bundle.style("main") + "\" />"))
-                .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("main") + "\"></script>"));
+                .body(Matchers.containsString("<link rel=\"stylesheet\" href=\"" + bundle.style("app") + "\" />"))
+                .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("app") + "\"></script>"));
 
         RestAssured.given()
                 .basePath("")
-                .get(bundle.style("main"))
+                .get(bundle.style("app"))
                 .then()
                 .statusCode(200);
         RestAssured.given()
                 .basePath("")
-                .get(bundle.script("main"))
+                .get(bundle.script("app"))
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("hello world in TEST mode"));
@@ -61,9 +61,9 @@ public class WebBundlerTest {
 
     @Test
     void testSourceMap() {
-        final String jsMap = bundle.resolve("main.js.map");
+        final String jsMap = bundle.resolve("app.js.map");
         Assertions.assertNotNull(jsMap);
-        final String cssMap = bundle.resolve("main.css.map");
+        final String cssMap = bundle.resolve("app.css.map");
         Assertions.assertNotNull(cssMap);
         RestAssured.given()
                 .basePath("")

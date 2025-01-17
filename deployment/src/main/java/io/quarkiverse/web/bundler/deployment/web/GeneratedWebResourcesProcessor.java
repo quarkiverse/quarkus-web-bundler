@@ -2,12 +2,14 @@ package io.quarkiverse.web.bundler.deployment.web;
 
 import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 
+import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
+import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.util.PathUtils;
@@ -16,12 +18,8 @@ import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
-import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
-import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
-import io.quarkus.vertx.http.deployment.devmode.NotFoundPageDisplayableEndpointBuildItem;
 import io.quarkus.vertx.http.deployment.spi.GeneratedStaticResourceBuildItem;
 
 public class GeneratedWebResourcesProcessor {
@@ -30,23 +28,21 @@ public class GeneratedWebResourcesProcessor {
 
     @BuildStep
     public void processStaticFiles(
-            BuildProducer<NotFoundPageDisplayableEndpointBuildItem> notFoundPageProducer,
             List<GeneratedWebResourceBuildItem> staticResources,
-            BuildProducer<GeneratedResourceBuildItem> prodResourcesProducer,
-            BuildProducer<NativeImageResourceBuildItem> nativeImageResourcesProducer,
-            BuildProducer<GeneratedStaticResourceBuildItem> generatedStaticResourceProducer,
-            LaunchModeBuildItem launchModeBuildItem) {
+            BuildProducer<GeneratedStaticResourceBuildItem> generatedStaticResourceProducer) {
         if (staticResources.isEmpty()) {
             return;
         }
 
         for (GeneratedWebResourceBuildItem staticResource : staticResources) {
-            if (staticResource.resource().isFile()) {
-                generatedStaticResourceProducer.produce(
-                        new GeneratedStaticResourceBuildItem(staticResource.publicPath(), staticResource.resource().path()));
+            if (staticResource.path() != null) {
+                if (Files.isRegularFile(staticResource.path())) {
+                    generatedStaticResourceProducer.produce(
+                            new GeneratedStaticResourceBuildItem(staticResource.publicPath(), staticResource.path()));
+                }
             } else {
                 generatedStaticResourceProducer.produce(
-                        new GeneratedStaticResourceBuildItem(staticResource.publicPath(), staticResource.resource().content()));
+                        new GeneratedStaticResourceBuildItem(staticResource.publicPath(), staticResource.content()));
             }
         }
     }
@@ -55,6 +51,7 @@ public class GeneratedWebResourcesProcessor {
     @Record(RUNTIME_INIT)
     public void initChangeEventHandler(
             WebBundlerConfig config,
+            ProjectResourcesScannerBuildItem scanner,
             WebBundlerTargetDirBuildItem targetDir,
             WebBundlerResourceRecorder recorder,
             ReadyForBundlingBuildItem readyForBundling,
@@ -65,6 +62,7 @@ public class GeneratedWebResourcesProcessor {
             routes.produce(RouteBuildItem.builder().route(WEB_BUNDLER_LIVE_RELOAD_PATH)
                     .handler(recorder.createChangeEventHandler(targetDir.dist().toAbsolutePath().toString(),
                             config.webRoot(),
+                            scanner.webDirs(),
                             staticResources.stream()
                                     .map(GeneratedWebResourceBuildItem::publicPath)
                                     .collect(Collectors.toSet()),

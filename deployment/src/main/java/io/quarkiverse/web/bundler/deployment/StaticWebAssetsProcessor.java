@@ -1,5 +1,6 @@
 package io.quarkiverse.web.bundler.deployment;
 
+import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.SYMLINK_AVAILABLE;
 import static io.quarkiverse.web.bundler.deployment.PrepareForBundlingProcessor.createSymbolicLinkOrFallback;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 
@@ -8,7 +9,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import io.quarkiverse.web.bundler.deployment.items.StaticAssetsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.PublicAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
@@ -22,66 +23,40 @@ import io.quarkus.runtime.LaunchMode;
 public class StaticWebAssetsProcessor {
 
     @BuildStep
-    void processStaticWebAssets(WebBundlerConfig config,
+    void processPublicWebAssets(WebBundlerConfig config,
             WebBundlerTargetDirBuildItem targetDir,
-            StaticAssetsBuildItem staticAssets,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFileBuildItemProducer,
+            PublicAssetsBuildItem staticAssets,
+            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             LaunchModeBuildItem launchMode,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer) {
         final boolean browserLiveReload = launchMode.getLaunchMode().equals(LaunchMode.DEVELOPMENT)
                 && config.browserLiveReload();
         for (WebAsset webAsset : staticAssets.getWebAssets()) {
-            final String publicPath = webAsset.pathFromWebRoot(config.webRoot());
+            final String publicPath = webAsset.webPath().replace("public/", "");
             final Path targetPath = targetDir.dist().resolve(publicPath);
             try {
-                if (!webAsset.isFile()) {
-                    makeWebAssetPublic(staticResourceProducer, prefixWithSlash(publicPath), webAsset, SourceType.STATIC_ASSET);
-                } else {
-                    if (browserLiveReload) {
+                if (webAsset.type() != WebAsset.Type.RESOURCE) {
+                    if (browserLiveReload && SYMLINK_AVAILABLE.get()) {
                         Files.createDirectories(targetPath.getParent());
-                        createSymbolicLinkOrFallback(watchedFileBuildItemProducer, webAsset, targetPath);
-                        makePublic(staticResourceProducer, prefixWithSlash(publicPath), targetPath, SourceType.STATIC_ASSET);
+                        createSymbolicLinkOrFallback(watchedFiles, webAsset, targetPath);
+                        staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(
+                                prefixWithSlash(publicPath),
+                                webAsset.content(), SourceType.STATIC_ASSET));
                     } else {
                         // We can read the file
-                        handleStaticResource(staticResourceProducer, prefixWithSlash(publicPath),
-                                new WebAsset.Resource(webAsset.resource().contentOrReadFromFile()), SourceType.STATIC_ASSET);
+                        staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(
+                                prefixWithSlash(publicPath),
+                                webAsset.content(), SourceType.STATIC_ASSET));
                     }
-
+                } else {
+                    staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(
+                            prefixWithSlash(publicPath),
+                            webAsset.content(), SourceType.STATIC_ASSET));
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         }
-    }
-
-    static void makeWebAssetPublic(
-            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
-            String publicPath,
-            WebAsset webAsset,
-            SourceType sourceType) {
-        handleStaticResource(
-                staticResourceProducer,
-                publicPath,
-                webAsset.resource(),
-                sourceType);
-    }
-
-    static void makePublic(BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, String publicPath,
-            Path path, SourceType sourceType) {
-        if (!Files.exists(path)) {
-            return;
-        }
-        handleStaticResource(staticResourceProducer, publicPath, new WebAsset.Resource(path), sourceType);
-    }
-
-    private static void handleStaticResource(
-            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
-            String publicPath,
-            WebAsset.Resource resource,
-            SourceType sourceType) {
-        staticResourceProducer.produce(new GeneratedWebResourceBuildItem(
-                publicPath,
-                resource, sourceType));
     }
 
 }

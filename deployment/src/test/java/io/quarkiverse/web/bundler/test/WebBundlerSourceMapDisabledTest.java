@@ -30,7 +30,7 @@ public class WebBundlerSourceMapDisabledTest {
 
     @Test
     public void test() {
-        Assertions.assertNull(bundle.resolve("main.js.map"));
-        Assertions.assertNull(bundle.resolve("main.css.map"));
+        Assertions.assertNull(bundle.resolve("app.js.map"));
+        Assertions.assertNull(bundle.resolve("app.css.map"));
     }
 }

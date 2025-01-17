@@ -13,13 +13,21 @@ public final class ReadyForBundlingBuildItem extends SimpleBuildItem {
 
     private final Path distDir;
 
-    private final boolean disableBundlingWatch;
+    private final boolean fixedNames;
 
-    public ReadyForBundlingBuildItem(BundleOptions bundleOptions, Long started, Path distDir, boolean disableBundlingWatch) {
+    private final boolean useEsbuildWatch;
+
+    public ReadyForBundlingBuildItem(BundleOptions bundleOptions, Long started, Path distDir, boolean fixedNames,
+            boolean useEsbuildWatch) {
         this.bundleOptions = bundleOptions;
         this.started = started;
         this.distDir = distDir;
-        this.disableBundlingWatch = disableBundlingWatch;
+        this.fixedNames = fixedNames;
+        this.useEsbuildWatch = useEsbuildWatch;
+    }
+
+    public boolean fixedNames() {
+        return fixedNames;
     }
 
     public Long started() {
@@ -34,7 +42,7 @@ public final class ReadyForBundlingBuildItem extends SimpleBuildItem {
         return distDir;
     }
 
-    public boolean enabledBundlingWatch() {
-        return disableBundlingWatch;
+    public boolean useEsbuildWatch() {
+        return useEsbuildWatch;
     }
 }
