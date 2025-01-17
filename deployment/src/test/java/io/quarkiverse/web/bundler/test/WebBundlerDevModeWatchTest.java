@@ -36,22 +36,22 @@ public class WebBundlerDevModeWatchTest {
                 .statusCode(200)
                 .body(Matchers.containsString("Hello Qute Static! Modified!"));
         RestAssured.given()
-                .get("/foo/bar/static/bundle/main.js")
+                .get("/foo/bar/static/bundle/app.js")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("console.log(\"Hello World!\");"));
-        test.modifyResourceFile("web/app/app.js", s -> s.replace("Hello World!", "Hello World! Modified!"));
+        test.modifyResourceFile("web/app.js", s -> s.replace("Hello World!", "Hello World! Modified!"));
         Thread.sleep(500);
         RestAssured.given()
-                .get("/foo/bar/static/bundle/main.js")
+                .get("/foo/bar/static/bundle/app.js")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("console.log(\"Hello World! Modified!\");"));
-        test.modifyResourceFile("web/app/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: #123456;"));
-        test.modifyResourceFile("web/app/other.scss", s -> s.replace("color: #AAAAAA;", "color: #567890;"));
+        test.modifyResourceFile("web/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: #123456;"));
+        test.modifyResourceFile("web/other.scss", s -> s.replace("color: #AAAAAA;", "color: #567890;"));
         Thread.sleep(500);
         RestAssured.given()
-                .get("/foo/bar/static/bundle/main.css")
+                .get("/foo/bar/static/bundle/app.css")
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("background-color: #123456;"))

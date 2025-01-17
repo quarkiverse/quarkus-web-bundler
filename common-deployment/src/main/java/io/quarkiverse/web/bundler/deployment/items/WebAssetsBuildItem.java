@@ -6,7 +6,7 @@ import java.util.List;
 
 import io.quarkus.builder.item.SimpleBuildItem;
 
-public class WebAssetsBuildItem extends SimpleBuildItem {
+public abstract class WebAssetsBuildItem extends SimpleBuildItem {
 
     private final List<WebAsset> webAssets;
 

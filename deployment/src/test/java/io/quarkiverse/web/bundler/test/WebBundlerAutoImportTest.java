@@ -36,10 +36,10 @@ public class WebBundlerAutoImportTest {
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("mode:TEST"))
-                .body(Matchers.containsString("<!-- no style found for key 'main' in Bundler mapping !-->"))
-                .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("main") + "\"></script>"));
+                .body(Matchers.containsString("<!-- no style found for key 'app' in Bundler mapping !-->"))
+                .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("app") + "\"></script>"));
         RestAssured.given()
-                .get(bundle.script("main"))
+                .get(bundle.script("app"))
                 .then()
                 .statusCode(200);
         RestAssured.given()

@@ -21,16 +21,16 @@ public class BundleTest {
 
         Assertions.assertThat(bundle.mapping().names())
                 .containsExactlyInAnyOrder(
-                        "main.css.map",
+                        "app.css.map",
                         "chunk.js",
-                        "main.css",
+                        "app.css",
                         "page-1.js",
                         "page-1.js.map",
                         "page-1.css",
                         "chunk.js.map",
                         "page-1.css.map",
-                        "main.js.map",
-                        "main.js");
+                        "app.js.map",
+                        "app.js");
 
         for (String name : bundle.mapping().names()) {
             RestAssured.given()

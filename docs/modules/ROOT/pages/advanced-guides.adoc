@@ -150,10 +150,10 @@ To enable server-side components, add this in the `application.properties`:
 [source,properties]
 ----
 quarkus.web-bundler.bundle.components=true
-quarkus.web-bundler.bundle.components.key=main // <1>
+quarkus.web-bundler.bundle.components.key=app // <1>
 quarkus.web-bundler.bundle.components.qute-tags=true // <2>
 ----
-<1> use `main` to have a single merged bundle with the `app` (or remove this line to use `qute-components` as default)
+<1> use `app` to have a single merged bundle with the `app` (or remove this line to use `components` as default)
 <2> activate qute-tags support (default is `false`)
 
 Here is a nice convention to define your components: `src/main/resources/web/components/[name]/[name].{html,css,scss,js,ts,...};`. The scripts, styles and assets will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
@@ -262,7 +262,7 @@ quarkus.web-bundler.browser-live-reload=false
 
 When browser-live-reload is enabled:
 
-- bundle files will be fixed (no hashes, i.e. `main.js`)
+- bundle files will be fixed (no hashes, i.e. `app.js`)
 - minification is disabled
 
 
@@ -324,7 +324,7 @@ After the bundling is done, the bundle files will be served by Quarkus under `{q
 
 This may also be configured with an external URL (e.g. 'https://my.cdn.org/'), in which case, Bundle files will NOT be served by Quarkus and all resolved paths in the bundle and mapping will automatically point to this url (a CDN for example).
 
-In production, it is a good practise to have a hash inserted in the scripts and styles file names (E.g.: `main-XKHKUJNQ.js`) to differentiate builds (make them static). This way they can be cached without a risk of missing the most recent builds. This option is enabled by default in production.
+In production, it is a good practise to have a hash inserted in the scripts and styles file names (E.g.: `app-XKHKUJNQ.js`) to differentiate builds (make them static). This way they can be cached without a risk of missing the most recent builds. This option is enabled by default in production.
 
 To make it easy there are several ways to resolve the bundle files public paths from the templates and the code.
 
@@ -337,8 +337,8 @@ From any Qute template you can use the `{#bundle /}` tag to help insert the bund
 ----
 {#bundle /}
 Output:
-<script type="text/javascript" src="/static/bundle/main-[hash].js"></script>
-<link rel="stylesheet" media="screen" href="/static/bundle/main-[hash].css">
+<script type="text/javascript" src="/static/bundle/app-[hash].js"></script>
+<link rel="stylesheet" media="screen" href="/static/bundle/app-[hash].css">
 
 {#bundle key="components"/}
 Output:
@@ -347,17 +347,52 @@ Output:
 
 {#bundle tag="script"/}
 Output:
-<script type="text/javascript" src="/static/bundle/main-[hash].js"></script>
+<script type="text/javascript" src="/static/bundle/app-[hash].js"></script>
 
 {#bundle tag="style"/}
 Output:
-<link rel="stylesheet" media="screen" href="/static/bundle/main-[hash].css">
+<link rel="stylesheet" media="screen" href="/static/bundle/app-[hash].css">
 
 {#bundle key="components" tag="script"/}
 Output:
 <script type="text/javascript" src="/static/bundle/components-[hash].js"></script>
 
 ----
+
+=== Bundle Import Map
+
+The `{#bundleImportMap /}` tag generates an import map that allows you to import modules directly from your bundled application within HTML `<script type="module">` blocks.
+
+When used together with `{#bundle /}`, the `{#bundleImportMap /}` tag automatically creates an import map linking your bundle exports (e.g. 'app' -> `/static/bundle/app-3HNF28.js`) to the correct bundled file path which is changing on every build with a different hash.
+This makes it possible to use ES module imports in HTML.
+
+==== Example
+
+.web/app.js
+[source,javascript]
+----
+export const name = "import!";
+----
+
+.index.html
+[source,html]
+----
+<html>
+<head>
+
+{#bundle /}
+{#bundleImportMap /}
+
+<script type="module">
+  import { name } from 'app';
+  alert(`Hello ${name}`);
+</script>
+
+</head>
+</html>
+
+----
+
 
 === Inject `Bundle` bean
 
@@ -370,14 +405,14 @@ Bundle bundle;
 
 ...
 
-System.out.println(bundle.script("main"));
-System.out.println(bundle.style("main"));
+System.out.println(bundle.script("app"));
+System.out.println(bundle.style("app"));
 ----
 
 
 or in a Qute template:
 [source,html]
 ----
-{inject:bundle.script("main")}
-{inject:bundle.style("main")}
+{inject:bundle.script("app")}
+{inject:bundle.style("app")}
 ----

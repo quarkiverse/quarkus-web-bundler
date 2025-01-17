@@ -1,7 +1,7 @@
 /
-app/
-app/app.js
-app/app.scss
-static/
-static/logo.svg
+app.js
+app.scss
+public/
+public/static/
+public/static/logo.svg
 web-bundler.html

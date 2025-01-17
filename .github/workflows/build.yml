@@ -52,6 +52,9 @@ jobs:
           java-version: 17
           cache: 'maven'
 
+      - name: Ensure browsers are installed
+        run: mvn -P playwright-cli exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium --with-deps"
+
       - name: Build with Maven
         run: mvn -B clean install -Dno-format
 

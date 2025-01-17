@@ -29,10 +29,10 @@ public class WebBundlerEmptyTest {
                 .get("/")
                 .then()
                 .statusCode(200)
-                .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("main") + "\"></script>"));
+                .body(Matchers.containsString(" <script type=\"module\" src=\"" + bundle.script("app") + "\"></script>"));
         RestAssured.given()
                 .basePath("")
-                .get(bundle.script("main"))
+                .get(bundle.script("app"))
                 .then()
                 .statusCode(200);
     }

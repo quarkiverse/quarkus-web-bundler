@@ -4,6 +4,7 @@ import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Set;
@@ -55,7 +56,8 @@ public class DevModeBundlingProcessor {
         Watch watch = DevModeBundlingProcessor.watchRef.get();
         if (readyForBundling.started() == null) {
             // no changes
-            boolean isRestartWatchNeeded = readyForBundling.enabledBundlingWatch() && (watch == null || !watch.isAlive());
+            boolean isRestartWatchNeeded = readyForBundling.useEsbuildWatch() && (watch == null || !watch.isAlive())
+                    && !Files.isDirectory(bundlesBuildContext.bundleDistDir());
             if (!isRestartWatchNeeded) {
                 if (watch != null && watch.isAlive()) {
                     devServices.produce(devService.toBuildItem());
@@ -65,8 +67,9 @@ public class DevModeBundlingProcessor {
                 liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
                 handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer,
                         bundlesBuildContext.bundleDistDir(),
+                        readyForBundling.fixedNames(),
                         readyForBundling.started());
-                processGeneratedEntryPoints(config, readyForBundling.bundleOptions().workDir(),
+                processGeneratedEntryPoints(readyForBundling.bundleOptions().workDir(),
                         generatedEntryPointProducer);
                 return;
             }
@@ -76,8 +79,8 @@ public class DevModeBundlingProcessor {
             shutdownDevService();
         }
 
-        if (!readyForBundling.enabledBundlingWatch()) {
-            // We use normal bundling when watch is not enabled
+        if (!readyForBundling.useEsbuildWatch()) {
+            // We use normal bundling when esbuild watch is disabled
             final BundleResult bundleResult = bundleAndProcess(config, readyForBundling, staticResourceProducer,
                     generatedBundleProducer,
                     generatedEntryPointProducer);
@@ -130,8 +133,8 @@ public class DevModeBundlingProcessor {
                     watch.dist());
             liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, watch.dist(),
-                    readyForBundling.started());
-            processGeneratedEntryPoints(config, readyForBundling.bundleOptions().workDir(), generatedEntryPointProducer);
+                    readyForBundling.fixedNames(), readyForBundling.started());
+            processGeneratedEntryPoints(readyForBundling.bundleOptions().workDir(), generatedEntryPointProducer);
 
         } catch (IOException e) {
             shutdownDevService();
@@ -156,7 +159,7 @@ public class DevModeBundlingProcessor {
     }
 
     private void shutdownDevService() {
-        LOGGER.debug("Web Bundler: shutdownDevService");
+        LOGGER.debug("Web Bundler: shutdown Esbuild watch");
         try {
             if (devService != null) {
                 devService.close();

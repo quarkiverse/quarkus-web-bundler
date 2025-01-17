@@ -5,6 +5,8 @@ import java.util.Set;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
+import io.vertx.core.json.JsonObject;
+
 @Named("bundle")
 public class Bundle {
 
@@ -23,6 +25,19 @@ public class Bundle {
 
     public Mapping mapping() {
         return mapping;
+    }
+
+    public String importMap() {
+        final JsonObject imports = new JsonObject();
+
+        for (String name : mapping.names()) {
+            if (name.endsWith(".js") && !name.contains("chunk")) {
+                imports.put(name, mapping.get(name));
+                imports.put(name.replace(".js", ""), mapping.get(name));
+            }
+        }
+
+        return new JsonObject().put("imports", imports).toString();
     }
 
     /**

@@ -35,13 +35,15 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
     private final List<Connection> connections = new CopyOnWriteArrayList<>();
     private final ClassLoader cl;
     private final Path directory;
+    private final List<String> localDirs;
     private final Runnable unRegisterChangeListener;
 
     public ChangeEventHandler(Function<Consumer<Set<String>>, Runnable> registerHandler, String directory,
-            String webRoot, Set<String> webResources, ShutdownContext shutdownContext) {
+            String webRoot, List<String> localDirs, ShutdownContext shutdownContext, Set<String> webResources) {
         this.directory = Path.of(directory);
         this.webRoot = webRoot;
         this.lastModifiedMap = initLastModifiedMap(webResources);
+        this.localDirs = localDirs;
         this.cl = Thread.currentThread().getContextClassLoader();
         this.unRegisterChangeListener = registerHandler.apply(this::onChange);
         shutdownContext.addShutdownTask(this::onShutdown);
@@ -87,6 +89,7 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
     private void onChange(Set<String> srcChanges) {
         final boolean isBundlingError = srcChanges.contains("web-bundler/build-error");
         final boolean isWebChange = isBundlingError
+                || localDirs.stream().anyMatch(l -> srcChanges.stream().anyMatch(s -> s.startsWith(l)))
                 || srcChanges.contains("web-bundler/build-success")
                 || srcChanges.stream().anyMatch(s -> s.startsWith(webRoot));
         if (!isWebChange) {

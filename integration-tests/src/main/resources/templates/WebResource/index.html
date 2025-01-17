@@ -1,28 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>QWA</title>
-    {#bundle key="chunk"/}
-    {#bundle tag="style" /}
+  <title>QWA</title>
+  {#bundle key="chunk"/}
+  {#bundle tag="style" /}
+
+  {#bundle tag="script"/}
+  {#bundleImportMap /}
+
+  <script type="module">
+    import { hello } from 'app';
+
+    console.log(hello);
+  </script>
 </head>
 <body>
 
 
 <div class="container-sm">
-    <h1>Hello QWA</h1>
-    <p id="message">Wait for it...</p>
-    <div class="slick-carousel">
-        <div><img src="https://picsum.photos/300/200?random=1"></div>
-        <div><img src="https://picsum.photos/300/200?random=2"></div>
-        <div><img src="https://picsum.photos/300/200?random=3"></div>
-        <div><img src="https://picsum.photos/300/200?random=4"></div>
-        <div><img src="https://picsum.photos/300/200?random=5"></div>
-        <div><img src="https://picsum.photos/300/200?random=6"></div>
-    </div>
+  <h1>Hello QWA</h1>
+  <p id="message">Wait for it...</p>
+  <div class="slick-carousel">
+    <div><img src="https://picsum.photos/300/200?random=1"></div>
+    <div><img src="https://picsum.photos/300/200?random=2"></div>
+    <div><img src="https://picsum.photos/300/200?random=3"></div>
+    <div><img src="https://picsum.photos/300/200?random=4"></div>
+    <div><img src="https://picsum.photos/300/200?random=5"></div>
+    <div><img src="https://picsum.photos/300/200?random=6"></div>
+  </div>
 
-    {#calendar /}
+  {#calendar /}
 
-  {#bundle tag="script"/}
 </div>
 </body>
 </html>
