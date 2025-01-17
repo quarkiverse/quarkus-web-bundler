@@ -1,5 +1,6 @@
 package io.quarkiverse.web.bundler.deployment.devui;
 
+import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.GENERATED_ENTRY_POINT;
 import static io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourcesProcessor.resolveFromRootPath;
 
 import java.util.ArrayList;
@@ -48,13 +49,13 @@ public class WebBundlerDevUIProcessor {
         final Map<String, EntryPointItem> generatedEntryPointsMap = generatedEntryPoints.stream()
                 .collect(
                         Collectors.toMap(GeneratedEntryPointBuildItem::key,
-                                e -> new EntryPointItem(e.webAsset().pathFromWebRoot(config.webRoot()),
-                                        e.webAsset().type().label()),
+                                e -> new EntryPointItem(e.publicPath(),
+                                        GENERATED_ENTRY_POINT.label()),
                                 (a, b) -> b));
 
         if (!entryPoints.isEmpty()) {
             final List<EntryPoint> entryPointsForDevUI = entryPoints.stream()
-                    .map(e -> new EntryPoint(e.getEntryPointKey(), getEntryPointItems(config, generatedEntryPointsMap, e)))
+                    .map(e -> new EntryPoint(e.key(), getEntryPointItems(generatedEntryPointsMap, e)))
                     .toList();
 
             cardPageBuildItem.addBuildTimeData("entryPoints",
@@ -85,15 +86,15 @@ public class WebBundlerDevUIProcessor {
         cardPageProducer.produce(cardPageBuildItem);
     }
 
-    private static List<EntryPointItem> getEntryPointItems(WebBundlerConfig config,
-            Map<String, EntryPointItem> generatedEntryPoints, EntryPointBuildItem e) {
+    private static List<EntryPointItem> getEntryPointItems(Map<String, EntryPointItem> generatedEntryPoints,
+            EntryPointBuildItem e) {
         final List<EntryPointItem> list = new ArrayList<>();
-        if (generatedEntryPoints.containsKey(e.getEntryPointKey())) {
-            list.add(generatedEntryPoints.get(e.getEntryPointKey()));
+        if (generatedEntryPoints.containsKey(e.key())) {
+            list.add(generatedEntryPoints.get(e.key()));
         }
-        list.addAll(e.getWebAssets().stream()
+        list.addAll(e.assets().stream()
                 .map(a -> new EntryPointItem(
-                        a.webAsset().pathFromWebRoot(config.webRoot()),
+                        a.relativePath(),
                         a.type().label()))
                 .toList());
         return list;

@@ -1,5 +1,6 @@
 package io.quarkiverse.web.bundler.runtime;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -14,25 +15,19 @@ import io.vertx.ext.web.RoutingContext;
 public class WebBundlerResourceRecorder {
 
     private static volatile Function<Consumer<Set<String>>, Runnable> hotDeploymentEventHandlerRegister;
-    private static volatile Runnable startWatchScheduler;
 
     public Handler<RoutingContext> createChangeEventHandler(final String webResourcesDirectory,
             String webRoot,
+            List<String> localDirs,
             final Set<String> webResources,
             ShutdownContext shutdownContext) {
-        startWatchScheduler.run();
         return new ChangeEventHandler(hotDeploymentEventHandlerRegister, webResourcesDirectory, webRoot,
-                webResources,
-                shutdownContext);
+                localDirs, shutdownContext, webResources);
     }
 
     public static void setHotDeploymentEventHandlerRegister(
             Function<Consumer<Set<String>>, Runnable> hotDeploymentEventHandlerRegister) {
         WebBundlerResourceRecorder.hotDeploymentEventHandlerRegister = hotDeploymentEventHandlerRegister;
-    }
-
-    public static void setStartWatchScheduler(Runnable startWatchScheduler) {
-        WebBundlerResourceRecorder.startWatchScheduler = startWatchScheduler;
     }
 
 }
