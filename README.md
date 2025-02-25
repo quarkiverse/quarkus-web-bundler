@@ -30,11 +30,11 @@ Create full-stack web apps and components with this Quarkus extension. It offers
 Use `@QuarkusTest` with [Quarkus Playwright](https://docs.quarkiverse.io/quarkus-playwright/dev/).
 It is very easy to create full-stack tests to cover all your scenarios (and re-using all the backend testing data).
 
-**Can I swith from Quinoa to the Web Bundler?**
+**Can I switch from Quinoa to the Web Bundler?**
 
 Yes, just move your web-dependencies to the pom.xml/build.gradle and follow the web-bundler structure, the output app should be the same.
 
-**Can I swith from the Web Bundler to Quinoa?**
+**Can I switch from the Web Bundler to Quinoa?**
 
 Yes, you just need to use a framework (like Vite) and switch to a package.json and follow your framework structure, the output app should be the same.
 
