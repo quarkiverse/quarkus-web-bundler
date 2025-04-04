@@ -41,7 +41,7 @@
       <groupId>org.mvnpm</groupId>
       <artifactId>bootstrap</artifactId>
       <scope>provided</scope>
-      <version>5.3.3</version>
+      <version>5.3.4</version>
     </dependency>
     <dependency>
       <groupId>org.mvnpm.at.hotwired</groupId>
