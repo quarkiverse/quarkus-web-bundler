@@ -23,7 +23,6 @@ import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
 import io.quarkus.vertx.http.deployment.devmode.NotFoundPageDisplayableEndpointBuildItem;
 import io.quarkus.vertx.http.deployment.spi.GeneratedStaticResourceBuildItem;
-import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
 
 public class GeneratedWebResourcesProcessor {
     private static final Logger LOGGER = Logger.getLogger(GeneratedWebResourcesProcessor.class);
@@ -74,7 +73,7 @@ public class GeneratedWebResourcesProcessor {
         }
     }
 
-    public static String resolveFromRootPath(HttpBuildTimeConfig httpConfig, String path) {
-        return PathUtils.join(httpConfig.rootPath, path);
+    public static String resolveFromRootPath(String rootPath, String path) {
+        return PathUtils.join(rootPath, path);
     }
 }

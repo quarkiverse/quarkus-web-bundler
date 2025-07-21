@@ -9,20 +9,22 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
-import io.quarkiverse.web.bundler.deployment.items.*;
+import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.GeneratedEntryPointBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
-import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
+import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 
 public class WebBundlerDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     public void createPages(WebBundlerConfig config,
-            HttpBuildTimeConfig httpConfig,
+            HttpRootPathBuildItem httpRootPath,
             BuildProducer<CardPageBuildItem> cardPageProducer,
             List<EntryPointBuildItem> entryPoints,
             List<GeneratedEntryPointBuildItem> generatedEntryPoints,
@@ -69,7 +71,7 @@ public class WebBundlerDevUIProcessor {
         if (!generatedWebResources.isEmpty()) {
             final List<WebAsset> assets = generatedWebResources.stream()
                     .sorted(Comparator.comparing(w -> w.type().order()))
-                    .map(w -> new WebAsset(resolveFromRootPath(httpConfig, w.publicPath()), w.type().label()))
+                    .map(w -> new WebAsset(resolveFromRootPath(httpRootPath.getRootPath(), w.publicPath()), w.type().label()))
                     .toList();
 
             cardPageBuildItem.addBuildTimeData("staticAssets", assets);

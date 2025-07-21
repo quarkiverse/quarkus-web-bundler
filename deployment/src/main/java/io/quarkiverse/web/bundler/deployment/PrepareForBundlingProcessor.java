@@ -11,17 +11,37 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.*;
+import java.nio.file.FileSystemException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
-import io.mvnpm.esbuild.model.*;
+import io.mvnpm.esbuild.model.AutoEntryPoint;
+import io.mvnpm.esbuild.model.BundleOptions;
+import io.mvnpm.esbuild.model.BundleOptionsBuilder;
+import io.mvnpm.esbuild.model.EsBuildConfig;
+import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
-import io.quarkiverse.web.bundler.deployment.items.*;
+import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
+import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebAsset;
+import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
 import io.quarkiverse.web.bundler.deployment.util.PathUtils;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -33,7 +53,7 @@ import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
-import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
+import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 
 public class PrepareForBundlingProcessor {
 
@@ -92,7 +112,7 @@ public class PrepareForBundlingProcessor {
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
-            HttpBuildTimeConfig httpBuildTimeConfig,
+            HttpRootPathBuildItem httpRootPath,
             OutputTargetBuildItem outputTarget) {
         if (entryPoints.isEmpty()) {
             if (!config.dependencies().autoImport().isEnabled()) {
@@ -164,7 +184,7 @@ public class PrepareForBundlingProcessor {
                         .preserveSymlinks()
                         .minify(false)
                         .define("process.env.LIVE_RELOAD_PATH",
-                                "'" + PathUtils.join(httpBuildTimeConfig.rootPath, WEB_BUNDLER_LIVE_RELOAD_PATH)
+                                "'" + PathUtils.join(httpRootPath.getRootPath(), WEB_BUNDLER_LIVE_RELOAD_PATH)
                                         + "'")
                         .fixedEntryNames();
             }
