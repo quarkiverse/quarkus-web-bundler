@@ -10,7 +10,12 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,7 +30,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.ResolvedDependency;
-import io.quarkus.vertx.http.runtime.HttpBuildTimeConfig;
+import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 
 public class WebBundlerDevUIWebDependenciesProcessor {
 
@@ -37,7 +42,7 @@ public class WebBundlerDevUIWebDependenciesProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     public DevUIWebDependenciesBuildItem findWebDependenciesAssets(
-            HttpBuildTimeConfig httpConfig,
+            HttpRootPathBuildItem httpRootPath,
             LiveReloadBuildItem liveReload,
             WebDependenciesBuildItem webDependencies) {
         final DevUIWebDependenciesContext webDependenciesContext = liveReload
@@ -61,7 +66,7 @@ public class WebBundlerDevUIWebDependenciesProcessor {
 
             final List<DevUIWebDependency> webJarDeps = new ArrayList<>(webDependencies.list().size());
             for (WebDependenciesBuildItem.Dependency dependency : webDependencies.list()) {
-                final DevUIWebDependency dep = getDep(httpConfig, providersByKeys, dependency);
+                final DevUIWebDependency dep = getDep(httpRootPath.getRootPath(), providersByKeys, dependency);
                 if (dep != null) {
                     webJarDeps.add(dep);
                 }
@@ -74,10 +79,10 @@ public class WebBundlerDevUIWebDependenciesProcessor {
         return new DevUIWebDependenciesBuildItem(List.of());
     }
 
-    private DevUIWebDependency getDep(HttpBuildTimeConfig httpConfig, Map<ArtifactKey, ClassPathElement> providersByKeys,
+    private DevUIWebDependency getDep(String rootPath, Map<ArtifactKey, ClassPathElement> providersByKeys,
             WebDependenciesBuildItem.Dependency webDependency) {
         String path = getTypePath(webDependency);
-        final String webDependencyRootPath = PathUtils.addTrailingSlash(resolveFromRootPath(httpConfig, path));
+        final String webDependencyRootPath = PathUtils.addTrailingSlash(resolveFromRootPath(rootPath, path));
 
         return createWebDependency(webDependency, webDependencyRootPath, providersByKeys, path);
     }
