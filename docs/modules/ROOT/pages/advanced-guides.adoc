@@ -306,12 +306,6 @@ NOTE: Adding new dependencies or recent versions has to be done manually from th
 
 WebJars are client-side web libraries (e.g. jQuery & Bootstrap) packaged into JAR (Java Archive) files. You can browse the repository from https://www.webjars.org/[the website, window="_blank"].
 
-.application.properties
-[source,properties]
-----
-quarkus.web-bundler.dependencies.type=webjars
-----
-
 .pom.xml
 [source,xml]
 ----
