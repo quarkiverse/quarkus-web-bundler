@@ -9,11 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.deployment.items.PublicAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
-import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
-import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;

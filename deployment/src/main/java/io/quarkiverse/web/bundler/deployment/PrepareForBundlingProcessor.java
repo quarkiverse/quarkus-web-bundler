@@ -1,5 +1,6 @@
 package io.quarkiverse.web.bundler.deployment;
 
+import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.DIST;
 import static io.quarkiverse.web.bundler.deployment.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
@@ -48,8 +49,6 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
-import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
@@ -74,8 +73,6 @@ public class PrepareForBundlingProcessor {
                     entry(EsBuildConfig.Loader.DATAURL, LoadersConfig::dataUrl),
                     entry(EsBuildConfig.Loader.BASE64, LoadersConfig::base64),
                     entry(EsBuildConfig.Loader.BINARY, LoadersConfig::binary));
-    public static final String TARGET_DIR_NAME = "web-bundler/";
-    public static final String DIST = "dist";
     private static final String LAUNCH_MODE_ENV = "LAUNCH_MODE";
 
     static {
@@ -84,19 +81,6 @@ public class PrepareForBundlingProcessor {
                 throw new Error("There is no WebBundleConfig.LoadersConfig for this loader : " + loader);
             }
         }
-    }
-
-    @BuildStep
-    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode) {
-        final String targetDirName = TARGET_DIR_NAME + launchMode.getLaunchMode().getDefaultProfile();
-        final Path targetDir = outputTarget.getOutputDirectory().resolve(targetDirName);
-        final Path distDir = targetDir.resolve(DIST);
-        try {
-            FileUtil.deleteDirectory(targetDir);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return new WebBundlerTargetDirBuildItem(targetDir, distDir);
     }
 
     @BuildStep

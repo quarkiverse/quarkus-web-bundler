@@ -1,0 +1,12 @@
+name: Web Bundler - Common
+description: Common package
+metadata:
+  unlisted: true
+  keywords:
+    - web-bundler
+    - qute
+    - components
+  guide: https://docs.quarkiverse.io/quarkus-web-bundler/dev/
+  categories:
+    - "web"
+  status: "stable"

@@ -4,6 +4,7 @@ import static io.quarkiverse.web.bundler.deployment.WebBundlerConfig.DEFAULT_ENT
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,15 +24,32 @@ import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.*;
+import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
+import io.quarkus.deployment.util.FileUtil;
 
 class BundleWebAssetsScannerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(BundleWebAssetsScannerProcessor.class);
     private static final String FEATURE = "web-bundler";
+    public static final String TARGET_DIR_NAME = "web-bundler/";
+    public static final String DIST = "dist";
 
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode) {
+        final String targetDirName = TARGET_DIR_NAME + launchMode.getLaunchMode().getDefaultProfile();
+        final Path targetDir = outputTarget.getOutputDirectory().resolve(targetDirName);
+        final Path distDir = targetDir.resolve(DIST);
+        try {
+            FileUtil.deleteDirectory(targetDir);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return new WebBundlerTargetDirBuildItem(targetDir, distDir);
     }
 
     @BuildStep

@@ -1,4 +1,4 @@
-package io.quarkiverse.web.bundler.deployment.watcher;
+package io.quarkiverse.web.bundler.deployment;
 
 import java.io.IOException;
 import java.nio.file.Files;

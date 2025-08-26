@@ -14,7 +14,7 @@
     <name>Quarkus Web Bundler - Parent</name>
     <modules>
         <module>spi</module>
-        <module>common-deployment</module>
+        <module>common</module>
         <module>qute-components</module>
         <module>runtime</module>
         <module>deployment</module>
@@ -31,8 +31,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <esbuild-java.version>2.0.0-beta-3</esbuild-java.version>
-        <quarkus.version>3.17.7</quarkus.version>
-        <scrimage-core.version>4.1.1</scrimage-core.version>
+        <quarkus.version>3.29.2</quarkus.version>
         <quarkus-playwright.version>2.1.3</quarkus-playwright.version>
     </properties>
     <dependencyManagement>
