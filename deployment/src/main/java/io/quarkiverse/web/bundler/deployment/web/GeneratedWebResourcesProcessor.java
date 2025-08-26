@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
+import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;

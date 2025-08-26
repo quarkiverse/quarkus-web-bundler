@@ -33,7 +33,7 @@ public class StaticAssetsScannerProcessor {
                 .scan(new ProjectResourcesScannerBuildItem.Scanner("static",
                         "glob:**", config.getEffectiveIgnoredFiles(), config.charset()));
         assets.addAll(staticAssets);
-        LOGGER.debugf("\"Web Bundler scan - static assets (fallback): %d found.", staticAssets.size());
+        LOGGER.debugf("Web Bundler scan - static assets (fallback): %d found.", staticAssets.size());
 
         return new PublicAssetsBuildItem(assets);
     }

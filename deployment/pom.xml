@@ -20,10 +20,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.quarkus.qute</groupId>
-            <artifactId>qute-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.mvnpm</groupId>
             <artifactId>esbuild-java-plugin-sass</artifactId>
             <version>${esbuild-java.version}</version>
@@ -32,6 +28,21 @@
             <groupId>io.quarkiverse.web-bundler</groupId>
             <artifactId>quarkus-web-bundler-common-deployment</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-qute</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-qute-deployment</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

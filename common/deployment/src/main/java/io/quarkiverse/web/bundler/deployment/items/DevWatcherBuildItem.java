@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.deployment.items;
 
-import io.quarkiverse.web.bundler.deployment.watcher.DevWatcher;
+import io.quarkiverse.web.bundler.deployment.DevWatcher;
 import io.quarkus.builder.item.SimpleBuildItem;
 
 public final class DevWatcherBuildItem extends SimpleBuildItem {

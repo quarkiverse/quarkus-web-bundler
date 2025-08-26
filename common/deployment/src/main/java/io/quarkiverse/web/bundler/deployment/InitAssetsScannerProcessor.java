@@ -17,7 +17,6 @@ import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDirBuildItem;
-import io.quarkiverse.web.bundler.deployment.watcher.DevWatcher;
 import io.quarkiverse.web.bundler.spi.items.WebBundlerWatchedDirBuildItem;
 import io.quarkus.bootstrap.workspace.SourceDir;
 import io.quarkus.bootstrap.workspace.WorkspaceModule;

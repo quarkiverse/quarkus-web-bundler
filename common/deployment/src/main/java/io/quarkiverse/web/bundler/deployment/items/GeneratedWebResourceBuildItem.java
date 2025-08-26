@@ -1,4 +1,4 @@
-package io.quarkiverse.web.bundler.deployment.web;
+package io.quarkiverse.web.bundler.deployment.items;
 
 import java.nio.file.Path;
 

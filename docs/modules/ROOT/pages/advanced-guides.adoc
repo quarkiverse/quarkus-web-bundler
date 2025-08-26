@@ -416,3 +416,4 @@ or in a Qute template:
 {inject:bundle.script("app")}
 {inject:bundle.style("app")}
 ----
+

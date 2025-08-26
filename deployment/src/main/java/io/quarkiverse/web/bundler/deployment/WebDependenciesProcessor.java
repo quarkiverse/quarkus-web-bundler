@@ -47,8 +47,8 @@ class WebDependenciesProcessor {
         final List<Dependency> buildDependencies = StreamSupport.stream(curateOutcome.getApplicationModel()
                 .getDependencies().spliterator(), false)
                 .filter(io.quarkus.maven.dependency.Dependency::isJar)
-                .filter(d -> d.isDeploymentCp() && "compile".equals(d.getScope()))
                 .filter(d -> WebDependencyType.MVNPM.matches(d.toCompactCoords()))
+                .filter(d -> d.isDeploymentCp() && ("compile".equals(d.getScope()) || "test".equals(d.getScope())))
                 .map(WebDependenciesProcessor::toWebDep)
                 .filter(Objects::nonNull)
                 .toList();

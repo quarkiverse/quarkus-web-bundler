@@ -18,19 +18,34 @@ import java.util.concurrent.CompletionStage;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
-import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
-import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem.SourceType;
+import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.qute.*;
+import io.quarkus.qute.Engine;
+import io.quarkus.qute.EvalContext;
+import io.quarkus.qute.Expression;
+import io.quarkus.qute.HtmlEscaper;
+import io.quarkus.qute.ImmutableList;
+import io.quarkus.qute.NamespaceResolver;
+import io.quarkus.qute.Qute;
+import io.quarkus.qute.ReflectionValueResolver;
+import io.quarkus.qute.Results;
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateLocator;
+import io.quarkus.qute.UserTagSectionHelper;
+import io.quarkus.qute.Variant;
 
 public class QuteTemplateWebAssetsProcessor {
+
     @BuildStep
     void processHtmlTemplateWebAssets(QuteTemplatesBuildItem htmlTemplates,
+            WebBundlerTargetDirBuildItem targetDirBuildItem,
             GeneratedBundleBuildItem generatedBundle,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             LaunchModeBuildItem launchMode) {
@@ -52,7 +67,10 @@ public class QuteTemplateWebAssetsProcessor {
         final Engine engine = Engine.builder()
                 .addDefaults()
                 .addNamespaceResolver(NamespaceResolver.builder("inject")
-                        .resolve((c) -> c.getName().equals("bundle") ? new Bundle(mapping) : null)
+                        .resolve((c) -> switch (c.getName()) {
+                            case "bundle" -> new Bundle(mapping);
+                            default -> null;
+                        })
                         .build())
                 .addNamespaceResolver(NamespaceResolver.builder("build")
                         .resolve((c) -> c.getName().equals("launchMode") ? launchMode.getLaunchMode().toString() : null)
@@ -68,7 +86,8 @@ public class QuteTemplateWebAssetsProcessor {
                 .build();
         for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
             final byte[] bytes = webAsset.content();
-            final String content = engine.parse(new String(bytes, webAsset.charset())).render();
+            Template template = engine.parse(new String(bytes, webAsset.charset()));
+            final String content = template.render();
             staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(prefixWithSlash(webAsset.webPath()),
                     content.getBytes(), SourceType.BUILD_TIME_TEMPLATE));
         }
@@ -123,4 +142,5 @@ public class QuteTemplateWebAssetsProcessor {
         }
 
     }
+
 }
