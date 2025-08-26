@@ -12,6 +12,8 @@ import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.web.bundler.common.runtime.Responsive;
+import io.quarkiverse.web.bundler.common.runtime.ResponsiveSectionHelperFactory;
 import io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
 import io.quarkus.qute.EngineBuilder;
 import io.quarkus.qute.TemplateLocator;
@@ -24,10 +26,12 @@ public class WebBundlerQuteEngineObserver {
     private static final Logger LOGGER = Logger.getLogger(WebBundlerQuteEngineObserver.class);
 
     private final WebBundlerQuteContext webBundlerQuteContext;
+    private final Responsive responsive;
 
     @Inject
-    public WebBundlerQuteEngineObserver(WebBundlerQuteContext context) {
+    public WebBundlerQuteEngineObserver(WebBundlerQuteContext context, Responsive responsive) {
         this.webBundlerQuteContext = context;
+        this.responsive = responsive;
     }
 
     void observeEngineBuilder(@Observes EngineBuilder builder) {
@@ -37,6 +41,7 @@ public class WebBundlerQuteEngineObserver {
             LOGGER.debugf("Registered UserTagSectionHelper for %s [%s]", tag, tagTemplateId);
             builder.addSectionHelper(new UserTagSectionHelper.Factory(tag, tagTemplateId));
         }
+        builder.addSectionHelper("responsive", new ResponsiveSectionHelperFactory(responsive));
     }
 
     private Optional<TemplateLocator.TemplateLocation> locate(String s) {
