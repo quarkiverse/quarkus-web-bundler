@@ -20,9 +20,13 @@ import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
+import io.quarkiverse.web.bundler.common.runtime.Responsive;
+import io.quarkiverse.web.bundler.common.runtime.ResponsiveSectionHelperFactory;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ResponsiveImageBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
+import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.runtime.Bundle;
@@ -30,14 +34,29 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
-import io.quarkus.qute.*;
+import io.quarkus.qute.Engine;
+import io.quarkus.qute.EvalContext;
+import io.quarkus.qute.Expression;
+import io.quarkus.qute.HtmlEscaper;
+import io.quarkus.qute.ImmutableList;
+import io.quarkus.qute.NamespaceResolver;
+import io.quarkus.qute.Qute;
+import io.quarkus.qute.ReflectionValueResolver;
+import io.quarkus.qute.Results;
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateLocator;
+import io.quarkus.qute.UserTagSectionHelper;
+import io.quarkus.qute.Variant;
 
 public class QuteTemplateWebAssetsProcessor {
+
     @BuildStep
     void processHtmlTemplateWebAssets(WebBundlerConfig config,
             QuteTemplatesBuildItem htmlTemplates,
+            WebBundlerTargetDirBuildItem targetDirBuildItem,
             GeneratedBundleBuildItem generatedBundle,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
+            BuildProducer<ResponsiveImageBuildItem> responsiveImageProducer,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
@@ -52,10 +71,15 @@ public class QuteTemplateWebAssetsProcessor {
                 return bundle.keySet();
             }
         };
+        Responsive responsive = new Responsive();
         final Engine engine = Engine.builder()
                 .addDefaults()
                 .addNamespaceResolver(NamespaceResolver.builder("inject")
-                        .resolve((c) -> c.getName().equals("bundle") ? new Bundle(mapping) : null)
+                        .resolve((c) -> switch (c.getName()) {
+                            case "bundle" -> new Bundle(mapping);
+                            case "responsive" -> responsive;
+                            default -> null;
+                        })
                         .build())
                 .addNamespaceResolver(NamespaceResolver.builder("build")
                         .resolve((c) -> c.getName().equals("launchMode") ? launchMode.getLaunchMode().toString() : null)
@@ -65,14 +89,19 @@ public class QuteTemplateWebAssetsProcessor {
                         .build())
                 .addLocator(new WebBundlerTagsLocator())
                 .addSectionHelper(new UserTagSectionHelper.Factory("bundle", "web-bundler/bundle.html"))
+                .addSectionHelper("responsive", new ResponsiveSectionHelperFactory(responsive))
                 .addValueResolver(new ReflectionValueResolver())
                 .addParserHook(new Qute.IndexedArgumentsParserHook())
                 .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
                 .build();
         for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
             final byte[] bytes = webAsset.resource().contentOrReadFromFile();
-            final String content = engine.parse(new String(bytes, webAsset.charset())).render();
-            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(webAsset.pathFromWebRoot(config.webRoot())),
+            Template template = engine.parse(new String(bytes, webAsset.charset()));
+            String pathFromWebRoot = webAsset.pathFromWebRoot(config.webRoot());
+            ResponsiveAssetsProcessor.scanResponsiveTags(template, responsive, webAsset, staticResourceProducer,
+                    pathFromWebRoot, targetDirBuildItem.dist());
+            final String content = template.render();
+            makeWebAssetPublic(staticResourceProducer, prefixWithSlash(pathFromWebRoot),
                     HtmlPageWebAsset.of(webAsset, content), SourceType.BUILD_TIME_TEMPLATE);
         }
     }
@@ -144,4 +173,5 @@ public class QuteTemplateWebAssetsProcessor {
             return Optional.empty();
         }
     }
+
 }
