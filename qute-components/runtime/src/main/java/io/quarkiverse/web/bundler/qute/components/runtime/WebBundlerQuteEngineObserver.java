@@ -26,12 +26,10 @@ public class WebBundlerQuteEngineObserver {
     private static final Logger LOGGER = Logger.getLogger(WebBundlerQuteEngineObserver.class);
 
     private final WebBundlerQuteContext webBundlerQuteContext;
-    private final Responsive responsive;
 
     @Inject
-    public WebBundlerQuteEngineObserver(WebBundlerQuteContext context, Responsive responsive) {
+    public WebBundlerQuteEngineObserver(WebBundlerQuteContext context) {
         this.webBundlerQuteContext = context;
-        this.responsive = responsive;
     }
 
     void observeEngineBuilder(@Observes EngineBuilder builder) {
@@ -41,7 +39,6 @@ public class WebBundlerQuteEngineObserver {
             LOGGER.debugf("Registered UserTagSectionHelper for %s [%s]", tag, tagTemplateId);
             builder.addSectionHelper(new UserTagSectionHelper.Factory(tag, tagTemplateId));
         }
-        builder.addSectionHelper("responsive", new ResponsiveSectionHelperFactory(responsive));
     }
 
     private Optional<TemplateLocator.TemplateLocation> locate(String s) {

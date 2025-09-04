@@ -24,6 +24,7 @@ import io.quarkiverse.web.bundler.common.runtime.Responsive;
 import io.quarkiverse.web.bundler.common.runtime.ResponsiveSectionHelperFactory;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ResponsiveBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ResponsiveImageBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
@@ -58,7 +59,8 @@ public class QuteTemplateWebAssetsProcessor {
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             BuildProducer<ResponsiveImageBuildItem> responsiveImageProducer,
             LiveReloadBuildItem liveReload,
-            LaunchModeBuildItem launchMode) {
+            LaunchModeBuildItem launchMode,
+            BuildProducer<ResponsiveBuildItem> responsiveBuildItemBuildProducer) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
         final Bundle.Mapping mapping = new Bundle.Mapping() {
             @Override
@@ -104,6 +106,8 @@ public class QuteTemplateWebAssetsProcessor {
             makeWebAssetPublic(staticResourceProducer, prefixWithSlash(pathFromWebRoot),
                     HtmlPageWebAsset.of(webAsset, content), SourceType.BUILD_TIME_TEMPLATE);
         }
+        // pass this on to any eventual runtime templates
+        responsiveBuildItemBuildProducer.produce(new ResponsiveBuildItem(responsive));
     }
 
     private CompletionStage<Object> resolveConfig(EvalContext ctx) {

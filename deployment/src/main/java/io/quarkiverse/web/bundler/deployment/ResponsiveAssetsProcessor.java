@@ -23,6 +23,9 @@ import org.jboss.logging.Logger;
 import io.quarkiverse.web.bundler.common.runtime.Responsive;
 import io.quarkiverse.web.bundler.common.runtime.ResponsiveSectionHelperFactory;
 import io.quarkiverse.web.bundler.deployment.items.QuteRuntimeTemplateBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ResponsiveBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
@@ -52,6 +55,11 @@ public class ResponsiveAssetsProcessor {
     };
 
     @BuildStep
+    QuteTemplateSourcePathsBuildItem collectTemplatePaths(List<QuteTemplateSourcePathBuildItem> paths) {
+        return new QuteTemplateSourcePathsBuildItem(paths);
+    }
+
+    @BuildStep
     void initBundleBean(
             BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
         additionalBeans.produce(new AdditionalBeanBuildItem(Responsive.class));
@@ -66,24 +74,31 @@ public class ResponsiveAssetsProcessor {
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             WebBundlerTargetDirBuildItem targetDirBuildItem,
             WebBundlerConfig config,
-            ApplicationArchivesBuildItem applicationArchives) {
+            ApplicationArchivesBuildItem applicationArchives,
+            QuteTemplateSourcePathsBuildItem quteTemplatePathsBuildItem,
+            ResponsiveBuildItem responsiveBuildItem) {
         if (quteRuntimeTemplateBuildItem.isEmpty()) {
             return;
         }
-        // this one collects responsives at build time
-        Responsive responsive = new Responsive();
+        // collect responsive usages, starting from the build-time templates
+        Responsive responsive = responsiveBuildItem.responsive;
         String staticWebPath = config.webRoot();
         Path staticResourcesPath = applicationArchives.getRootArchive().getChildPath(staticWebPath);
 
         for (QuteRuntimeTemplateBuildItem runtimeTemplateBuildItem : quteRuntimeTemplateBuildItem) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debugf("Inspecting template %s for responsive tags", runtimeTemplateBuildItem.templatePath);
+                LOGGER.debugf("Inspecting (run-time) template %s for responsive tags",
+                        runtimeTemplateBuildItem.templatePath);
             }
-            // FIXME: disallow non-absolute resources since we cannot really guess what URI a template will end up in, and
+            // default to null
+            Path templatePath = quteTemplatePathsBuildItem.templatePathsToSourcePaths
+                    .get(runtimeTemplateBuildItem.templatePath);
             // we don't want to place images in the templates folder
             runtimeTemplateBuildItem.sectionNodes.stream().map(TemplateNode::asSection)
                     .filter(s -> s.getName().equals("responsive"))
-                    .forEach(resp -> collectResponsive(resp, Path.of(runtimeTemplateBuildItem.templatePath), responsive,
+                    .forEach(resp -> collectResponsive(resp,
+                            runtimeTemplateBuildItem.templatePath, templatePath,
+                            responsive,
                             staticResourceProducer,
                             staticResourcesPath, targetDirBuildItem.dist()));
 
@@ -101,7 +116,7 @@ public class ResponsiveAssetsProcessor {
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, String pathFromWebRoot, Path targetDist) {
         Path webAssetPath = webAsset.resource().path();
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debugf("Inspecting template %s for responsive tags", webAssetPath);
+            LOGGER.debugf("Inspecting (build-time) template %s for responsive tags", webAssetPath);
         }
         // This is disgusting, but I (Stef) could not find how to do this cleanly
         String webAssetPathString = webAssetPath.toString();
@@ -112,11 +127,12 @@ public class ResponsiveAssetsProcessor {
         Path webFolderPath = Path.of(webAssetPathString.substring(0, webAssetPathString.length() - pathFromWebRoot.length()));
         template.findNodes(TemplateNode::isSection).stream().map(TemplateNode::asSection)
                 .filter(s -> s.getName().equals("responsive"))
-                .forEach(resp -> collectResponsive(resp, webAsset.resource().path(), responsive, staticResourceProducer,
+                .forEach(resp -> collectResponsive(resp, webAsset.resourceName(), webAsset.resource().path(), responsive,
+                        staticResourceProducer,
                         webFolderPath, targetDist));
     }
 
-    private static void collectResponsive(SectionNode resp, Path templatePath, Responsive responsive,
+    private static void collectResponsive(SectionNode resp, String templateName, Path templatePath, Responsive responsive,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             Path webFolderPath, Path targetDist) {
         List<Expression> expressions = resp.getExpressions();
@@ -126,14 +142,22 @@ public class ResponsiveAssetsProcessor {
                 Object literal = expr.getLiteral();
                 if (literal instanceof String file) {
                     Path imagePath = Path.of(file);
+                    Path absoluteImagePath;
                     // We can't use Path.isAbsolute on Windows, and our paths are expected to be URIs anyways
-                    Path absoluteImagePath = file.startsWith("/")
-                            // we need to resolve by passing a string, otherwise we get an exception due to different FS providers
-                            // for zip filesystems
-                            ? webFolderPath.resolve(imagePath.subpath(0, imagePath.getNameCount()).toString())
-                            : templatePath.getParent().resolve(imagePath);
+                    if (file.startsWith("/")) {
+                        // we need to resolve by passing a string, otherwise we get an exception due to different FS providers
+                        // for zip filesystems
+                        absoluteImagePath = webFolderPath.resolve(imagePath.subpath(0, imagePath.getNameCount()).toString());
+                    } else if (templatePath != null) {
+                        absoluteImagePath = templatePath.getParent().resolve(imagePath);
+                    } else {
+                        throw new RuntimeException(
+                                "Cannot refer to relative files from template when we do not know the template path: "
+                                        + templateName);
+                    }
                     if (!Files.isRegularFile(absoluteImagePath)) {
-                        throw new RuntimeException("Image does not exist or is not a file: " + imagePath);
+                        throw new RuntimeException("Image does not exist or is not a file: " + imagePath + " (looked up at "
+                                + absoluteImagePath + ")");
                     }
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debugf(" Found responsive tag for image: %s", imagePath);

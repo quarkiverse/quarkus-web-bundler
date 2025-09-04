@@ -20,11 +20,38 @@ import jakarta.inject.Singleton;
 @Named("responsive")
 public class Responsive {
 
-    Map<Path, ResponsiveImage> images = new HashMap<>();
+    // cache of absolute image path to image id
+    Map<Path, String> imageIdsByPath = new HashMap<>();
+    // map of image id to image
+    Map<String, ResponsiveImage> images = new HashMap<>();
+    // map of user (by key:templateid/file) to image
     Map<String, ResponsiveImage> users = new HashMap<>();
 
     public ResponsiveImage addImage(Path absoluteImagePath) {
-        return images.computeIfAbsent(absoluteImagePath, key -> new ResponsiveImage(absoluteImagePath));
+        String id = imageIdsByPath.get(absoluteImagePath);
+        if (id == null) {
+            id = digest(absoluteImagePath);
+            imageIdsByPath.put(absoluteImagePath, id);
+        }
+        String finalId = id;
+        return images.computeIfAbsent(id, key -> new ResponsiveImage(finalId, absoluteImagePath.getFileName().toString()));
+    }
+
+    private String digest(Path absoluteImagePath) {
+        try (var is = new DigestInputStream(Files.newInputStream(absoluteImagePath), MessageDigest.getInstance("SHA-1"))) {
+            byte[] buffer = new byte[8192];
+            while (is.read(buffer) > -1) {
+            }
+            byte[] digest = is.getMessageDigest().digest();
+            // only keep the first 8 chars (4 bytes)
+            StringBuilder sb = new StringBuilder(8);
+            for (int i = 0; i < 4; ++i) {
+                sb.append(Integer.toHexString(digest[i] & 255 | 256).substring(1, 3));
+            }
+            return sb.toString();
+        } catch (IOException | NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // for static init
@@ -63,11 +90,6 @@ public class Responsive {
         public final String id;
         public final String fileName;
 
-        public ResponsiveImage(Path absoluteImagePath) {
-            id = digest(absoluteImagePath);
-            fileName = absoluteImagePath.getFileName().toString();
-        }
-
         public ResponsiveImage(String id, String imageFileName) {
             this.id = id;
             this.fileName = imageFileName;
@@ -86,23 +108,6 @@ public class Responsive {
                 ret.put(entry.getKey(), entry.getValue().path.toString());
             }
             return ret;
-        }
-
-        private String digest(Path absoluteImagePath) {
-            try (var is = new DigestInputStream(Files.newInputStream(absoluteImagePath), MessageDigest.getInstance("SHA-1"))) {
-                byte[] buffer = new byte[8192];
-                while (is.read(buffer) > -1) {
-                }
-                byte[] digest = is.getMessageDigest().digest();
-                // only keep the first 8 chars (4 bytes)
-                StringBuilder sb = new StringBuilder(8);
-                for (int i = 0; i < 4; ++i) {
-                    sb.append(Integer.toHexString(digest[i] & 255 | 256).substring(1, 3));
-                }
-                return sb.toString();
-            } catch (IOException | NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
         }
 
         public void addScaledImage(int width, Consumer<Variant> consumer) {

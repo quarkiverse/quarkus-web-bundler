@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
+import jakarta.inject.Inject;
+
 import io.quarkus.qute.EngineConfiguration;
 import io.quarkus.qute.Expression;
 import io.quarkus.qute.ResultNode;
@@ -16,13 +18,16 @@ import io.quarkus.qute.TextNode;
 
 @EngineConfiguration
 public class ResponsiveSectionHelperFactory implements SectionHelperFactory<SectionHelper> {
-    private final Responsive responsive;
 
-    // This is only used for build-time validation, it will not be used for evaluating templates
+    @Inject
+    Responsive responsive;
+
+    // Used by CDI for runtime and build-time validation (of runtime templates)
     public ResponsiveSectionHelperFactory() {
         responsive = null;
     }
 
+    // Used for build-time templates
     public ResponsiveSectionHelperFactory(Responsive responsive) {
         this.responsive = responsive;
     }
