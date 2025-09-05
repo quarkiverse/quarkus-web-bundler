@@ -12,8 +12,6 @@ import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.bundler.common.runtime.Responsive;
-import io.quarkiverse.web.bundler.common.runtime.ResponsiveSectionHelperFactory;
 import io.quarkiverse.web.bundler.qute.components.runtime.WebBundlerQuteContextRecorder.WebBundlerQuteContext;
 import io.quarkus.qute.EngineBuilder;
 import io.quarkus.qute.TemplateLocator;

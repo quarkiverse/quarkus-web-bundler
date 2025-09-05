@@ -6,10 +6,10 @@ import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
@@ -22,19 +22,33 @@ public class Responsive {
 
     // cache of absolute image path to image id
     Map<Path, String> imageIdsByPath = new HashMap<>();
-    // map of image id to image
+    // map of image (id/file) to image
     Map<String, ResponsiveImage> images = new HashMap<>();
-    // map of user (by key:templateid/file) to image
-    Map<String, ResponsiveImage> users = new HashMap<>();
+    // map of user (by key:templateid/file) to image user
+    Map<String, ResponsiveImageUser> users = new HashMap<>();
 
-    public ResponsiveImage addImage(Path absoluteImagePath) {
+    public ResponsiveImage addImage(Path absoluteImagePath, String targetFileName) {
         String id = imageIdsByPath.get(absoluteImagePath);
         if (id == null) {
             id = digest(absoluteImagePath);
             imageIdsByPath.put(absoluteImagePath, id);
         }
+        /*
+         * The idea here is that we want to make sure responsives for a unique absolute path end up in the same folder (same id,
+         * same file name),
+         * and if someone has the same file (same id) in more than one absolute path, they also end up in the same folder (same
+         * id, same file name),
+         * and if someone has the same file (same id) in more than one absolute path under a different file name, they also end
+         * up in the same
+         * folder (same id), but with different file names.
+         */
         String finalId = id;
-        return images.computeIfAbsent(id, key -> new ResponsiveImage(finalId, absoluteImagePath.getFileName().toString()));
+        String key = keyImage(id, targetFileName);
+        return images.computeIfAbsent(key, key2 -> new ResponsiveImage(finalId, targetFileName));
+    }
+
+    private String keyImage(String id, String targetFileName) {
+        return id + "|" + targetFileName;
     }
 
     private String digest(Path absoluteImagePath) {
@@ -55,35 +69,54 @@ public class Responsive {
     }
 
     // for static init
-    public ResponsiveImage restoreImage(String id, String imageFileName, List<String> users) {
-        var responsiveImage = new ResponsiveImage(id, imageFileName);
-        for (String user : users) {
-            this.users.put(user, responsiveImage);
-        }
-        return responsiveImage;
+    public ResponsiveImage restoreImage(String id, String imageFileName) {
+        ResponsiveImage image = new ResponsiveImage(id, imageFileName);
+        images.put(keyImage(id, imageFileName), image);
+        return image;
     }
 
-    public Map<ResponsiveImage, List<String>> collectUsers() {
-        Map<ResponsiveImage, List<String>> ret = new HashMap<>();
-        for (Map.Entry<String, ResponsiveImage> entry : users.entrySet()) {
-            var users = ret.computeIfAbsent(entry.getValue(), key -> new ArrayList<>());
-            users.add(entry.getKey());
+    public Map<ResponsiveImage, Set<ResponsiveImageUser>> collectImageUsers() {
+        Map<ResponsiveImage, Set<ResponsiveImageUser>> ret = new HashMap<>();
+        for (var user : users.values()) {
+            ret.computeIfAbsent(user.image, x -> new HashSet<>()).add(user);
         }
         return ret;
     }
 
-    public void registerImageUser(String templateId, String file, ResponsiveImage responsiveImage) {
-        users.put(key(templateId, file), responsiveImage);
+    public void registerImageUser(String templateId, String declaredUri, String runtimeUri, ResponsiveImage responsiveImage) {
+        users.put(keyImageUser(templateId, declaredUri),
+                new ResponsiveImageUser(templateId, declaredUri, runtimeUri, responsiveImage));
     }
 
-    public ResponsiveImage get(String templateId, String file) {
-        return users.get(key(templateId, file));
+    public ResponsiveImageUser get(String templateId, String declaredURI) {
+        return users.get(keyImageUser(templateId, declaredURI));
     }
 
-    private String key(String templateId, String file) {
-        return templateId + "|" + file;
+    private String keyImageUser(String templateId, String declaredURI) {
+        return templateId + "|" + declaredURI;
     }
 
+    /**
+     * This represents a responsive tag, pointing to a responsive image
+     */
+    public static class ResponsiveImageUser {
+        public final ResponsiveImage image;
+        public final String runtimeURI;
+        public final String declaredURI;
+        public final String templateId;
+        // Eventually, this will list the variants in use
+
+        public ResponsiveImageUser(String templateId, String declaredURI, String runtimeURI, ResponsiveImage image) {
+            this.templateId = templateId;
+            this.declaredURI = declaredURI;
+            this.image = image;
+            this.runtimeURI = runtimeURI;
+        }
+    }
+
+    /**
+     * This represents a unique responsive image for a unique path along with all its generated variants
+     */
     public static class ResponsiveImage {
 
         public final TreeMap<Integer, Variant> variants = new TreeMap<>();

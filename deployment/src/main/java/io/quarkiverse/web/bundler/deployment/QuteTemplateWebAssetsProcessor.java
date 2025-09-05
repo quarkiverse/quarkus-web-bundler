@@ -26,6 +26,7 @@ import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ResponsiveBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ResponsiveImageBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ResponsivePathMapperBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
@@ -60,7 +61,8 @@ public class QuteTemplateWebAssetsProcessor {
             BuildProducer<ResponsiveImageBuildItem> responsiveImageProducer,
             LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
-            BuildProducer<ResponsiveBuildItem> responsiveBuildItemBuildProducer) {
+            BuildProducer<ResponsiveBuildItem> responsiveBuildItemBuildProducer,
+            Optional<ResponsivePathMapperBuildItem> responsivePathMapperBuildItem) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
         final Bundle.Mapping mapping = new Bundle.Mapping() {
             @Override
@@ -101,7 +103,7 @@ public class QuteTemplateWebAssetsProcessor {
             Template template = engine.parse(new String(bytes, webAsset.charset()));
             String pathFromWebRoot = webAsset.pathFromWebRoot(config.webRoot());
             ResponsiveAssetsProcessor.scanResponsiveTags(template, responsive, webAsset, staticResourceProducer,
-                    pathFromWebRoot, targetDirBuildItem.dist());
+                    pathFromWebRoot, targetDirBuildItem.dist(), responsivePathMapperBuildItem);
             final String content = template.render();
             makeWebAssetPublic(staticResourceProducer, prefixWithSlash(pathFromWebRoot),
                     HtmlPageWebAsset.of(webAsset, content), SourceType.BUILD_TIME_TEMPLATE);

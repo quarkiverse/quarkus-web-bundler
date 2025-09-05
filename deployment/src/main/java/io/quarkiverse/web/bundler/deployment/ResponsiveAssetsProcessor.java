@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -26,6 +26,7 @@ import io.quarkiverse.web.bundler.deployment.items.QuteRuntimeTemplateBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ResponsiveBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ResponsivePathMapperBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
@@ -41,6 +42,7 @@ import io.quarkus.qute.Expression;
 import io.quarkus.qute.SectionNode;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateNode;
+import io.quarkus.runtime.RuntimeValue;
 
 public class ResponsiveAssetsProcessor {
 
@@ -76,7 +78,8 @@ public class ResponsiveAssetsProcessor {
             WebBundlerConfig config,
             ApplicationArchivesBuildItem applicationArchives,
             QuteTemplateSourcePathsBuildItem quteTemplatePathsBuildItem,
-            ResponsiveBuildItem responsiveBuildItem) {
+            ResponsiveBuildItem responsiveBuildItem,
+            Optional<ResponsivePathMapperBuildItem> responsivePathMapperBuildItem) {
         if (quteRuntimeTemplateBuildItem.isEmpty()) {
             return;
         }
@@ -100,20 +103,27 @@ public class ResponsiveAssetsProcessor {
                             runtimeTemplateBuildItem.templatePath, templatePath,
                             responsive,
                             staticResourceProducer,
-                            staticResourcesPath, targetDirBuildItem.dist()));
+                            staticResourcesPath, targetDirBuildItem.dist(),
+                            responsivePathMapperBuildItem.orElse(null)));
 
         }
 
         // now populate the runtime value from the build-time value
-        for (Map.Entry<io.quarkiverse.web.bundler.common.runtime.Responsive.ResponsiveImage, List<String>> entry : responsive
-                .collectUsers().entrySet()) {
-            responsiveRecorder.addResponsive(beanContainer.getValue(), entry.getKey().id, entry.getKey().fileName,
-                    entry.getValue(), entry.getKey().collectVariants());
+        for (var userEntry : responsive.collectImageUsers().entrySet()) {
+            Responsive.ResponsiveImage image = userEntry.getKey();
+            RuntimeValue<Responsive.ResponsiveImage> runtimeImage = responsiveRecorder.addResponsive(beanContainer.getValue(),
+                    image.id, image.fileName,
+                    image.collectVariants());
+            for (Responsive.ResponsiveImageUser user : userEntry.getValue()) {
+                responsiveRecorder.addImageUser(beanContainer.getValue(), user.templateId, user.declaredURI, user.runtimeURI,
+                        runtimeImage);
+            }
         }
     }
 
     public static void scanResponsiveTags(Template template, Responsive responsive, WebAsset webAsset,
-            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, String pathFromWebRoot, Path targetDist) {
+            BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, String pathFromWebRoot, Path targetDist,
+            Optional<ResponsivePathMapperBuildItem> responsivePathMapperBuildItem) {
         Path webAssetPath = webAsset.resource().path();
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debugf("Inspecting (build-time) template %s for responsive tags", webAssetPath);
@@ -129,12 +139,12 @@ public class ResponsiveAssetsProcessor {
                 .filter(s -> s.getName().equals("responsive"))
                 .forEach(resp -> collectResponsive(resp, webAsset.resourceName(), webAsset.resource().path(), responsive,
                         staticResourceProducer,
-                        webFolderPath, targetDist));
+                        webFolderPath, targetDist, responsivePathMapperBuildItem.orElse(null)));
     }
 
     private static void collectResponsive(SectionNode resp, String templateName, Path templatePath, Responsive responsive,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
-            Path webFolderPath, Path targetDist) {
+            Path webFolderPath, Path targetDist, ResponsivePathMapperBuildItem responsivePathMapperBuildItem) {
         List<Expression> expressions = resp.getExpressions();
         if (expressions.size() == 1) {
             Expression expr = expressions.get(0);
@@ -162,8 +172,16 @@ public class ResponsiveAssetsProcessor {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debugf(" Found responsive tag for image: %s", imagePath);
                     }
-                    Responsive.ResponsiveImage collectedImage = responsive.addImage(absoluteImagePath);
-                    responsive.registerImageUser(resp.getOrigin().getTemplateId(), file, collectedImage);
+                    String targetFileName = absoluteImagePath.getFileName().toString();
+                    if (responsivePathMapperBuildItem != null) {
+                        targetFileName = responsivePathMapperBuildItem
+                                .getRuntimeURI(absoluteImagePath.getFileName().toString());
+                    }
+                    Responsive.ResponsiveImage collectedImage = responsive.addImage(absoluteImagePath, targetFileName);
+                    String runtimeFile = responsivePathMapperBuildItem != null
+                            ? responsivePathMapperBuildItem.getRuntimeURI(file)
+                            : file;
+                    responsive.registerImageUser(resp.getOrigin().getTemplateId(), file, runtimeFile, collectedImage);
                     processResponsiveImage(absoluteImagePath, collectedImage, staticResourceProducer, targetDist);
                 } else {
                     throw new RuntimeException("Invalid responsive literal: " + literal + " (must be a string literal)");

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ResponsivePathMapperBuildItem;
 import io.quarkus.builder.BuildChainBuilder;
 import io.quarkus.builder.BuildContext;
 import io.quarkus.builder.BuildStep;
@@ -45,6 +47,14 @@ public class WebBundlerResponsiveTest {
             }
             context.produce(new QuteTemplateSourcePathBuildItem("index.html",
                     java.nio.file.Path.of("target/test-classes/roq/index.html")));
+            context.produce(new ResponsivePathMapperBuildItem(new Mapper()));
+        }
+
+        private static class Mapper implements Function<String, String> {
+            @Override
+            public String apply(String s) {
+                return s.replace('é', '-').toLowerCase();
+            }
         }
     }
 
@@ -53,6 +63,7 @@ public class WebBundlerResponsiveTest {
         @Override
         public void accept(BuildChainBuilder buildChainBuilder) {
             buildChainBuilder.addBuildStep(new MyBuildStep())
+                    .produces(ResponsivePathMapperBuildItem.class)
                     .produces(TemplatePathBuildItem.class)
                     .produces(QuteTemplateSourcePathBuildItem.class)
                     .build();
@@ -107,7 +118,8 @@ public class WebBundlerResponsiveTest {
                 .body(Matchers
                         .containsString(
                                 "<img src=\"white_1920_1080.png\" srcset=\"/responsives/1b139664/white_1920_1080_640.png 640w, /responsives/1b139664/white_1920_1080_1024.png 1024w\"/>"
-                                        + "<img src=\"/static/white_1920_1080.png\" srcset=\"/responsives/1b139664/white_1920_1080_640.png 640w, /responsives/1b139664/white_1920_1080_1024.png 1024w\"/>"));
+                                        + "<img src=\"/static/white_1920_1080.png\" srcset=\"/responsives/1b139664/white_1920_1080_640.png 640w, /responsives/1b139664/white_1920_1080_1024.png 1024w\"/>"
+                                        + "<img src=\"fo-/fo-_1920_1080.png\" srcset=\"/responsives/1b139664/fo-_1920_1080_640.png 640w, /responsives/1b139664/fo-_1920_1080_1024.png 1024w\"/>"));
         RestAssured.given()
                 .get("/static/white_1920_1080.png")
                 .then()
@@ -118,6 +130,14 @@ public class WebBundlerResponsiveTest {
                 .statusCode(200);
         RestAssured.given()
                 .get("/responsives/1b139664/white_1920_1080_1024.png")
+                .then()
+                .statusCode(200);
+        RestAssured.given()
+                .get("/responsives/1b139664/fo-_1920_1080_640.png")
+                .then()
+                .statusCode(200);
+        RestAssured.given()
+                .get("/responsives/1b139664/fo-_1920_1080_1024.png")
                 .then()
                 .statusCode(200);
     }

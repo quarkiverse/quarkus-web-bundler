@@ -66,10 +66,11 @@ public class ResponsiveSectionHelperFactory implements SectionHelperFactory<Sect
             public CompletionStage<ResultNode> resolve(SectionResolutionContext context) {
                 return context.evaluate(fileExpression)
                         .thenApply(fileObject -> {
-                            Responsive.ResponsiveImage responsiveImage = responsive.get(
+                            Responsive.ResponsiveImageUser responsiveImageUser = responsive.get(
                                     context.resolutionContext().getTemplate().getId(), (String) fileObject);
                             return new TextNode(
-                                    "<img src=\"" + fileObject + "\" srcset=\"" + responsiveImage.srcset()
+                                    "<img src=\"" + responsiveImageUser.runtimeURI + "\" srcset=\""
+                                            + responsiveImageUser.image.srcset()
                                             + "\"/>",
                                     origin);
                         });
