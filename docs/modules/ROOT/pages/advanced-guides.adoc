@@ -381,3 +381,51 @@ or in a Qute template:
 {inject:bundle.script("main")}
 {inject:bundle.style("main")}
 ----
+
+[#images]
+== Images
+
+Quarkus Web Bundler can turn your images into responsive images by automatically generating smaller variants of
+your images at build-time.
+
+For example, you can use the following Qute image tag:
+
+[source,html]
+----
+{#image 'foo.png'/}
+----
+
+Which will be expanded to the following `<img>` tag:
+
+[source,html]
+----
+<img src='foo.png' srcset='/static/processed-images/1b139664/foo_640.png 640w,
+                           /static/processed-images/1b139664/foo_1024.png 1024w'/>
+----
+
+=== Image paths
+
+Relative image paths will be resolved relative to the template that includes the image.
+
+Absolute image paths will be resolved from the resource folders of your applications, such as `src/main/resources/web/`
+or `/public` (in the case of https://iamroq.com[Roq].
+
+=== Image variants
+
+At the moment, smaller image variants will be produced for the following sizes: 640, 1024, 1920, 2560, though
+this will be configurable in the future. Naturally, we only produce variants for sizes that are smaller than the
+original image.
+
+The original image, as you can see from the above example, is preserved in the resulting application.
+
+The generated variants are placed in files according to this pattern:
+
+[source]
+----
+/static/processed-images/{id}/{basename}_{size}.{ext}
+----
+
+id:: A short hash of the image content
+basename:: The file name of the image, without its extension
+size:: The width of the generated image
+ext:: The generated image extension (which at the moment will be the same as the source image extension)
