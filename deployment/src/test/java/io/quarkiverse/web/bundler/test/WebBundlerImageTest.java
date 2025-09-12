@@ -16,8 +16,9 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import io.quarkiverse.web.bundler.deployment.items.ImagePathMapperBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImageSourcePathBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ResponsivePathMapperBuildItem;
 import io.quarkus.builder.BuildChainBuilder;
 import io.quarkus.builder.BuildContext;
 import io.quarkus.builder.BuildStep;
@@ -28,7 +29,7 @@ import io.quarkus.qute.deployment.TemplatePathBuildItem;
 import io.quarkus.test.QuarkusUnitTest;
 import io.restassured.RestAssured;
 
-public class WebBundlerResponsiveTest {
+public class WebBundlerImageTest {
 
     public static class MyBuildStep implements BuildStep {
 
@@ -47,7 +48,8 @@ public class WebBundlerResponsiveTest {
             }
             context.produce(new QuteTemplateSourcePathBuildItem("index.html",
                     java.nio.file.Path.of("target/test-classes/roq/index.html")));
-            context.produce(new ResponsivePathMapperBuildItem(new Mapper()));
+            context.produce(new ImagePathMapperBuildItem(new Mapper()));
+            context.produce(new ImageSourcePathBuildItem(java.nio.file.Path.of("target/test-classes/roq-public")));
         }
 
         private static class Mapper implements Function<String, String> {
@@ -63,9 +65,10 @@ public class WebBundlerResponsiveTest {
         @Override
         public void accept(BuildChainBuilder buildChainBuilder) {
             buildChainBuilder.addBuildStep(new MyBuildStep())
-                    .produces(ResponsivePathMapperBuildItem.class)
+                    .produces(ImagePathMapperBuildItem.class)
                     .produces(TemplatePathBuildItem.class)
                     .produces(QuteTemplateSourcePathBuildItem.class)
+                    .produces(ImageSourcePathBuildItem.class)
                     .build();
         }
     }
@@ -82,32 +85,32 @@ public class WebBundlerResponsiveTest {
                     .addAsResource("web"));
 
     @Test
-    public void testResponsiveBuildTime() {
+    public void testImageBuildTime() {
 
         RestAssured.given()
-                .get("/responsive.html")
+                .get("/images.html")
                 .then()
                 .statusCode(200)
                 .log().body()
                 .body(Matchers
                         .containsString(
-                                "<img src=\"static/white_1920_1080.png\" srcset=\"/responsives/1b139664/white_1920_1080_640.png 640w, /responsives/1b139664/white_1920_1080_1024.png 1024w\"/>"));
+                                "<img src=\"static/white_1920_1080.png\" srcset=\"/static/processed-images/1b139664/white_1920_1080_640.png 640w, /static/processed-images/1b139664/white_1920_1080_1024.png 1024w\"/>"));
         RestAssured.given()
                 .get("/static/white_1920_1080.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/white_1920_1080_640.png")
+                .get("/static/processed-images/1b139664/white_1920_1080_640.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/white_1920_1080_1024.png")
+                .get("/static/processed-images/1b139664/white_1920_1080_1024.png")
                 .then()
                 .statusCode(200);
     }
 
     @Test
-    public void testResponsiveRunTime() {
+    public void testImageRunTime() {
 
         RestAssured.given()
                 .get("/rest")
@@ -117,27 +120,28 @@ public class WebBundlerResponsiveTest {
                 // FIXME There should actually be a newline in there but for some reason it gets removed
                 .body(Matchers
                         .containsString(
-                                "<img src=\"white_1920_1080.png\" srcset=\"/responsives/1b139664/white_1920_1080_640.png 640w, /responsives/1b139664/white_1920_1080_1024.png 1024w\"/>"
-                                        + "<img src=\"/static/white_1920_1080.png\" srcset=\"/responsives/1b139664/white_1920_1080_640.png 640w, /responsives/1b139664/white_1920_1080_1024.png 1024w\"/>"
-                                        + "<img src=\"fo-/fo-_1920_1080.png\" srcset=\"/responsives/1b139664/fo-_1920_1080_640.png 640w, /responsives/1b139664/fo-_1920_1080_1024.png 1024w\"/>"));
+                                "<img src=\"white_1920_1080.png\" srcset=\"/static/processed-images/1b139664/white_1920_1080_640.png 640w, /static/processed-images/1b139664/white_1920_1080_1024.png 1024w\"/>"
+                                        + "<img src=\"/static/white_1920_1080.png\" srcset=\"/static/processed-images/1b139664/white_1920_1080_640.png 640w, /static/processed-images/1b139664/white_1920_1080_1024.png 1024w\"/>"
+                                        + "<img src=\"fo-/fo-_1920_1080.png\" srcset=\"/static/processed-images/1b139664/fo-_1920_1080_640.png 640w, /static/processed-images/1b139664/fo-_1920_1080_1024.png 1024w\"/>"
+                                        + "<img src=\"/fo-_1920_1080.png\" srcset=\"/static/processed-images/1b139664/fo-_1920_1080_640.png 640w, /static/processed-images/1b139664/fo-_1920_1080_1024.png 1024w\"/>"));
         RestAssured.given()
                 .get("/static/white_1920_1080.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/white_1920_1080_640.png")
+                .get("/static/processed-images/1b139664/white_1920_1080_640.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/white_1920_1080_1024.png")
+                .get("/static/processed-images/1b139664/white_1920_1080_1024.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/fo-_1920_1080_640.png")
+                .get("/static/processed-images/1b139664/fo-_1920_1080_640.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/fo-_1920_1080_1024.png")
+                .get("/static/processed-images/1b139664/fo-_1920_1080_1024.png")
                 .then()
                 .statusCode(200);
     }

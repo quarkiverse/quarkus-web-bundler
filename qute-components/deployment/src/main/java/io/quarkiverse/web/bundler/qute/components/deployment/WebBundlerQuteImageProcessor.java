@@ -9,7 +9,7 @@ import io.quarkus.qute.TemplateNode;
 import io.quarkus.qute.deployment.TemplatePathBuildItem;
 import io.quarkus.qute.deployment.TemplatesAnalysisBuildItem;
 
-public class WebBundlerQuteResponsiveProcessor {
+public class WebBundlerQuteImageProcessor {
     @BuildStep
     void scanRuntimeQuteTemplates(
             BuildProducer<QuteRuntimeTemplateBuildItem> quteRuntimeTemplateBuildItemBuildProducer,

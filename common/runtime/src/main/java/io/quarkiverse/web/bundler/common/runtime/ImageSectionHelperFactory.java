@@ -17,24 +17,24 @@ import io.quarkus.qute.TemplateNode;
 import io.quarkus.qute.TextNode;
 
 @EngineConfiguration
-public class ResponsiveSectionHelperFactory implements SectionHelperFactory<SectionHelper> {
+public class ImageSectionHelperFactory implements SectionHelperFactory<SectionHelper> {
 
     @Inject
-    Responsive responsive;
+    Images images;
 
     // Used by CDI for runtime and build-time validation (of runtime templates)
-    public ResponsiveSectionHelperFactory() {
-        responsive = null;
+    public ImageSectionHelperFactory() {
+        images = null;
     }
 
     // Used for build-time templates
-    public ResponsiveSectionHelperFactory(Responsive responsive) {
-        this.responsive = responsive;
+    public ImageSectionHelperFactory(Images images) {
+        this.images = images;
     }
 
     @Override
     public List<String> getDefaultAliases() {
-        return Arrays.asList("responsive");
+        return Arrays.asList("image");
     }
 
     @Override
@@ -66,11 +66,11 @@ public class ResponsiveSectionHelperFactory implements SectionHelperFactory<Sect
             public CompletionStage<ResultNode> resolve(SectionResolutionContext context) {
                 return context.evaluate(fileExpression)
                         .thenApply(fileObject -> {
-                            Responsive.ResponsiveImageUser responsiveImageUser = responsive.get(
+                            Images.ImageUser imageUser = images.get(
                                     context.resolutionContext().getTemplate().getId(), (String) fileObject);
                             return new TextNode(
-                                    "<img src=\"" + responsiveImageUser.runtimeURI + "\" srcset=\""
-                                            + responsiveImageUser.image.srcset()
+                                    "<img src=\"" + imageUser.runtimeURI + "\" srcset=\""
+                                            + imageUser.image.srcset()
                                             + "\"/>",
                                     origin);
                         });

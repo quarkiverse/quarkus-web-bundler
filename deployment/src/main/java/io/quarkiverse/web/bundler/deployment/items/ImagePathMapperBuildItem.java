@@ -7,14 +7,14 @@ import io.quarkus.builder.item.SimpleBuildItem;
 /**
  * Allows extensions to define a rewrite function from source-declared paths
  * to run-time-declared paths.
- * For example, a responsive image might be located at `Foé/some.jpg` in the sources,
+ * For example, an image might be located at `Foé/some.jpg` in the sources,
  * and be placed at the `fo-/some.jpg` URI at run-time.
  */
-public final class ResponsivePathMapperBuildItem extends SimpleBuildItem {
+public final class ImagePathMapperBuildItem extends SimpleBuildItem {
 
     private final Function<String, String> rewriter;
 
-    public ResponsivePathMapperBuildItem(Function<String, String> rewriter) {
+    public ImagePathMapperBuildItem(Function<String, String> rewriter) {
         this.rewriter = rewriter;
     }
 

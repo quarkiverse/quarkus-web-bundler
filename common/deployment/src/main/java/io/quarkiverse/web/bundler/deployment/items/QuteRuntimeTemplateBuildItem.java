@@ -6,7 +6,7 @@ import io.quarkus.builder.item.MultiBuildItem;
 import io.quarkus.qute.TemplateNode;
 
 /**
- * Represents a list of Qute templates to scan for responsive tags
+ * Represents a list of Qute templates to scan for image tags
  */
 public final class QuteRuntimeTemplateBuildItem extends MultiBuildItem {
 

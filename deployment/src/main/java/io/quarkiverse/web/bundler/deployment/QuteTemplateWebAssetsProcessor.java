@@ -20,13 +20,13 @@ import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
-import io.quarkiverse.web.bundler.common.runtime.Responsive;
-import io.quarkiverse.web.bundler.common.runtime.ResponsiveSectionHelperFactory;
+import io.quarkiverse.web.bundler.common.runtime.ImageSectionHelperFactory;
+import io.quarkiverse.web.bundler.common.runtime.Images;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImagePathMapperBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImageSourcePathBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImagesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ResponsiveBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ResponsiveImageBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ResponsivePathMapperBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
@@ -35,7 +35,6 @@ import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.qute.Engine;
 import io.quarkus.qute.EvalContext;
 import io.quarkus.qute.Expression;
@@ -58,11 +57,10 @@ public class QuteTemplateWebAssetsProcessor {
             WebBundlerTargetDirBuildItem targetDirBuildItem,
             GeneratedBundleBuildItem generatedBundle,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
-            BuildProducer<ResponsiveImageBuildItem> responsiveImageProducer,
-            LiveReloadBuildItem liveReload,
             LaunchModeBuildItem launchMode,
-            BuildProducer<ResponsiveBuildItem> responsiveBuildItemBuildProducer,
-            Optional<ResponsivePathMapperBuildItem> responsivePathMapperBuildItem) {
+            BuildProducer<ImagesBuildItem> imagesBuildItemProducer,
+            Optional<ImagePathMapperBuildItem> imagePathMapperBuildItem,
+            List<ImageSourcePathBuildItem> imageSourcePathBuildItems) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
         final Bundle.Mapping mapping = new Bundle.Mapping() {
             @Override
@@ -75,13 +73,12 @@ public class QuteTemplateWebAssetsProcessor {
                 return bundle.keySet();
             }
         };
-        Responsive responsive = new Responsive();
+        Images images = new Images();
         final Engine engine = Engine.builder()
                 .addDefaults()
                 .addNamespaceResolver(NamespaceResolver.builder("inject")
                         .resolve((c) -> switch (c.getName()) {
                             case "bundle" -> new Bundle(mapping);
-                            case "responsive" -> responsive;
                             default -> null;
                         })
                         .build())
@@ -93,7 +90,7 @@ public class QuteTemplateWebAssetsProcessor {
                         .build())
                 .addLocator(new WebBundlerTagsLocator())
                 .addSectionHelper(new UserTagSectionHelper.Factory("bundle", "web-bundler/bundle.html"))
-                .addSectionHelper("responsive", new ResponsiveSectionHelperFactory(responsive))
+                .addSectionHelper("image", new ImageSectionHelperFactory(images))
                 .addValueResolver(new ReflectionValueResolver())
                 .addParserHook(new Qute.IndexedArgumentsParserHook())
                 .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
@@ -102,14 +99,15 @@ public class QuteTemplateWebAssetsProcessor {
             final byte[] bytes = webAsset.resource().contentOrReadFromFile();
             Template template = engine.parse(new String(bytes, webAsset.charset()));
             String pathFromWebRoot = webAsset.pathFromWebRoot(config.webRoot());
-            ResponsiveAssetsProcessor.scanResponsiveTags(template, responsive, webAsset, staticResourceProducer,
-                    pathFromWebRoot, targetDirBuildItem.dist(), responsivePathMapperBuildItem);
+            ImageAssetsProcessor.scanImageTags(template, images, webAsset, staticResourceProducer,
+                    pathFromWebRoot, targetDirBuildItem.dist(), imagePathMapperBuildItem,
+                    imageSourcePathBuildItems);
             final String content = template.render();
             makeWebAssetPublic(staticResourceProducer, prefixWithSlash(pathFromWebRoot),
                     HtmlPageWebAsset.of(webAsset, content), SourceType.BUILD_TIME_TEMPLATE);
         }
         // pass this on to any eventual runtime templates
-        responsiveBuildItemBuildProducer.produce(new ResponsiveBuildItem(responsive));
+        imagesBuildItemProducer.produce(new ImagesBuildItem(images));
     }
 
     private CompletionStage<Object> resolveConfig(EvalContext ctx) {

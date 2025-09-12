@@ -10,12 +10,12 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 
 @QuarkusTest
-public class ResponsiveTest {
+public class ImageTest {
     @TestHTTPResource("/")
     URL url;
 
     @Test
-    void responsive() {
+    void image() {
         RestAssured.given()
                 .get("/")
                 .then()
@@ -23,17 +23,17 @@ public class ResponsiveTest {
                 .log().body()
                 .body(Matchers
                         .containsString(
-                                "<img src=\"/static/white_1920_1080.png\" srcset=\"/responsives/1b139664/white_1920_1080_640.png 640w, /responsives/1b139664/white_1920_1080_1024.png 1024w\"/>"));
+                                "<img src=\"/static/white_1920_1080.png\" srcset=\"/static/processed-images/1b139664/white_1920_1080_640.png 640w, /static/processed-images/1b139664/white_1920_1080_1024.png 1024w\"/>"));
         RestAssured.given()
                 .get("/static/white_1920_1080.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/white_1920_1080_640.png")
+                .get("/static/processed-images/1b139664/white_1920_1080_640.png")
                 .then()
                 .statusCode(200);
         RestAssured.given()
-                .get("/responsives/1b139664/white_1920_1080_1024.png")
+                .get("/static/processed-images/1b139664/white_1920_1080_1024.png")
                 .then()
                 .statusCode(200);
     }

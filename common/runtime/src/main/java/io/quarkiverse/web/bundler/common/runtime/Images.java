@@ -1,9 +1,6 @@
 package io.quarkiverse.web.bundler.common.runtime;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -17,21 +14,21 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 @Singleton
-@Named("responsive")
-public class Responsive {
+@Named("images")
+public class Images {
 
     // cache of absolute image path to image id
     Map<Path, String> imageIdsByPath = new HashMap<>();
     // map of image (id/file) to image
-    Map<String, ResponsiveImage> images = new HashMap<>();
+    Map<String, Image> images = new HashMap<>();
     // map of user (by key:templateid/file) to image user
-    Map<String, ResponsiveImageUser> users = new HashMap<>();
+    Map<String, ImageUser> users = new HashMap<>();
 
-    public ResponsiveImage addImage(Path absoluteImagePath, String targetFileName) {
-        String id = imageIdsByPath.get(absoluteImagePath);
+    public Image addImage(ResolvedSourceImage resolvedImage, String targetFileName) {
+        String id = imageIdsByPath.get(resolvedImage.absolutePath());
         if (id == null) {
-            id = digest(absoluteImagePath);
-            imageIdsByPath.put(absoluteImagePath, id);
+            id = digest(resolvedImage.contents());
+            imageIdsByPath.put(resolvedImage.absolutePath(), id);
         }
         /*
          * The idea here is that we want to make sure responsives for a unique absolute path end up in the same folder (same id,
@@ -44,51 +41,49 @@ public class Responsive {
          */
         String finalId = id;
         String key = keyImage(id, targetFileName);
-        return images.computeIfAbsent(key, key2 -> new ResponsiveImage(finalId, targetFileName));
+        return images.computeIfAbsent(key, key2 -> new Image(finalId, targetFileName));
     }
 
     private String keyImage(String id, String targetFileName) {
         return id + "|" + targetFileName;
     }
 
-    private String digest(Path absoluteImagePath) {
-        try (var is = new DigestInputStream(Files.newInputStream(absoluteImagePath), MessageDigest.getInstance("SHA-1"))) {
-            byte[] buffer = new byte[8192];
-            while (is.read(buffer) > -1) {
-            }
-            byte[] digest = is.getMessageDigest().digest();
+    private String digest(byte[] contents) {
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+            byte[] digest = messageDigest.digest(contents);
             // only keep the first 8 chars (4 bytes)
             StringBuilder sb = new StringBuilder(8);
             for (int i = 0; i < 4; ++i) {
                 sb.append(Integer.toHexString(digest[i] & 255 | 256).substring(1, 3));
             }
             return sb.toString();
-        } catch (IOException | NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
 
     // for static init
-    public ResponsiveImage restoreImage(String id, String imageFileName) {
-        ResponsiveImage image = new ResponsiveImage(id, imageFileName);
+    public Image restoreImage(String id, String imageFileName) {
+        Image image = new Image(id, imageFileName);
         images.put(keyImage(id, imageFileName), image);
         return image;
     }
 
-    public Map<ResponsiveImage, Set<ResponsiveImageUser>> collectImageUsers() {
-        Map<ResponsiveImage, Set<ResponsiveImageUser>> ret = new HashMap<>();
+    public Map<Image, Set<ImageUser>> collectImageUsers() {
+        Map<Image, Set<ImageUser>> ret = new HashMap<>();
         for (var user : users.values()) {
             ret.computeIfAbsent(user.image, x -> new HashSet<>()).add(user);
         }
         return ret;
     }
 
-    public void registerImageUser(String templateId, String declaredUri, String runtimeUri, ResponsiveImage responsiveImage) {
+    public void registerImageUser(String templateId, String declaredUri, String runtimeUri, Image image) {
         users.put(keyImageUser(templateId, declaredUri),
-                new ResponsiveImageUser(templateId, declaredUri, runtimeUri, responsiveImage));
+                new ImageUser(templateId, declaredUri, runtimeUri, image));
     }
 
-    public ResponsiveImageUser get(String templateId, String declaredURI) {
+    public ImageUser get(String templateId, String declaredURI) {
         return users.get(keyImageUser(templateId, declaredURI));
     }
 
@@ -97,16 +92,16 @@ public class Responsive {
     }
 
     /**
-     * This represents a responsive tag, pointing to a responsive image
+     * This represents an image tag, pointing to a processed image
      */
-    public static class ResponsiveImageUser {
-        public final ResponsiveImage image;
+    public static class ImageUser {
+        public final Image image;
         public final String runtimeURI;
         public final String declaredURI;
         public final String templateId;
         // Eventually, this will list the variants in use
 
-        public ResponsiveImageUser(String templateId, String declaredURI, String runtimeURI, ResponsiveImage image) {
+        public ImageUser(String templateId, String declaredURI, String runtimeURI, Image image) {
             this.templateId = templateId;
             this.declaredURI = declaredURI;
             this.image = image;
@@ -115,15 +110,15 @@ public class Responsive {
     }
 
     /**
-     * This represents a unique responsive image for a unique path along with all its generated variants
+     * This represents a unique image for a unique path along with all its generated variants
      */
-    public static class ResponsiveImage {
+    public static class Image {
 
         public final TreeMap<Integer, Variant> variants = new TreeMap<>();
         public final String id;
         public final String fileName;
 
-        public ResponsiveImage(String id, String imageFileName) {
+        public Image(String id, String imageFileName) {
             this.id = id;
             this.fileName = imageFileName;
         }
@@ -166,7 +161,7 @@ public class Responsive {
         public class Variant {
 
             public final int width;
-            // this is relative to the target dir: responsives/id/filename-width.ext
+            // this is relative to the target dir: static/processed-images/id/filename-width.ext
             public final Path path;
 
             public Variant(int width) {
@@ -187,7 +182,7 @@ public class Responsive {
                 } else {
                     newFileName = fileName + "_" + width;
                 }
-                return Path.of("responsives", id, newFileName);
+                return Path.of("static", "processed-images", id, newFileName);
             }
 
             public String uriPath() {
@@ -195,5 +190,14 @@ public class Responsive {
                 return path.toString().replace('\\', '/');
             }
         }
+    }
+
+    /**
+     * Used to represent a resolved image, which can be on the FS, or in a zip file, or in the classpath. This
+     * is suboptimal, I'd rather use a ByteBuffer which can be memory mapped and avoir loading the image in memory
+     * but the ImageIO API doesn't use it anyway, so it's moot.
+     */
+    public record ResolvedSourceImage(Path absolutePath, byte[] contents) {
+
     }
 }

@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -20,17 +21,18 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.bundler.common.runtime.Responsive;
-import io.quarkiverse.web.bundler.common.runtime.ResponsiveSectionHelperFactory;
+import io.quarkiverse.web.bundler.common.runtime.ImageSectionHelperFactory;
+import io.quarkiverse.web.bundler.common.runtime.Images;
+import io.quarkiverse.web.bundler.deployment.items.ImagePathMapperBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImageSourcePathBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImagesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteRuntimeTemplateBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ResponsiveBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ResponsivePathMapperBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
-import io.quarkiverse.web.bundler.runtime.ResponsiveRecorder;
+import io.quarkiverse.web.bundler.runtime.ImageRecorder;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -44,9 +46,9 @@ import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateNode;
 import io.quarkus.runtime.RuntimeValue;
 
-public class ResponsiveAssetsProcessor {
+public class ImageAssetsProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(ResponsiveAssetsProcessor.class);
+    private static final Logger LOGGER = Logger.getLogger(ImageAssetsProcessor.class);
 
     // From https://dev.to/razbakov/responsive-images-best-practices-in-2025-4dlb
     private static final int[] DIMENSIONS = new int[] {
@@ -64,13 +66,13 @@ public class ResponsiveAssetsProcessor {
     @BuildStep
     void initBundleBean(
             BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
-        additionalBeans.produce(new AdditionalBeanBuildItem(Responsive.class));
-        additionalBeans.produce(new AdditionalBeanBuildItem(ResponsiveSectionHelperFactory.class));
+        additionalBeans.produce(new AdditionalBeanBuildItem(Images.class));
+        additionalBeans.produce(new AdditionalBeanBuildItem(ImageSectionHelperFactory.class));
     }
 
     @Record(ExecutionTime.RUNTIME_INIT)
     @BuildStep
-    void scanRuntimeQuteTemplates(ResponsiveRecorder responsiveRecorder,
+    void scanRuntimeQuteTemplates(ImageRecorder imageRecorder,
             BeanContainerBuildItem beanContainer,
             List<QuteRuntimeTemplateBuildItem> quteRuntimeTemplateBuildItem,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
@@ -78,19 +80,20 @@ public class ResponsiveAssetsProcessor {
             WebBundlerConfig config,
             ApplicationArchivesBuildItem applicationArchives,
             QuteTemplateSourcePathsBuildItem quteTemplatePathsBuildItem,
-            ResponsiveBuildItem responsiveBuildItem,
-            Optional<ResponsivePathMapperBuildItem> responsivePathMapperBuildItem) {
+            ImagesBuildItem imagesBuildItem,
+            Optional<ImagePathMapperBuildItem> imagePathMapperBuildItem,
+            List<ImageSourcePathBuildItem> imageSourcePathBuildItems) {
         if (quteRuntimeTemplateBuildItem.isEmpty()) {
             return;
         }
-        // collect responsive usages, starting from the build-time templates
-        Responsive responsive = responsiveBuildItem.responsive;
+        // collect image usages, starting from the build-time templates
+        Images images = imagesBuildItem.images;
         String staticWebPath = config.webRoot();
         Path staticResourcesPath = applicationArchives.getRootArchive().getChildPath(staticWebPath);
 
         for (QuteRuntimeTemplateBuildItem runtimeTemplateBuildItem : quteRuntimeTemplateBuildItem) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debugf("Inspecting (run-time) template %s for responsive tags",
+                LOGGER.debugf("Inspecting (run-time) template %s for image tags",
                         runtimeTemplateBuildItem.templatePath);
             }
             // default to null
@@ -98,35 +101,37 @@ public class ResponsiveAssetsProcessor {
                     .get(runtimeTemplateBuildItem.templatePath);
             // we don't want to place images in the templates folder
             runtimeTemplateBuildItem.sectionNodes.stream().map(TemplateNode::asSection)
-                    .filter(s -> s.getName().equals("responsive"))
-                    .forEach(resp -> collectResponsive(resp,
+                    .filter(s -> s.getName().equals("image"))
+                    .forEach(resp -> collectImage(resp,
                             runtimeTemplateBuildItem.templatePath, templatePath,
-                            responsive,
+                            images,
                             staticResourceProducer,
                             staticResourcesPath, targetDirBuildItem.dist(),
-                            responsivePathMapperBuildItem.orElse(null)));
+                            imagePathMapperBuildItem.orElse(null),
+                            imageSourcePathBuildItems));
 
         }
 
         // now populate the runtime value from the build-time value
-        for (var userEntry : responsive.collectImageUsers().entrySet()) {
-            Responsive.ResponsiveImage image = userEntry.getKey();
-            RuntimeValue<Responsive.ResponsiveImage> runtimeImage = responsiveRecorder.addResponsive(beanContainer.getValue(),
+        for (var userEntry : images.collectImageUsers().entrySet()) {
+            Images.Image image = userEntry.getKey();
+            RuntimeValue<Images.Image> runtimeImage = imageRecorder.addImage(beanContainer.getValue(),
                     image.id, image.fileName,
                     image.collectVariants());
-            for (Responsive.ResponsiveImageUser user : userEntry.getValue()) {
-                responsiveRecorder.addImageUser(beanContainer.getValue(), user.templateId, user.declaredURI, user.runtimeURI,
+            for (Images.ImageUser user : userEntry.getValue()) {
+                imageRecorder.addImageUser(beanContainer.getValue(), user.templateId, user.declaredURI, user.runtimeURI,
                         runtimeImage);
             }
         }
     }
 
-    public static void scanResponsiveTags(Template template, Responsive responsive, WebAsset webAsset,
+    public static void scanImageTags(Template template, Images images, WebAsset webAsset,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, String pathFromWebRoot, Path targetDist,
-            Optional<ResponsivePathMapperBuildItem> responsivePathMapperBuildItem) {
+            Optional<ImagePathMapperBuildItem> imagePathMapperBuildItem,
+            List<ImageSourcePathBuildItem> imageSourcePathBuildItems) {
         Path webAssetPath = webAsset.resource().path();
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debugf("Inspecting (build-time) template %s for responsive tags", webAssetPath);
+            LOGGER.debugf("Inspecting (build-time) template %s for image tags", webAssetPath);
         }
         // This is disgusting, but I (Stef) could not find how to do this cleanly
         String webAssetPathString = webAssetPath.toString();
@@ -136,15 +141,17 @@ public class ResponsiveAssetsProcessor {
         }
         Path webFolderPath = Path.of(webAssetPathString.substring(0, webAssetPathString.length() - pathFromWebRoot.length()));
         template.findNodes(TemplateNode::isSection).stream().map(TemplateNode::asSection)
-                .filter(s -> s.getName().equals("responsive"))
-                .forEach(resp -> collectResponsive(resp, webAsset.resourceName(), webAsset.resource().path(), responsive,
+                .filter(s -> s.getName().equals("image"))
+                .forEach(resp -> collectImage(resp, webAsset.resourceName(), webAsset.resource().path(), images,
                         staticResourceProducer,
-                        webFolderPath, targetDist, responsivePathMapperBuildItem.orElse(null)));
+                        webFolderPath, targetDist, imagePathMapperBuildItem.orElse(null),
+                        imageSourcePathBuildItems));
     }
 
-    private static void collectResponsive(SectionNode resp, String templateName, Path templatePath, Responsive responsive,
+    private static void collectImage(SectionNode resp, String templateName, Path templatePath, Images images,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
-            Path webFolderPath, Path targetDist, ResponsivePathMapperBuildItem responsivePathMapperBuildItem) {
+            Path webFolderPath, Path targetDist, ImagePathMapperBuildItem imagePathMapperBuildItem,
+            List<ImageSourcePathBuildItem> imageSourcePathBuildItems) {
         List<Expression> expressions = resp.getExpressions();
         if (expressions.size() == 1) {
             Expression expr = expressions.get(0);
@@ -152,59 +159,100 @@ public class ResponsiveAssetsProcessor {
                 Object literal = expr.getLiteral();
                 if (literal instanceof String file) {
                     Path imagePath = Path.of(file);
-                    Path absoluteImagePath;
+                    Images.ResolvedSourceImage resolvedImage;
                     // We can't use Path.isAbsolute on Windows, and our paths are expected to be URIs anyways
                     if (file.startsWith("/")) {
                         // we need to resolve by passing a string, otherwise we get an exception due to different FS providers
                         // for zip filesystems
-                        absoluteImagePath = webFolderPath.resolve(imagePath.subpath(0, imagePath.getNameCount()).toString());
+                        resolvedImage = resolveAbsoluteFile(webFolderPath, imageSourcePathBuildItems,
+                                imagePath.subpath(0, imagePath.getNameCount()).toString());
                     } else if (templatePath != null) {
-                        absoluteImagePath = templatePath.getParent().resolve(imagePath);
+                        Path resolvedPath = templatePath.getParent().resolve(imagePath);
+                        resolvedImage = resolveImage(resolvedPath);
+                        if (resolvedImage == null) {
+                            throw new RuntimeException("Image does not exist or is not a file: " + imagePath + " (looked up at "
+                                    + resolvedPath + ")");
+                        }
                     } else {
                         throw new RuntimeException(
                                 "Cannot refer to relative files from template when we do not know the template path: "
                                         + templateName);
                     }
-                    if (!Files.isRegularFile(absoluteImagePath)) {
-                        throw new RuntimeException("Image does not exist or is not a file: " + imagePath + " (looked up at "
-                                + absoluteImagePath + ")");
-                    }
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debugf(" Found responsive tag for image: %s", imagePath);
+                        LOGGER.debugf(" Found image tag for image: %s", imagePath);
                     }
-                    String targetFileName = absoluteImagePath.getFileName().toString();
-                    if (responsivePathMapperBuildItem != null) {
-                        targetFileName = responsivePathMapperBuildItem
-                                .getRuntimeURI(absoluteImagePath.getFileName().toString());
+                    String targetFileName = imagePath.getFileName().toString();
+                    if (imagePathMapperBuildItem != null) {
+                        targetFileName = imagePathMapperBuildItem
+                                .getRuntimeURI(targetFileName);
                     }
-                    Responsive.ResponsiveImage collectedImage = responsive.addImage(absoluteImagePath, targetFileName);
-                    String runtimeFile = responsivePathMapperBuildItem != null
-                            ? responsivePathMapperBuildItem.getRuntimeURI(file)
+                    Images.Image collectedImage = images.addImage(resolvedImage, targetFileName);
+                    String runtimeFile = imagePathMapperBuildItem != null
+                            ? imagePathMapperBuildItem.getRuntimeURI(file)
                             : file;
-                    responsive.registerImageUser(resp.getOrigin().getTemplateId(), file, runtimeFile, collectedImage);
-                    processResponsiveImage(absoluteImagePath, collectedImage, staticResourceProducer, targetDist);
+                    images.registerImageUser(resp.getOrigin().getTemplateId(), file, runtimeFile, collectedImage);
+                    processImage(resolvedImage, collectedImage, staticResourceProducer, targetDist);
                 } else {
-                    throw new RuntimeException("Invalid responsive literal: " + literal + " (must be a string literal)");
+                    throw new RuntimeException("Invalid image literal: " + literal + " (must be a string literal)");
                 }
             } else {
-                throw new RuntimeException("Invalid responsive parameter: " + expr + " (must be a string literal)");
+                throw new RuntimeException("Invalid image parameter: " + expr + " (must be a string literal)");
             }
         } else {
             throw new RuntimeException(
-                    "Invalid responsive parameter list: " + expressions + " (must be a single string literal)");
+                    "Invalid image parameter list: " + expressions + " (must be a single string literal)");
         }
     }
 
-    private static void processResponsiveImage(Path absoluteImagePath,
-            Responsive.ResponsiveImage responsiveImage, BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
+    private static Images.ResolvedSourceImage resolveAbsoluteFile(Path webFolderPath,
+            List<ImageSourcePathBuildItem> imageSourcePathBuildItems, String pathToResolve) {
+        // It's possible for the web folder path to be null (in Roq)
+        if (webFolderPath != null) {
+            Path resolvedPath = webFolderPath.resolve(pathToResolve);
+            Images.ResolvedSourceImage ret = resolveImage(resolvedPath);
+            if (ret != null) {
+                return ret;
+            }
+        }
+        for (ImageSourcePathBuildItem imageSourcePathBuildItem : imageSourcePathBuildItems) {
+            Path resolvedPath = imageSourcePathBuildItem.path.resolve(pathToResolve);
+            Images.ResolvedSourceImage ret = resolveImage(resolvedPath);
+            if (ret != null) {
+                return ret;
+            }
+        }
+        throw new RuntimeException("Image does not exist or is not a file: " + pathToResolve + " (looked up at "
+                + webFolderPath + " and " + imageSourcePathBuildItems.stream().map(bi -> bi.path).toList() + ")");
+    }
+
+    private static Images.ResolvedSourceImage resolveImage(Path resolvedPath) {
+        try (InputStream resourceStream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(resolvedPath.toString())) {
+            if (resourceStream != null) {
+                return new Images.ResolvedSourceImage(resolvedPath, resourceStream.readAllBytes());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read image " + resolvedPath + " from the classpath", e);
+        }
+        if (Files.isRegularFile(resolvedPath)) {
+            try {
+                return new Images.ResolvedSourceImage(resolvedPath, Files.readAllBytes(resolvedPath));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read image " + resolvedPath + " from the filesystem", e);
+            }
+        }
+        return null;
+    }
+
+    private static void processImage(Images.ResolvedSourceImage resolvedImage,
+            Images.Image processedImage, BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             Path targetDist) {
         try {
             // FIXME: we should only read the image once to figure out its size, and later generate all collected variants
             BufferedImage image = null;
             String format = null;
-            // We can't use Path.toFile() which does not work for zip entries, so we can't pass a File to createImageInputStream
-            byte[] bytes = Files.readAllBytes(absoluteImagePath);
-            try (ImageInputStream imageInputStream = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            try (ImageInputStream imageInputStream = ImageIO
+                    .createImageInputStream(new ByteArrayInputStream(resolvedImage.contents()))) {
                 Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(imageInputStream);
                 while (imageReaders.hasNext()) {
                     ImageReader imageReader = imageReaders.next();
@@ -230,8 +278,8 @@ public class ResponsiveAssetsProcessor {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debugf("  [%s] Need to resize", dimension);
                     }
-                    scaleImage(image, absoluteImagePath, format, dimension,
-                            responsiveImage, staticResourceProducer, targetDist);
+                    scaleImage(image, format, dimension,
+                            processedImage, staticResourceProducer, targetDist);
                 } else {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debugf("  [%s] No need to resize (source image is smaller)", dimension);
@@ -243,12 +291,12 @@ public class ResponsiveAssetsProcessor {
         }
     }
 
-    private static void scaleImage(BufferedImage image, Path absoluteImagePath, String format, int width,
-            Responsive.ResponsiveImage responsiveImage, BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
+    private static void scaleImage(BufferedImage image, String format, int width,
+            Images.Image processedImage, BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             Path targetDist)
             throws IOException {
-        responsiveImage.addScaledImage(width, newVariant -> {
-            Image scaledImage = image.getScaledInstance(width, -1, Image.SCALE_DEFAULT);
+        processedImage.addScaledImage(width, newVariant -> {
+            Image scaledImage = image.getScaledInstance(width, -1, java.awt.Image.SCALE_DEFAULT);
             Path scaledAbsolutePath = resizedImagePath(targetDist, newVariant);
             RenderedImage scaledImageRendered;
             if (scaledImage instanceof RenderedImage s) {
@@ -285,14 +333,14 @@ public class ResponsiveAssetsProcessor {
     }
 
     private static Path resizedImagePath(Path targetPath,
-            Responsive.ResponsiveImage.Variant newVariant) {
+            Images.Image.Variant newVariant) {
         // Make sure the target folder exists
-        Path targetResponsivePath = targetPath.resolve(newVariant.path);
+        Path targetProcessedImagesPath = targetPath.resolve(newVariant.path);
         try {
-            Files.createDirectories(targetResponsivePath.getParent());
+            Files.createDirectories(targetProcessedImagesPath.getParent());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return targetResponsivePath;
+        return targetProcessedImagesPath;
     }
 }
