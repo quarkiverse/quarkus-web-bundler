@@ -28,7 +28,7 @@
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <esbuild-java.version>1.5.3</esbuild-java.version>
+    <esbuild-java.version>1.5.4</esbuild-java.version>
     <quarkus.version>3.12.0</quarkus.version>
     <scrimage-core.version>4.1.1</scrimage-core.version>
   </properties>
