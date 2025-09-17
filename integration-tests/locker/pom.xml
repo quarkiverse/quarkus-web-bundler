@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.web-bundler</groupId>
     <artifactId>quarkus-web-bundler-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>1.9.3</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>quarkus-web-bundler-integration-tests-locker</artifactId>
