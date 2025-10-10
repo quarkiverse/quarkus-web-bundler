@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.web.bundler.deployment.items.ImagePathMapperBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ImageSourcePathBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathBuildItem;
+import io.quarkiverse.web.bundler.spi.items.QuteTemplateSourcePathBuildItem;
 import io.quarkus.builder.BuildChainBuilder;
 import io.quarkus.builder.BuildContext;
 import io.quarkus.builder.BuildStep;

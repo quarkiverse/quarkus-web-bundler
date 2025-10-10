@@ -2,7 +2,7 @@ package io.quarkiverse.web.bundler.qute.components.deployment;
 
 import java.util.List;
 
-import io.quarkiverse.web.bundler.deployment.items.QuteRuntimeTemplateBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.QuteImageTemplateToScanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.qute.TemplateNode;
@@ -12,7 +12,7 @@ import io.quarkus.qute.deployment.TemplatesAnalysisBuildItem;
 public class WebBundlerQuteImageProcessor {
     @BuildStep
     void scanRuntimeQuteTemplates(
-            BuildProducer<QuteRuntimeTemplateBuildItem> quteRuntimeTemplateBuildItemBuildProducer,
+            BuildProducer<QuteImageTemplateToScanBuildItem> quteRuntimeTemplateBuildItemBuildProducer,
             TemplatesAnalysisBuildItem templatesAnalysisBuildItem,
             List<TemplatePathBuildItem> tp) {
         // Collect runtime templates that are build-time validated, and pass them on to the normal deployment
@@ -23,7 +23,7 @@ public class WebBundlerQuteImageProcessor {
             //            findTemplatePath(analysis.path, tp);
             // Note that the template ID is not set at this stage, for some reason
             quteRuntimeTemplateBuildItemBuildProducer
-                    .produce(new QuteRuntimeTemplateBuildItem(analysis.findNodes(TemplateNode::isSection),
+                    .produce(new QuteImageTemplateToScanBuildItem(analysis.findNodes(TemplateNode::isSection),
                             analysis.path));
         }
     }

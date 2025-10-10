@@ -26,13 +26,13 @@ import io.quarkiverse.web.bundler.common.runtime.Images;
 import io.quarkiverse.web.bundler.deployment.items.ImagePathMapperBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ImageSourcePathBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ImagesBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.QuteRuntimeTemplateBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.QuteTemplateSourcePathsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.QuteImageTemplateToScanBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.runtime.ImageRecorder;
+import io.quarkiverse.web.bundler.spi.items.QuteTemplateSourcePathBuildItem;
+import io.quarkiverse.web.bundler.spi.items.QuteTemplateSourcePathsBuildItem;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -74,7 +74,7 @@ public class ImageAssetsProcessor {
     @BuildStep
     void scanRuntimeQuteTemplates(ImageRecorder imageRecorder,
             BeanContainerBuildItem beanContainer,
-            List<QuteRuntimeTemplateBuildItem> quteRuntimeTemplateBuildItem,
+            List<QuteImageTemplateToScanBuildItem> templateToScan,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             WebBundlerTargetDirBuildItem targetDirBuildItem,
             WebBundlerConfig config,
@@ -83,7 +83,7 @@ public class ImageAssetsProcessor {
             ImagesBuildItem imagesBuildItem,
             Optional<ImagePathMapperBuildItem> imagePathMapperBuildItem,
             List<ImageSourcePathBuildItem> imageSourcePathBuildItems) {
-        if (quteRuntimeTemplateBuildItem.isEmpty()) {
+        if (templateToScan.isEmpty() || imagesBuildItem == null) {
             return;
         }
         // collect image usages, starting from the build-time templates
@@ -91,7 +91,7 @@ public class ImageAssetsProcessor {
         String staticWebPath = config.webRoot();
         Path staticResourcesPath = applicationArchives.getRootArchive().getChildPath(staticWebPath);
 
-        for (QuteRuntimeTemplateBuildItem runtimeTemplateBuildItem : quteRuntimeTemplateBuildItem) {
+        for (QuteImageTemplateToScanBuildItem runtimeTemplateBuildItem : templateToScan) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debugf("Inspecting (run-time) template %s for image tags",
                         runtimeTemplateBuildItem.templatePath);
@@ -129,7 +129,7 @@ public class ImageAssetsProcessor {
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, String pathFromWebRoot, Path targetDist,
             Optional<ImagePathMapperBuildItem> imagePathMapperBuildItem,
             List<ImageSourcePathBuildItem> imageSourcePathBuildItems) {
-        Path webAssetPath = webAsset.resource().path();
+        Path webAssetPath = webAsset.path();
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debugf("Inspecting (build-time) template %s for image tags", webAssetPath);
         }
@@ -142,7 +142,7 @@ public class ImageAssetsProcessor {
         Path webFolderPath = Path.of(webAssetPathString.substring(0, webAssetPathString.length() - pathFromWebRoot.length()));
         template.findNodes(TemplateNode::isSection).stream().map(TemplateNode::asSection)
                 .filter(s -> s.getName().equals("image"))
-                .forEach(resp -> collectImage(resp, webAsset.resourceName(), webAsset.resource().path(), images,
+                .forEach(resp -> collectImage(resp, webAsset.webPath(), webAsset.path(), images,
                         staticResourceProducer,
                         webFolderPath, targetDist, imagePathMapperBuildItem.orElse(null),
                         imageSourcePathBuildItems));
@@ -319,9 +319,9 @@ public class ImageAssetsProcessor {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debugf("   [%s] Resized to %s, accessible at: %s", width, scaledAbsolutePath, scaledWebPath);
             }
-            staticResourceProducer.produce(new GeneratedWebResourceBuildItem(
+            staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromFile(
                     scaledWebPath,
-                    new WebAsset.Resource(scaledAbsolutePath), GeneratedWebResourceBuildItem.SourceType.STATIC_ASSET));
+                    scaledAbsolutePath, GeneratedWebResourceBuildItem.SourceType.STATIC_ASSET));
         });
     }
 

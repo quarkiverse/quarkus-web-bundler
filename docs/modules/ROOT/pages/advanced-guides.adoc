@@ -443,7 +443,7 @@ Which will be expanded to the following `<img>` tag:
 Relative image paths will be resolved relative to the template that includes the image.
 
 Absolute image paths will be resolved from the resource folders of your applications, such as `src/main/resources/web/`
-or `/public` (in the case of https://iamroq.com[Roq].
+or `/public` (in the case of https://iamroq.com[Roq]).
 
 === Image variants
 
