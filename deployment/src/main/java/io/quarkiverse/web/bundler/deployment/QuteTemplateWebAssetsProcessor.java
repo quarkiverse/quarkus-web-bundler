@@ -17,23 +17,46 @@ import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
+import io.quarkiverse.web.bundler.common.runtime.ImageSectionHelperFactory;
+import io.quarkiverse.web.bundler.common.runtime.Images;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImagePathMapperBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImageSourcePathBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ImagesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
+import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.qute.*;
+import io.quarkus.qute.Engine;
+import io.quarkus.qute.EvalContext;
+import io.quarkus.qute.Expression;
+import io.quarkus.qute.HtmlEscaper;
+import io.quarkus.qute.ImmutableList;
+import io.quarkus.qute.NamespaceResolver;
+import io.quarkus.qute.Qute;
+import io.quarkus.qute.ReflectionValueResolver;
+import io.quarkus.qute.Results;
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateLocator;
+import io.quarkus.qute.UserTagSectionHelper;
+import io.quarkus.qute.Variant;
 
 public class QuteTemplateWebAssetsProcessor {
+
     @BuildStep
     void processHtmlTemplateWebAssets(QuteTemplatesBuildItem htmlTemplates,
+            WebBundlerTargetDirBuildItem targetDirBuildItem,
             GeneratedBundleBuildItem generatedBundle,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
-            LaunchModeBuildItem launchMode) {
+            LaunchModeBuildItem launchMode,
+            BuildProducer<ImagesBuildItem> imagesBuildItemProducer,
+            Optional<ImagePathMapperBuildItem> imagePathMapperBuildItem,
+            List<ImageSourcePathBuildItem> imageSourcePathBuildItems) {
         if (htmlTemplates.getWebAssets().isEmpty()) {
             return;
         }
@@ -49,10 +72,14 @@ public class QuteTemplateWebAssetsProcessor {
                 return bundle.keySet();
             }
         };
+        Images images = new Images();
         final Engine engine = Engine.builder()
                 .addDefaults()
                 .addNamespaceResolver(NamespaceResolver.builder("inject")
-                        .resolve((c) -> c.getName().equals("bundle") ? new Bundle(mapping) : null)
+                        .resolve((c) -> switch (c.getName()) {
+                            case "bundle" -> new Bundle(mapping);
+                            default -> null;
+                        })
                         .build())
                 .addNamespaceResolver(NamespaceResolver.builder("build")
                         .resolve((c) -> c.getName().equals("launchMode") ? launchMode.getLaunchMode().toString() : null)
@@ -62,16 +89,24 @@ public class QuteTemplateWebAssetsProcessor {
                         .build())
                 .addLocator(new WebBundlerTagsLocator())
                 .addSectionHelper(new UserTagSectionHelper.Factory("bundle", "web-bundler/bundle.html"))
+                .addSectionHelper("image", new ImageSectionHelperFactory(images))
                 .addValueResolver(new ReflectionValueResolver())
                 .addParserHook(new Qute.IndexedArgumentsParserHook())
                 .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
                 .build();
         for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
             final byte[] bytes = webAsset.content();
-            final String content = engine.parse(new String(bytes, webAsset.charset())).render();
+            Template template = engine.parse(new String(bytes, webAsset.charset()));
+            String pathFromWebRoot = webAsset.webPath();
+            ImageAssetsProcessor.scanImageTags(template, images, webAsset, staticResourceProducer,
+                    pathFromWebRoot, targetDirBuildItem.dist(), imagePathMapperBuildItem,
+                    imageSourcePathBuildItems);
+            final String content = template.render();
             staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(prefixWithSlash(webAsset.webPath()),
                     content.getBytes(), SourceType.BUILD_TIME_TEMPLATE));
         }
+        // pass this on to any eventual runtime templates
+        imagesBuildItemProducer.produce(new ImagesBuildItem(images));
     }
 
     private CompletionStage<Object> resolveConfig(EvalContext ctx) {
@@ -123,4 +158,5 @@ public class QuteTemplateWebAssetsProcessor {
         }
 
     }
+
 }
