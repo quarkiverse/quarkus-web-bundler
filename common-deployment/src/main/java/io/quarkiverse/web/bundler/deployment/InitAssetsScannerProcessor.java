@@ -3,6 +3,7 @@ package io.quarkiverse.web.bundler.deployment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -12,13 +13,15 @@ import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebDirBuildItem;
+import io.quarkiverse.web.bundler.deployment.watcher.DevWatcher;
 import io.quarkiverse.web.bundler.spi.items.WebBundlerWatchedDirBuildItem;
 import io.quarkus.bootstrap.workspace.SourceDir;
 import io.quarkus.bootstrap.workspace.WorkspaceModule;
 import io.quarkus.deployment.ApplicationArchive;
-import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
@@ -35,6 +38,7 @@ import io.quarkus.runtime.LaunchMode;
 public class InitAssetsScannerProcessor {
 
     private static final Logger LOG = Logger.getLogger(InitAssetsScannerProcessor.class);
+    private static volatile DevWatcher watcher;
 
     @BuildStep
     ProjectRootBuildItem initProjectRoot(OutputTargetBuildItem outputTarget) {
@@ -42,23 +46,37 @@ public class InitAssetsScannerProcessor {
         return new ProjectRootBuildItem(projectRoot);
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
-    void startWatch(LiveReloadBuildItem liveReload,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
+    @BuildStep
+    DevWatcherBuildItem startWatch(WebBundlerConfig config,
+            LiveReloadBuildItem liveReload,
+            LaunchModeBuildItem launchMode,
             List<WebBundlerWatchedDirBuildItem> watchedDirs,
+            List<WebDirBuildItem> webDirs,
             CuratedApplicationShutdownBuildItem shutdown) {
-        Watcher.start(true);
+        if (launchMode.getLaunchMode() != LaunchMode.DEVELOPMENT || !config.browserLiveReload() || watchedDirs.isEmpty()) {
+            return null;
+        }
+        if (watcher != null) {
+            watcher.close();
+        }
+        watcher = new DevWatcher();
         Set<Path> uniquePaths = new HashSet<>();
         for (WebBundlerWatchedDirBuildItem watchedDir : watchedDirs) {
             if (uniquePaths.add(watchedDir.path())) {
-                Watcher.watchDirectoryRecursively(watchedDir.path(), watchedDir.web());
+                watcher.watchDirectoryRecursively(watchedDir.path());
             }
         }
+        watcher.setWebDirs(webDirs.stream().map(WebDirBuildItem::path).toList());
 
         if (!liveReload.isLiveReload()) {
             // Only the first time
-            shutdown.addCloseTask(Watcher::stop, true);
+            shutdown.addCloseTask(() -> {
+                if (watcher != null) {
+                    watcher.close();
+                }
+            }, true);
         }
+        return new DevWatcherBuildItem(watcher);
     }
 
     @BuildStep
@@ -67,6 +85,7 @@ public class InitAssetsScannerProcessor {
             WebBundlerConfig config,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             BuildProducer<WebBundlerWatchedDirBuildItem> watchedDirs,
+            BuildProducer<WebDirBuildItem> webDirs,
             LaunchModeBuildItem launchMode,
             ApplicationArchivesBuildItem applicationArchives,
             CurateOutcomeBuildItem curateOutcome) {
@@ -75,18 +94,23 @@ public class InitAssetsScannerProcessor {
                 .filter(Dependency::isRuntimeExtensionArtifact).collect(Collectors.toList());
         final Collection<Path> srcResourcesDirs = launchMode.getLaunchMode().isDevOrTest() ? findSrcResourcesDirs(curateOutcome)
                 : List.of();
-        final List<Path> projectWebDirs = resolveProjectWebDirs(config, projectRoot);
-
+        final Path projectWebDir = resolveProjectWebDir(config, projectRoot);
+        final List<Path> localDirs = new ArrayList<>();
         if (launchMode.getLaunchMode() == LaunchMode.DEVELOPMENT) {
-            for (Path projectWebDir : projectWebDirs) {
-                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(projectWebDir, true));
+            if (projectWebDir != null) {
+                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(projectWebDir));
+                localDirs.add(projectWebDir);
+                webDirs.produce(new WebDirBuildItem(projectWebDir));
             }
             for (Path srcDir : findSrcDirs(curateOutcome)) {
-                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(srcDir, false));
+                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(srcDir));
             }
             for (Path srcResourcesDir : srcResourcesDirs) {
-                // TODO web should be true
-                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(srcResourcesDir, false));
+                final Path resourceWebDir = srcResourcesDir.resolve(config.webRoot());
+                if (Files.isDirectory(resourceWebDir)) {
+                    webDirs.produce(new WebDirBuildItem(resourceWebDir));
+                }
+                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(srcResourcesDir));
             }
             watchedFiles.produce(
                     HotDeploymentWatchedFileBuildItem.builder().setLocationPredicate(p -> p.startsWith(config.webRoot()))
@@ -98,7 +122,7 @@ public class InitAssetsScannerProcessor {
         }
 
         return new ProjectResourcesScannerBuildItem(allApplicationArchives, extensionArtifacts, srcResourcesDirs,
-                projectWebDirs, config.webRoot());
+                localDirs, config.webRoot());
     }
 
     private static Collection<Path> findSrcDirs(CurateOutcomeBuildItem curateOutcome) {
@@ -121,29 +145,29 @@ public class InitAssetsScannerProcessor {
         return paths;
     }
 
-    private static List<Path> resolveProjectWebDirs(WebBundlerConfig config,
+    private static Path resolveProjectWebDir(WebBundlerConfig config,
             ProjectRootBuildItem projectRoot) {
         if (config.projectWebDir().isEmpty()) {
-            return List.of();
+            return null;
         }
-        Path configuredSiteDirPath = Paths.get(config.projectWebDir().get().trim());
+        Path configuredWebDir = Paths.get(config.projectWebDir().get().trim());
         if (!projectRoot.exists() || !Files.isDirectory(projectRoot.path())) {
-            if (configuredSiteDirPath.isAbsolute() && Files.isDirectory(configuredSiteDirPath)) {
-                configuredSiteDirPath = configuredSiteDirPath.normalize();
+            if (configuredWebDir.isAbsolute() && Files.isDirectory(configuredWebDir)) {
+                configuredWebDir = configuredWebDir.normalize();
             } else {
                 LOG.warn(
                         "If not absolute, the project web directory is resolved relative to the project root, but the Web Bundler was not able to find the project root.");
-                return List.of();
+                return null;
             }
         }
 
-        final Path webRoot = Objects.requireNonNull(projectRoot.path()).resolve(configuredSiteDirPath).normalize();
+        final Path webRoot = Objects.requireNonNull(projectRoot.path()).resolve(configuredWebDir).normalize();
 
         if (!Files.isDirectory(webRoot)) {
-            return List.of();
+            return null;
         }
 
-        return List.of(webRoot);
+        return webRoot;
     }
 
     private static Path findProjectRoot(Path outputDirectory) {

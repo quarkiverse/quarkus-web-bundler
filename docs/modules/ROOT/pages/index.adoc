@@ -4,7 +4,7 @@ include::./includes/attributes.adoc[]
 
 Create full-stack web apps and components with this Quarkus extension. It offers zero-configuration bundling and minification (with source-map) for your web app scripts (JS, JSX, TS, TSX), dependencies (jQuery, htmx, Bootstrap, Lit etc.), and styles (CSS, SCSS, SASS).
 
-No need to install NodeJs, it relies on a Java wrapped version of https://esbuild.github.io[esbuild, window="_blank"]. For libraries, all the NPM catalog is accessible through Maven or Gradle dependencies.
+No need to install NodeJs manually, it relies on a Java native binding of https://deno.com/[Deno, window="_blank"] and https://esbuild.github.io[esbuild, window="_blank"]. For libraries, all the NPM catalog is accessible through Maven or Gradle dependencies.
 
 * [*] Easy to set up
 * [*] Production build
@@ -29,6 +29,21 @@ For instance, with Maven, add the following dependency to your POM file:
     <version>{project-version}</version>
 </dependency>
 ----
+
+With Gradle, you need to add this plugin and the dependency:
+[source,kotlin,subs=attributes+]
+----
+plugins {
+  id("io.mvnpm.gradle.plugin.native-java-plugin") version "1.0.0"
+}
+
+...
+
+dependencies {
+    implementation("io.quarkiverse.web-bundler:quarkus-web-bundler:{project-version}")
+}
+----
+
 
 Plug the bundle in your index.html template (xref:advanced-guides.adoc#html-templates[More info on this]):
 
@@ -63,8 +78,8 @@ NOTE: By default `{#bundle /}` inserts both script and style tags for `app`, thi
 
 Add your web resources in `src/main/resources/web`:
 
-* `app/&#42;&#42;`: App scripts (js, ts, jsx, tsx, ...), styles (css, scss, sass) and assets (svg, jpg, gif, png, ...), to be *bundled* and served under http://localhost:8080/static/bundle/
-* `static/&#42;&#42;`: Any static file to be *served* without change under http://localhost:8080/static/
+* App scripts (js, ts, jsx, tsx, ...), styles (css, scss, sass) and assets (svg, jpg, gif, png, ...), to be *bundled* and served under http://localhost:8080/static/bundle/
+* `public/&#42;&#42;`: Any public file to be *served* without change under http://localhost:8080/..
 
 Add xref:advanced-guides.adoc#web-dependencies[Web Dependencies] to the pom *and import them* (scripts and styles):
 

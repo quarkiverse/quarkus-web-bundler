@@ -44,6 +44,11 @@ public record BundleWebAsset(WebAsset webAsset, BundleType bundleType) implement
     }
 
     @Override
+    public String watchPath() {
+        return webAsset.watchPath();
+    }
+
+    @Override
     public Type type() {
         return webAsset.type();
     }

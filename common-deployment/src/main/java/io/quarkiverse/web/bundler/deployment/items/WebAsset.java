@@ -13,6 +13,8 @@ public interface WebAsset {
 
     Charset charset();
 
+    String watchPath();
+
     Type type();
 
     static boolean isLocalFileSystem(Path path) {
@@ -24,9 +26,15 @@ public interface WebAsset {
     }
 
     enum Type {
-        SOURCE_FILE,
-        FILE,
-        RESOURCE
+        EXTERNAL, // File is in an external web directory
+        PROJECT_SOURCE, // File is in the project root resources and src is detected
+        PROJECT_RESOURCE, // File is in the project root resources and src is not detected
+        JAR_RESOURCE // File is in a jar
+        ;
+
+        public boolean canLink() {
+            return this == EXTERNAL || this == PROJECT_SOURCE;
+        }
     }
 
 }

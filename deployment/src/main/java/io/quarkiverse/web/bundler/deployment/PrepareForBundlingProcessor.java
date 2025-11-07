@@ -1,6 +1,5 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.*;
 import static io.quarkiverse.web.bundler.deployment.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
@@ -33,9 +32,11 @@ import io.mvnpm.esbuild.model.BundleOptions;
 import io.mvnpm.esbuild.model.BundleOptionsBuilder;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
+import io.mvnpm.esbuild.plugin.EsBuildPluginSass;
 import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
 import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
+import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
@@ -100,6 +101,7 @@ public class PrepareForBundlingProcessor {
 
     @BuildStep
     ReadyForBundlingBuildItem prepareForBundling(WebBundlerConfig config,
+            DevWatcherBuildItem watcher,
             InstalledWebDependenciesBuildItem installedWebDependencies,
             List<EntryPointBuildItem> entryPoints,
             WebBundlerTargetDirBuildItem targetDir,
@@ -121,8 +123,7 @@ public class PrepareForBundlingProcessor {
             }
         }
 
-        final long started = Instant.now().toEpochMilli();
-        boolean useEsbuildWatch = config.browserLiveReload() && SYMLINK_AVAILABLE.get();
+        final long startTime = Instant.now().toEpochMilli();
 
         try {
             Files.createDirectories(targetDir.webBundler());
@@ -132,7 +133,7 @@ public class PrepareForBundlingProcessor {
             if (bundleConfig.isPresent()) {
                 for (WebAsset webAsset : bundleConfig.get().getWebAssets()) {
                     final Path targetConfig = targetDir.webBundler().resolve(webAsset.webPath());
-                    createAsset(config, watchedFiles, webAsset, targetConfig, browserLiveReload);
+                    createAsset(config, watchedFiles, webAsset, targetConfig, watcher);
                 }
             }
 
@@ -166,6 +167,7 @@ public class PrepareForBundlingProcessor {
                 esBuildConfigBuilder.addExternal(join(config.httpRootPath(), "static/*"));
             }
             final BundleOptionsBuilder optionsBuilder = BundleOptions.builder()
+                    .addPlugin(new EsBuildPluginSass())
                     .withWorkDir(targetDir.webBundler())
                     .withDependencies(installedWebDependencies.toEsBuildWebDependencies())
                     .withEsConfig(esBuildConfigBuilder.build())
@@ -177,10 +179,11 @@ public class PrepareForBundlingProcessor {
                     .valueOf(config.dependencies().autoImport().mode().toString());
             for (EntryPointBuildItem entryPoint : entryPoints) {
                 final List<String> scripts = new ArrayList<>();
+
                 for (BundleWebAsset webAsset : entryPoint.assets()) {
-                    String destination = PathUtils.join("src", webAsset.webPath());
+                    String destination = PathUtils.join("web", webAsset.webPath());
                     final Path scriptPath = targetDir.webBundler().resolve(destination);
-                    createAsset(config, watchedFiles, webAsset, scriptPath, browserLiveReload);
+                    createAsset(config, watchedFiles, webAsset, scriptPath, watcher);
                     // Manual assets are supposed to be imported by the entry point
                     if (!webAsset.bundleType().equals(MANUAL)) {
                         scripts.add(destination);
@@ -222,7 +225,7 @@ public class PrepareForBundlingProcessor {
             }
 
             final BundleOptions options = optionsBuilder.build();
-            return new ReadyForBundlingBuildItem(options, started, targetDir.dist(), fixedNames, useEsbuildWatch);
+            return new ReadyForBundlingBuildItem(startTime, options, targetDir.dist(), fixedNames);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -230,11 +233,11 @@ public class PrepareForBundlingProcessor {
 
     static void createAsset(WebBundlerConfig config, BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             WebAsset webAsset, Path targetPath,
-            boolean browserLiveReload) throws IOException {
+            DevWatcherBuildItem watcher) throws IOException {
         Files.createDirectories(targetPath.getParent());
-        if (webAsset.type() != WebAsset.Type.RESOURCE) {
-            if (browserLiveReload && SYMLINK_AVAILABLE.get()) {
-                createSymbolicLinkOrFallback(watchedFiles, webAsset, targetPath);
+        if (webAsset.type() != WebAsset.Type.JAR_RESOURCE) {
+            if (watcher != null) {
+                createSymbolicLinkOrFallback(watcher, watchedFiles, webAsset, targetPath);
             } else {
                 Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -245,32 +248,29 @@ public class PrepareForBundlingProcessor {
 
     }
 
-    static void createSymbolicLinkOrFallback(BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles, WebAsset webAsset,
+    static void createSymbolicLinkOrFallback(DevWatcherBuildItem watcher,
+            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles, WebAsset webAsset,
             Path targetPath) throws IOException {
         Files.deleteIfExists(targetPath);
-        if (webAsset.type() == WebAsset.Type.RESOURCE) {
-            return;
+        if (webAsset.type() == WebAsset.Type.JAR_RESOURCE) {
+            throw new IllegalStateException("createSymbolicLinkOrFallback must not be called on a resource web asset");
         }
-        if (webAsset.type() == WebAsset.Type.SOURCE_FILE) {
+
+        if (webAsset.type().canLink()) {
             try {
                 Files.createSymbolicLink(targetPath, webAsset.path());
+                watcher.get().addWatchedLink(webAsset.path(), targetPath, true);
                 watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
                         .setRestartNeeded(false)
-                        .setLocation(webAsset.path().toString())
+                        .setLocation(webAsset.watchPath())
                         .build());
+                return;
             } catch (FileSystemException e) {
-                if (SYMLINK_AVAILABLE.getAndSet(false)) {
-                    LOGGER.warn(
-                            "Creating a symbolic link was not authorized on this system. It is required by the Web Bundler to allow filesystem watch. As a result, Web Bundler live-reload will use a scheduler as a fallback.\n\nTo resolve this issue, please add the necessary permissions to allow symbolic link creation.");
-                }
+                // Falling back to copy
             }
-        } else {
-            if (SYMLINK_AVAILABLE.getAndSet(false)) {
-                LOGGER.warn(
-                        "The sources are necessary by the Web Bundler to allow filesystem watch. Web Bundler live-reload will use a scheduler as a fallback");
-            }
-            Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
+        watcher.get().addWatchedLink(webAsset.path(), targetPath, false);
+        Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
     }
 

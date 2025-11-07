@@ -59,9 +59,6 @@ class BundlingProcessor {
         try {
             final long startedBundling = Instant.now().toEpochMilli();
             final BundleResult result = Bundler.bundle(readyForBundling.bundleOptions(), false);
-            if (!result.result().output().isBlank()) {
-                LOGGER.debugf(result.result().output());
-            }
 
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, result.dist(),
                     readyForBundling.fixedNames(), startedBundling);
@@ -91,7 +88,7 @@ class BundlingProcessor {
 
     static void handleBundleDistDir(WebBundlerConfig config, BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer, Path bundleDir, boolean fixedNames,
-            Long started) {
+            long startTime) {
         try {
             Map<String, String> bundle = new HashMap<>();
             List<String> names = new ArrayList<>();
@@ -117,18 +114,16 @@ class BundlingProcessor {
                     }
                 });
             }
-            if (started != null) {
-                LOGGER.infof("Bundle generated %d files in %sms", names.size(),
-                        Instant.now().minusMillis(started).toEpochMilli());
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debugf("Bundle dir: '%s'\n  - %s", bundleDir, names.size(),
-                            String.join("\n  - ", names));
-                }
-                if (LOGGER.isDebugEnabled() || LaunchMode.current() == LaunchMode.DEVELOPMENT) {
-                    LOGGER.infof("Bundle#mapping:\n%s", mappingString);
-                }
-
+            LOGGER.infof("Bundle generated %d files in %sms", names.size(),
+                    Instant.now().minusMillis(startTime).toEpochMilli());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debugf("Bundle dir: '%s'\n  - %s", bundleDir, names.size(),
+                        String.join("\n  - ", names));
             }
+            if (LOGGER.isDebugEnabled() || LaunchMode.current() == LaunchMode.DEVELOPMENT) {
+                LOGGER.infof("Bundle#mapping:\n%s", mappingString);
+            }
+
             generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));
         } catch (IOException e) {
             throw new RuntimeException(e);

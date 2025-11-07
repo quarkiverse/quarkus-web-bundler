@@ -13,16 +13,15 @@ Create full-stack web apps and components with this Quarkus extension. It offers
 * [x] Build-time index.html rendering with bundled scripts and styles
 * [x] Server Side Qute Components (Qute template + Script + Style)
 
-**Is it the same as Quinoa?** It is very close but:
+**Is it the same as [Quinoa](https://github.com/quarkiverse/quarkus-quinoa/)?** It is very close but:
 
 - It is already integrated with a bundler (esbuild, which is very similar to Webpack or Rollup)
-- NodeJS is not needed
 - It works without any configuration
 - All the npm catalog is available directly as dependencies in your pom.xml/build.gradle
 
 **When should I use Quinoa instead?**
 
-- I have a dedicated UI team very familliar with the NodeJS eco-system
+- I have a dedicated UI team very familiar with the NodeJS eco-system
 - I need a very specific NodeJs/Bundling configuration that the web-bundler does not cover
 
 **How to test my Web App without Jest or similar?**

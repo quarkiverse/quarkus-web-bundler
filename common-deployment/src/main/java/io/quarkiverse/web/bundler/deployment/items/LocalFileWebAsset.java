@@ -9,19 +9,18 @@ import java.util.Objects;
 
 import io.quarkus.arc.impl.LazyValue;
 
-public final class FileWebAsset implements WebAsset {
+public abstract class LocalFileWebAsset implements WebAsset {
     private final String webPath;
     private final Path path;
     private final Charset charset;
-    private final Type type;
     private final LazyValue<byte[]> lazyContent;
+    private final Type type;
 
-    public FileWebAsset(String webPath, Path path, Type type,
-            Charset charset) {
+    public LocalFileWebAsset(String webPath, Path path, Type type, Charset charset) {
         this.webPath = webPath;
         this.path = path;
-        this.type = type;
         this.charset = charset;
+        this.type = type;
         lazyContent = new LazyValue<>(() -> {
             try {
                 return Files.readAllBytes(path);
@@ -58,16 +57,15 @@ public final class FileWebAsset implements WebAsset {
 
     @Override
     public boolean equals(Object o) {
-
         if (o == null || getClass() != o.getClass())
             return false;
-        FileWebAsset that = (FileWebAsset) o;
-        return Objects.equals(webPath, that.webPath) && Objects.equals(path, that.path)
-                && Objects.equals(charset, that.charset);
+        LocalFileWebAsset that = (LocalFileWebAsset) o;
+        return Objects.equals(webPath, that.webPath) && Objects.equals(path, that.path) && Objects.equals(charset, that.charset)
+                && Objects.equals(lazyContent, that.lazyContent);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(webPath, path, charset);
+        return Objects.hash(webPath, path, charset, lazyContent);
     }
 }

@@ -1,26 +1,27 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.*;
+import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.bundleAndProcess;
+import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.handleBundleDistDir;
+import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.processGeneratedEntryPoints;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.logging.Logger;
 
-import io.mvnpm.esbuild.BundleException;
 import io.mvnpm.esbuild.Bundler;
-import io.mvnpm.esbuild.Watch;
+import io.mvnpm.esbuild.BundlingException;
 import io.mvnpm.esbuild.model.BundleOptions;
-import io.mvnpm.esbuild.model.BundleResult;
+import io.mvnpm.esbuild.model.DevResult;
+import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedEntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
 import io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourceBuildItem;
+import io.quarkiverse.web.bundler.runtime.devmode.WebBundlingException;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -35,12 +36,11 @@ public class DevModeBundlingProcessor {
 
     private static final String DEV_SERVICE_NAME = "web-bundler-dev";
     private static volatile DevServicesResultBuildItem.RunningDevService devService;
-    private static final AtomicReference<Watch> watchRef = new AtomicReference<>();
-
-    private static final AtomicReference<BundleException> bundleExceptionRef = new AtomicReference<>();
+    private static volatile DevResult dev;
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void watch(WebBundlerConfig config,
+            DevWatcherBuildItem watcher,
             ReadyForBundlingBuildItem readyForBundling,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
@@ -51,46 +51,22 @@ public class DevModeBundlingProcessor {
         if (readyForBundling == null) {
             return;
         }
-        final BundlesBuildContext bundlesBuildContext = liveReload.getContextObject(BundlesBuildContext.class);
-        final boolean isLiveReload = liveReload.isLiveReload();
-        Watch watch = DevModeBundlingProcessor.watchRef.get();
-        if (readyForBundling.started() == null) {
-            // no changes
-            boolean isRestartWatchNeeded = readyForBundling.useEsbuildWatch() && (watch == null || !watch.isAlive())
-                    && !Files.isDirectory(bundlesBuildContext.bundleDistDir());
-            if (!isRestartWatchNeeded) {
-                if (watch != null && watch.isAlive()) {
-                    devServices.produce(devService.toBuildItem());
-                }
-                final BundlesBuildContext newBundlesBuildContext = new BundlesBuildContext(readyForBundling.bundleOptions(),
-                        bundlesBuildContext.bundleDistDir());
-                liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
-                handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer,
-                        bundlesBuildContext.bundleDistDir(),
-                        readyForBundling.fixedNames(),
-                        readyForBundling.started());
-                processGeneratedEntryPoints(readyForBundling.bundleOptions().workDir(),
-                        generatedEntryPointProducer);
-                return;
-            }
-        }
 
-        if (watch != null) {
-            shutdownDevService();
-        }
-
-        if (!readyForBundling.useEsbuildWatch()) {
+        if (watcher == null) {
             // We use normal bundling when esbuild watch is disabled
-            final BundleResult bundleResult = bundleAndProcess(config, readyForBundling, staticResourceProducer,
+            bundleAndProcess(config, readyForBundling, staticResourceProducer,
                     generatedBundleProducer,
                     generatedEntryPointProducer);
-            final BundlesBuildContext newBundlesBuildContext = new BundlesBuildContext(readyForBundling.bundleOptions(),
-                    bundleResult.dist());
-            liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
             return;
         }
 
-        if (!isLiveReload) {
+        if (dev != null) {
+            shutdownDevService();
+        }
+
+        resetRemoteProblem();
+
+        if (!liveReload.isLiveReload()) {
             // Only the first time
             Runnable closeTask = () -> {
                 if (devService != null) {
@@ -101,75 +77,75 @@ public class DevModeBundlingProcessor {
         }
 
         try {
-            watch = Bundler.watch(readyForBundling.bundleOptions(), (r) -> {
-                if (watchRef.get() == null) {
-                    LOGGER.error("Received a bundling event without a watchRef");
-                    return;
-                }
-                LOGGER.debugf("New bundling event received: %s", r);
-                if (!r.isSuccess()) {
-                    bundleExceptionRef.set(r.bundleException());
-                    if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() != null) {
-                        RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(r.bundleException());
-                    }
-
-                } else {
-                    resetRemoteProblem();
-                    bundleExceptionRef.set(null);
-                }
-                if (!watchRef.get().isAlive()) {
-                    shutdownDevService();
-                }
-                callNoRestartChangesConsumers(r.isSuccess());
-            }, false);
-            watchRef.set(watch);
+            dev = Bundler.dev(readyForBundling.bundleOptions(), false);
             devService = new DevServicesResultBuildItem.RunningDevService(
-                    DEV_SERVICE_NAME, null, watch::close, new HashMap<>());
+                    DEV_SERVICE_NAME, null, dev, new HashMap<>());
             devServices.produce(devService.toBuildItem());
-            if (!watch.firstBuildResult().isSuccess()) {
-                throw watch.firstBuildResult().bundleException();
-            }
-            final BundlesBuildContext newBundlesBuildContext = new BundlesBuildContext(readyForBundling.bundleOptions(),
-                    watch.dist());
-            liveReload.setContextObject(BundlesBuildContext.class, newBundlesBuildContext);
-            handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, watch.dist(),
-                    readyForBundling.fixedNames(), readyForBundling.started());
+            resetRemoteProblem();
+            dev.process().build();
+            watcher.get().setRunWebBuild(DevModeBundlingProcessor::build);
+            handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, dev.process().dist(),
+                    readyForBundling.fixedNames(), readyForBundling.startTime());
             processGeneratedEntryPoints(readyForBundling.bundleOptions().workDir(), generatedEntryPointProducer);
-
+        } catch (BundlingException e) {
+            throw new WebBundlingException(e.getMessage(), e.logs().errors());
         } catch (IOException e) {
             shutdownDevService();
-            liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
             throw new UncheckedIOException(e);
         } catch (Exception e) {
             shutdownDevService();
-            liveReload.setContextObject(BundlesBuildContext.class, new BundlesBuildContext());
             throw e;
         }
     }
 
-    private void callNoRestartChangesConsumers(boolean isSuccess) {
+    public static void build() {
+        if (dev != null && dev.process().isAlive()) {
+            LOGGER.debugf("Triggering a Web Build");
+            try {
+                dev.process().build();
+                resetRemoteProblem();
+                callNoRestartChangesConsumers(true);
+            } catch (BundlingException e) {
+                if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() == null) {
+                    RuntimeUpdatesProcessor.INSTANCE
+                            .setRemoteProblem(new WebBundlingException(e.getMessage(), e.logs().errors()));
+                }
+                callNoRestartChangesConsumers(false);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            LOGGER.warn("EsBuild Bundler dev service is not alive");
+            shutdownDevService();
+            RuntimeUpdatesProcessor.INSTANCE.doScan(false, true);
+        }
+    }
+
+    private static void callNoRestartChangesConsumers(boolean isSuccess) {
         RuntimeUpdatesProcessor.INSTANCE
                 .notifyExtensions(Set.of(isSuccess ? "web-bundler/build-success" : "web-bundler/build-error"));
     }
 
     private static void resetRemoteProblem() {
-        if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() instanceof BundleException) {
+        if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() instanceof WebBundlingException) {
             RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(null);
         }
     }
 
-    private void shutdownDevService() {
-        LOGGER.debug("Web Bundler: shutdown Esbuild watch");
+    private static void shutdownDevService() {
+        LOGGER.info("Web Bundler: shutdown Esbuild watch");
         try {
+            if (dev != null) {
+                dev.close();
+            }
             if (devService != null) {
                 devService.close();
             }
         } catch (Throwable e) {
-            LOGGER.error("Failed to stop Web Bundler bundling process", e);
+            LOGGER.error("Failed to stop Web Bundler Bundling process", e);
         } finally {
             devService = null;
-            watchRef.set(null);
-            bundleExceptionRef.set(null);
+            dev = null;
         }
     }
 
@@ -180,4 +156,5 @@ public class DevModeBundlingProcessor {
             this(null, null);
         }
     }
+
 }
