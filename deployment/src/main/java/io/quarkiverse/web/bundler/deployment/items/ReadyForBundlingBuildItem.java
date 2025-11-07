@@ -7,31 +7,26 @@ import io.quarkus.builder.item.SimpleBuildItem;
 
 public final class ReadyForBundlingBuildItem extends SimpleBuildItem {
 
+    private final long startTime;
     private final BundleOptions bundleOptions;
-
-    private final Long started;
 
     private final Path distDir;
 
     private final boolean fixedNames;
 
-    private final boolean useEsbuildWatch;
-
-    public ReadyForBundlingBuildItem(BundleOptions bundleOptions, Long started, Path distDir, boolean fixedNames,
-            boolean useEsbuildWatch) {
+    public ReadyForBundlingBuildItem(long startTime, BundleOptions bundleOptions, Path distDir, boolean fixedNames) {
+        this.startTime = startTime;
         this.bundleOptions = bundleOptions;
-        this.started = started;
         this.distDir = distDir;
         this.fixedNames = fixedNames;
-        this.useEsbuildWatch = useEsbuildWatch;
+    }
+
+    public long startTime() {
+        return startTime;
     }
 
     public boolean fixedNames() {
         return fixedNames;
-    }
-
-    public Long started() {
-        return started;
     }
 
     public BundleOptions bundleOptions() {
@@ -42,7 +37,4 @@ public final class ReadyForBundlingBuildItem extends SimpleBuildItem {
         return distDir;
     }
 
-    public boolean useEsbuildWatch() {
-        return useEsbuildWatch;
-    }
 }

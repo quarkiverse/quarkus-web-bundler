@@ -84,7 +84,7 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
                     final Path dirPath = webDir.resolve(scanner.dir());
                     if (Files.isDirectory(dirPath) && dirPath.toString().endsWith(scanner.dir())) {
                         scan(webDir, dirPath, scanner.pathMatcher(), scanner.ignored(), scanner.charset, webAssetConsumer,
-                                true);
+                                false);
                         break;
                     }
                 } else {
@@ -94,7 +94,7 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
                         if (Files.exists(dirPath)) {
                             scan(rootDirFs, dirPath, scanner.pathMatcher(), scanner.ignored(), scanner.charset(),
                                     webAssetConsumer,
-                                    true);
+                                    false);
                         }
                     } catch (IOException e) {
                         LOGGER.warnf(e, "Unable to create the file system from the rootDir: %s", rootDir);
@@ -105,10 +105,10 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
         for (ApplicationArchive archive : allApplicationArchives) {
             archive.accept(tree -> {
                 scanRoots(tree.getRoots().stream().map(s -> s.resolve(resourceWebDir)).toList(), scanner, webAssetConsumer,
-                        true);
+                        false);
             });
         }
-        scanRoots(localDirs, scanner, webAssetConsumer, false);
+        scanRoots(localDirs, scanner, webAssetConsumer, true);
     }
 
     private static boolean isLocalFileSystem(Path path) {
@@ -120,7 +120,7 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
     }
 
     private void scanRoots(Collection<Path> tree, Scanner scanner, Consumer<WebAsset> webAssetConsumer,
-            boolean classPathResource) {
+            boolean external) {
         for (Path rootDir : tree) {
             // Note that we cannot use ApplicationArchive.getChildPath(String) here because we would not be able to detect
             // a wrong directory bundleName on case-insensitive file systems
@@ -128,7 +128,7 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
                 final Path dirPath = rootDir.resolve(scanner.dir());
                 if (Files.isDirectory(dirPath) && toUnixPath(dirPath.toString()).endsWith(scanner.dir())) {
                     scan(rootDir, dirPath, scanner.pathMatcher(), scanner.ignored(), scanner.charset, webAssetConsumer,
-                            classPathResource);
+                            external);
                     break;
                 }
             } catch (IOException e) {
@@ -144,7 +144,7 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
             List<String> ignored,
             Charset charset,
             Consumer<WebAsset> webAssetConsumer,
-            boolean classPathResource)
+            boolean external)
             throws IOException {
         Path toScan = directory == null ? root : directory;
         boolean isLocalFileSystem = isLocalFileSystem(toScan);
@@ -166,9 +166,9 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
                     }
 
                     if (!assetPath.isEmpty()) {
-                        final Path srcFilePath = classPathResource ? (isLocalFileSystem ? findSrc(assetPath) : null) : filePath;
+                        final Path srcFilePath = external ? filePath : (isLocalFileSystem ? findSrc(assetPath) : null);
                         webAssetConsumer.accept(toWebAsset(assetPath,
-                                filePath.normalize(), srcFilePath, charset, isLocalFileSystem));
+                                filePath.normalize(), srcFilePath, charset, isLocalFileSystem, external));
                     }
                 }
             }
@@ -189,14 +189,18 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
     }
 
     WebAsset toWebAsset(String webPath, Path filePath, Path srcFilePath, Charset charset,
-            boolean isLocalFileSystem) {
+            boolean isLocalFileSystem, boolean external) {
+        if (external) {
+            return new ExternalFileWebAsset(webPath, srcFilePath, charset);
+        }
+        final String resourcePath = PathUtils.join(resourceWebDir, webPath);
         if (srcFilePath != null) {
-            return new FileWebAsset(webPath, srcFilePath, WebAsset.Type.SOURCE_FILE, charset);
+            return new ProjectResourceWebAsset(webPath, srcFilePath, resourcePath, WebAsset.Type.PROJECT_SOURCE, charset);
         }
         if (isLocalFileSystem) {
-            return new FileWebAsset(webPath, filePath, WebAsset.Type.FILE, charset);
+            return new ProjectResourceWebAsset(webPath, filePath, resourcePath, WebAsset.Type.PROJECT_RESOURCE, charset);
         }
-        return new ResourceWebAsset(webPath, filePath, PathUtils.join(resourceWebDir, webPath), readTemplateContent(filePath),
+        return new JarResourceWebAsset(webPath, filePath, resourcePath, readTemplateContent(filePath),
                 charset);
     }
 

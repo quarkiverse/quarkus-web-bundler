@@ -100,7 +100,7 @@ public class ChangeEventHandler implements Handler<RoutingContext> {
         try {
             final Changes changes = computeChanges();
 
-            LOGGER.info(changes);
+            LOGGER.infof("Sending changes to browser: %s", changes);
             for (Connection connection : connections) {
                 if (!connection.closed().get() && !connection.ctx().response().closed()) {
                     if (isBundlingError) {

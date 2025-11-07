@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -43,14 +44,25 @@ class WebDependenciesProcessor {
         if (entryPoints.isEmpty() && !config.dependencies().autoImport().isEnabled()) {
             return new WebDependenciesBuildItem(List.of());
         }
-        final List<Dependency> dependencies = StreamSupport.stream(curateOutcome.getApplicationModel()
+        final List<Dependency> buildDependencies = StreamSupport.stream(curateOutcome.getApplicationModel()
+                .getDependencies().spliterator(), false)
+                .filter(io.quarkus.maven.dependency.Dependency::isJar)
+                .filter(d -> d.isDeploymentCp() && "compile".equals(d.getScope()))
+                .filter(d -> WebDependencyType.MVNPM.matches(d.toCompactCoords()))
+                .map(WebDependenciesProcessor::toWebDep)
+                .filter(Objects::nonNull)
+                .toList();
+        final List<Dependency> runtimeDependencies = StreamSupport.stream(curateOutcome.getApplicationModel()
                 .getDependenciesWithAnyFlag(DependencyFlags.COMPILE_ONLY, DependencyFlags.RUNTIME_CP).spliterator(), false)
                 .filter(io.quarkus.maven.dependency.Dependency::isJar)
                 .filter(d -> WebDependencyType.anyMatch(d.toCompactCoords()))
                 .peek(d -> checkScope(launchMode, d, config))
                 .map(WebDependenciesProcessor::toWebDep)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
+        final List<Dependency> dependencies = new ArrayList<>(buildDependencies.size() + runtimeDependencies.size());
+        dependencies.addAll(buildDependencies);
+        dependencies.addAll(runtimeDependencies);
         return new WebDependenciesBuildItem(dependencies);
     }
 
@@ -61,8 +73,6 @@ class WebDependenciesProcessor {
             ProjectRootBuildItem projectRoot,
             WebDependenciesBuildItem webDependencies,
             WebBundlerConfig config) {
-        final InstalledWebDependenciesContext installedWebDependenciesContext = liveReload
-                .getContextObject(InstalledWebDependenciesContext.class);
         final Path nodeModulesDir = resolveNodeModulesDir(config, outputTarget, projectRoot);
         long startedInstall = Instant.now().toEpochMilli();
         try {

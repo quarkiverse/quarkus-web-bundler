@@ -28,7 +28,6 @@ class BundleWebAssetsScannerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(BundleWebAssetsScannerProcessor.class);
     private static final String FEATURE = "web-bundler";
-    public static AtomicBoolean SYMLINK_AVAILABLE = new AtomicBoolean(true);
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -50,12 +49,9 @@ class BundleWebAssetsScannerProcessor {
         final Map<String, EntryPoint> entryPoints = new HashMap<>();
 
         // This is legacy support for web/app dir
-        AtomicBoolean appDir = new AtomicBoolean(false);
-        QuarkusClassLoader.visitRuntimeResources(config.webRoot(), p -> {
-            appDir.set(Files.isDirectory(p.getPath().resolve("app")));
-        });
+        boolean appDir = checkAppDir(config);
 
-        for (Map.Entry<String, EntryPointConfig> e : config.bundleWithDefault(appDir.get()).entrySet()) {
+        for (Map.Entry<String, EntryPointConfig> e : config.bundleWithDefault(appDir).entrySet()) {
             if (e.getValue().enabled()) {
 
                 final String entryPointKey = e.getValue().effectiveKey(e.getKey());
@@ -89,7 +85,7 @@ class BundleWebAssetsScannerProcessor {
             entryPoints.get(DEFAULT_ENTRY_POINT_KEY)
                     .assets()
                     .add(new BundleWebAsset(
-                            new ResourceWebAsset("app.js", null, appJsResource, appJsContent, StandardCharsets.UTF_8),
+                            new JarResourceWebAsset("app.js", null, appJsResource, appJsContent, StandardCharsets.UTF_8),
                             BundleType.AUTO));
         }
 
@@ -99,8 +95,26 @@ class BundleWebAssetsScannerProcessor {
                 config,
                 entryPoints,
                 scanner.scan(bundleConfigAssetsScanners));
-        produceWebAssets(bundles, bundleConfigAssets, context, false);
+        produceWebAssets(bundles, bundleConfigAssets, context);
         LOGGER.debugf("Web Bundler scan - Bundles: %d entrypoints found", entryPoints.size());
+    }
+
+    private static boolean checkAppDir(WebBundlerConfig config) {
+        AtomicBoolean appDir = new AtomicBoolean(false);
+        QuarkusClassLoader.visitRuntimeResources(config.webRoot(), p -> {
+            final Path appDirPath = p.getPath().resolve("app");
+            if (!Files.isDirectory(appDirPath)) {
+                appDir.set(false);
+                return;
+            }
+            try (var entries = Files.list(appDirPath)) {
+                final boolean app = Files.isDirectory(appDirPath) && entries.findFirst().isPresent();
+                appDir.set(app);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return appDir.get();
     }
 
     private static boolean isImportSassFile(String resourceName) {
@@ -115,21 +129,20 @@ class BundleWebAssetsScannerProcessor {
 
     void produceWebAssets(BuildProducer<EntryPointBuildItem> bundles,
             BuildProducer<BundleConfigAssetsBuildItem> bundleConfigAssets,
-            WebAssetsLookupDevContext context,
-            boolean checkIfExists) {
+            WebAssetsLookupDevContext context) {
         for (EntryPoint e : context.entryPoints().values()) {
-            produceWebAssetsWithCheck(checkIfExists, e.assets(),
+            produceWebAssetsWithCheck(e.assets(),
                     webAssets -> {
                         bundles.produce(new EntryPointBuildItem(new EntryPoint(e.key(), e.dir(), webAssets)));
                     });
         }
 
-        produceWebAssetsWithCheck(checkIfExists, context.bundleConfigWebAssets(),
+        produceWebAssetsWithCheck(context.bundleConfigWebAssets(),
                 webAssets -> bundleConfigAssets.produce(new BundleConfigAssetsBuildItem(webAssets)));
 
     }
 
-    private static <T extends WebAsset> void produceWebAssetsWithCheck(boolean checkIfExists, List<T> e,
+    private static <T extends WebAsset> void produceWebAssetsWithCheck(List<T> e,
             Consumer<List<T>> consumer) {
         if (!e.isEmpty()) {
             consumer.accept(e);
