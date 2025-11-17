@@ -1,0 +1,11 @@
+name: Web Bundler - Tailwind CSS
+description: Add support for bundling with Tailwind CSS
+metadata:
+  keywords:
+    - web-bundler
+    - tailwind
+    - css
+  guide: https://docs.quarkiverse.io/quarkus-web-bundler/dev/
+  categories:
+    - "web"
+  status: "experimental"

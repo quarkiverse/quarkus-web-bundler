@@ -66,12 +66,11 @@ public class InitAssetsScannerProcessor {
             }
         }
         watcher.setWebDirs(webDirs.stream().map(WebDirBuildItem::path).toList());
-
         if (!liveReload.isLiveReload()) {
-            // Only the first time
             shutdown.addCloseTask(() -> {
                 if (watcher != null) {
                     watcher.close();
+                    watcher = null;
                 }
             }, true);
         }

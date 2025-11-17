@@ -63,3 +63,7 @@ pom.xml.releaseBackup
 pom.xml.versionsBackup
 release.properties
 nbactions.xml
+
+node_modules/
+
+**/node_modules/
