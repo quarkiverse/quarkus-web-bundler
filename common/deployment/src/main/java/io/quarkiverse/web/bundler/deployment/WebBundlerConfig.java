@@ -88,12 +88,12 @@ public interface WebBundlerConfig {
     Map<String, EntryPointConfig> bundle();
 
     default Map<String, EntryPointConfig> bundleWithDefault(boolean appDir) {
-        if (!bundle().isEmpty()) {
-            return bundle();
-        }
         Map<String, EntryPointConfig> conf = new HashMap<>(bundle());
-        conf.put(DEFAULT_ENTRY_POINT_KEY, new ConfiguredEntryPoint(appDir ? DEFAULT_ENTRY_POINT_KEY : "",
-                DEFAULT_ENTRY_POINT_KEY, DEFAULT_ENTRY_POINT_KEY));
+        if (!conf.containsKey(DEFAULT_ENTRY_POINT_KEY)) {
+            // When the config is not empty, default app entrypoint can only be in web/app/ dir
+            conf.put(DEFAULT_ENTRY_POINT_KEY, new ConfiguredEntryPoint(!appDir && conf.isEmpty() ? "" : DEFAULT_ENTRY_POINT_KEY,
+                    DEFAULT_ENTRY_POINT_KEY, DEFAULT_ENTRY_POINT_KEY));
+        }
         return conf;
     }
 
@@ -105,6 +105,18 @@ public interface WebBundlerConfig {
      */
     @WithDefault("static/bundle")
     String bundlePath();
+
+    /**
+     * Easily debug the bundling using chrome inspect (DevMode only)
+     */
+    @WithDefault("false")
+    boolean debug();
+
+    /**
+     * Sass/Scss plugin for the Web Bundler is enabled by default
+     */
+    @WithDefault("true")
+    boolean sass();
 
     /**
      * Configure bundling options
@@ -124,6 +136,12 @@ public interface WebBundlerConfig {
      */
     @WithDefault("true")
     boolean browserLiveReload();
+
+    /**
+     * Path to the node_modules parent directory (relative to the project root).
+     */
+    @ConfigDocDefault("project root directory")
+    Optional<String> nodeModules();
 
     /**
      * When enabled, Quarkus will create redirections from {bundlePath}/{entryPointKey}.{js,css} to the corresponding file
@@ -220,12 +238,6 @@ public interface WebBundlerConfig {
     }
 
     interface WebDependenciesConfig {
-
-        /**
-         * Path to the node_modules directory (relative to the project root).
-         */
-        @ConfigDocDefault("node_modules will be in the build/target directory")
-        Optional<String> nodeModules();
 
         /**
          * Disable this option to allow using runtime web dependencies.

@@ -12,11 +12,11 @@
     <packaging>pom</packaging>
     <name>Quarkus Web Bundler - Parent</name>
     <modules>
-        <module>spi</module>
         <module>common</module>
-        <module>qute-components</module>
-        <module>runtime</module>
-        <module>deployment</module>
+        <module>core/spi</module>
+        <module>core/runtime</module>
+        <module>core/deployment</module>
+        <module>plugins</module>
     </modules>
     <scm>
         <connection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</connection>
@@ -29,7 +29,7 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <esbuild-java.version>2.0.0-beta-3</esbuild-java.version>
+        <esbuild-java.version>2.0.0-CR2</esbuild-java.version>
         <quarkus.version>3.29.2</quarkus.version>
         <quarkus-playwright.version>2.2.1</quarkus-playwright.version>
     </properties>
