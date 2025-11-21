@@ -29,7 +29,7 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <esbuild-java.version>2.0.0-CR2</esbuild-java.version>
+        <esbuild-java.version>2.0.0-CR3</esbuild-java.version>
         <quarkus.version>3.29.2</quarkus.version>
         <quarkus-playwright.version>2.2.1</quarkus-playwright.version>
     </properties>
