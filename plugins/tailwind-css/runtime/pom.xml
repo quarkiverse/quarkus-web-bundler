@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.web-bundler</groupId>
     <artifactId>quarkus-web-bundler-tailwind-css-parent</artifactId>
-    <version>2.0.0.CR6</version>
+    <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-web-bundler-tailwind-css</artifactId>
   <name>Quarkus Web Bundler - Tailwind CSS - Runtime</name>
