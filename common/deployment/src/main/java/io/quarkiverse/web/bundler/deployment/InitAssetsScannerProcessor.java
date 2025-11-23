@@ -94,11 +94,13 @@ public class InitAssetsScannerProcessor {
                 : List.of();
         final Path projectWebDir = resolveProjectWebDir(config, projectRoot);
         final List<Path> localDirs = new ArrayList<>();
+        if (projectWebDir != null) {
+            localDirs.add(projectWebDir);
+        }
         if (launchMode.getLaunchMode() == LaunchMode.DEVELOPMENT) {
-            if (projectWebDir != null) {
-                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(projectWebDir));
-                localDirs.add(projectWebDir);
-                webDirs.produce(new WebDirBuildItem(projectWebDir));
+            for (Path localDir : localDirs) {
+                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(localDir));
+                webDirs.produce(new WebDirBuildItem(localDir));
             }
             for (Path srcDir : findSrcDirs(curateOutcome)) {
                 watchedDirs.produce(new WebBundlerWatchedDirBuildItem(srcDir));
