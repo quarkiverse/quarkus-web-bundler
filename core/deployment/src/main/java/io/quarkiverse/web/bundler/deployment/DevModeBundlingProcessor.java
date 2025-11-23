@@ -116,8 +116,13 @@ public class DevModeBundlingProcessor {
     }
 
     private static void callNoRestartChangesConsumers(boolean isSuccess) {
-        RuntimeUpdatesProcessor.INSTANCE
-                .notifyExtensions(Set.of(isSuccess ? "web-bundler/build-success" : "web-bundler/build-error"));
+        try {
+            RuntimeUpdatesProcessor.INSTANCE
+                    .notifyExtensions(Set.of(isSuccess ? "web-bundler/build-success" : "web-bundler/build-error"));
+        } catch (Exception e) {
+            LOGGER.debug("An error occurred while notifying extensions for WebBundler changes", e);
+        }
+
     }
 
     private static void resetRemoteProblem() {
