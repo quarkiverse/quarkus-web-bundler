@@ -21,6 +21,7 @@ import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedEntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.runtime.devmode.WebBundlingException;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -29,6 +30,7 @@ import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.dev.RuntimeUpdatesProcessor;
+import io.quarkus.deployment.util.FileUtil;
 
 public class DevModeBundlingProcessor {
 
@@ -40,6 +42,7 @@ public class DevModeBundlingProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void watch(WebBundlerConfig config,
+            WebBundlerTargetDirBuildItem targetDir,
             DevWatcherBuildItem watcher,
             ReadyForBundlingBuildItem readyForBundling,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
@@ -59,12 +62,40 @@ public class DevModeBundlingProcessor {
                     generatedEntryPointProducer);
             return;
         }
-
-        if (dev != null) {
-            shutdownDevService();
+        resetRemoteProblem();
+        if (targetDir.keepDir()) {
+            if (dev != null
+                    && dev.process().isAlive()) {
+                try {
+                    LOGGER.info("Web Bundling in incremental mode (hit 's' to trigger full bundling)");
+                    dev.process().build();
+                    handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, dev.process().dist(),
+                            readyForBundling.fixedNames(), readyForBundling.startTime());
+                    processGeneratedEntryPoints(readyForBundling.bundleOptions().workDir(), generatedEntryPointProducer);
+                } catch (BundlingException e) {
+                    throw new WebBundlingException(e.getMessage(), e.logs().errors());
+                } catch (IOException e) {
+                    shutdownDevService();
+                    throw new UncheckedIOException(e);
+                } catch (Exception e) {
+                    shutdownDevService();
+                    throw e;
+                }
+                return;
+            } else {
+                // Dist dir needs to be cleaned
+                try {
+                    FileUtil.deleteDirectory(targetDir.dist());
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
         }
 
-        resetRemoteProblem();
+        if (dev != null) {
+            shutdownDevService(true);
+        }
+
         if (!liveReload.isLiveReload()) {
             shutdown.addCloseTask(DevModeBundlingProcessor::shutdownDevService, true);
         }
@@ -97,9 +128,9 @@ public class DevModeBundlingProcessor {
                 dev.process().build();
                 resetRemoteProblem();
                 RuntimeUpdatesProcessor.INSTANCE.doScan(false, false);
-                LOGGER.info("Web build successful");
+                LOGGER.info("Web Bundling successful");
             } catch (BundlingException e) {
-                LOGGER.error("Web build Error");
+                LOGGER.error("Web Bundling failed (see logs before this message)");
                 if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() == null) {
                     RuntimeUpdatesProcessor.INSTANCE
                             .setRemoteProblem(new WebBundlingException(e.getMessage(), e.logs().errors()));
@@ -109,8 +140,8 @@ public class DevModeBundlingProcessor {
                 throw new RuntimeException(e);
             }
         } else {
-            LOGGER.warn("EsBuild Bundler dev service is not alive");
-            shutdownDevService();
+            LOGGER.warn("Web Bundling Dev Service needs to be restarted");
+            shutdownDevService(true);
             RuntimeUpdatesProcessor.INSTANCE.doScan(false, true);
         }
     }
@@ -132,7 +163,15 @@ public class DevModeBundlingProcessor {
     }
 
     private static void shutdownDevService() {
-        LOGGER.info("Web Bundler: stopping dev bundling");
+        shutdownDevService(false);
+    }
+
+    private static void shutdownDevService(boolean restart) {
+        if (restart) {
+            LOGGER.info("Restarting Web Bundler Dev Service to rebuild from scratch...");
+        } else {
+            LOGGER.info("Stopping Web Bundler Dev Service");
+        }
         try {
             if (dev != null) {
                 dev.close();

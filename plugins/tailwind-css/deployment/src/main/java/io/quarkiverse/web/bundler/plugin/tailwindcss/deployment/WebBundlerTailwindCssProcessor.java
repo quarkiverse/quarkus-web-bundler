@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+import org.jboss.logging.Logger;
+
 import io.mvnpm.esbuild.plugin.EsBuildPluginTailwind;
 import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerEsbuildPluginBuiltItem;
@@ -23,6 +25,7 @@ import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.runtime.LaunchMode;
 
 public class WebBundlerTailwindCssProcessor {
+    private static final Logger LOGGER = Logger.getLogger(WebBundlerTailwindCssProcessor.class);
     private static final String FEATURE = "web-bundler-tailwind-css";
 
     @BuildStep
@@ -79,7 +82,7 @@ public class WebBundlerTailwindCssProcessor {
                 .collect(Collectors.joining("\n\n---\n\n"));
         try {
             Files.createDirectories(targetDir);
-            Files.writeString(targetDir.resolve("extensions-merge-content.html"), merged, StandardOpenOption.CREATE_NEW,
+            Files.writeString(targetDir.resolve("extensions-merge-content.html"), merged, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException(e);
