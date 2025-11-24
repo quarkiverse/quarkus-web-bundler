@@ -40,16 +40,28 @@ class BundleWebAssetsScannerProcessor {
     }
 
     @BuildStep
-    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode) {
+    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode,
+            DevWatcherBuildItem watcher, LiveReloadBuildItem liveReload) {
         final String targetDirName = TARGET_DIR_NAME + launchMode.getLaunchMode().getDefaultProfile();
         final Path targetDir = outputTarget.getOutputDirectory().resolve(targetDirName);
         final Path distDir = targetDir.resolve(DIST);
+        if (Files.isDirectory(distDir)
+                && liveReload.isLiveReload()
+                // create or delete = re-bundle
+                && watcher != null
+                && !watcher.detectedConfigChange()
+                && !watcher.detectedAddOrRemoveChanges()
+                // Probably a user initiated reload = re-bundle
+                && !liveReload.getChangedResources().isEmpty()) {
+            return new WebBundlerTargetDirBuildItem(targetDir, distDir, true);
+        }
+
         try {
             FileUtil.deleteDirectory(targetDir);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return new WebBundlerTargetDirBuildItem(targetDir, distDir);
+        return new WebBundlerTargetDirBuildItem(targetDir, distDir, false);
     }
 
     @BuildStep

@@ -29,6 +29,7 @@ public final class DevWatcher {
     private final List<Path> webDirs = new CopyOnWriteArrayList<>();
     private final Map<Path, Link> watchedLinks = new ConcurrentHashMap<>();
     private volatile Runnable runWebBuild;
+    private final List<FileChangeEvent> changesHistory = new CopyOnWriteArrayList<>();
 
     public DevWatcher() {
         this.watcher = new WatchServiceFileSystemWatcher("Dev Watcher", true);
@@ -69,17 +70,23 @@ public final class DevWatcher {
         watcher.watchFiles(directory, monitoredFiles, this::handleChanges);
     }
 
+    public List<FileChangeEvent> changesHistory() {
+        return changesHistory;
+    }
+
     private void handleChanges(Collection<FileChangeEvent> changes) {
         if (changes.stream().allMatch(c -> Files.isDirectory(c.getFile())))
             return;
 
-        boolean web = changes.stream().anyMatch(c -> webDirs.stream().anyMatch(w -> c.getFile().startsWith(w)));
+        this.changesHistory.addAll(changes);
+
+        boolean web = isWebChange(changes.stream().map(FileChangeEvent::getFile).toList());
 
         LOG.debugf("%s change detected on filesystem (%d): %s", web ? "Web file" : "File", changes.size(),
                 changes.stream().map(c -> c.getType() + " " + c.getFile()).toList());
 
         if (web) {
-            if (changes.stream().anyMatch(c -> c.getType() != FileChangeEvent.Type.MODIFIED)) {
+            if (detectedAddOrRemoveChanges(changes)) {
                 // This makes sure we build even if there was an error in a previous build
                 RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(null);
                 doScan(true);
@@ -93,8 +100,16 @@ public final class DevWatcher {
         }
     }
 
+    public static boolean detectedAddOrRemoveChanges(Collection<FileChangeEvent> changes) {
+        return changes.stream().anyMatch(c -> c.getType() != FileChangeEvent.Type.MODIFIED);
+    }
+
+    private boolean isWebChange(Collection<Path> changes) {
+        return changes.stream().anyMatch(c -> webDirs.stream().anyMatch(c::startsWith));
+    }
+
     private void runWebBuild() {
-        LOG.info("Triggering a new Web build...");
+        LOG.info("Changes detected in web file(s), triggering a new Web Bundling...");
         copyWebLinksIfNeed();
         if (runWebBuild != null) {
             BUILD_EXECUTOR.execute(runWebBuild);

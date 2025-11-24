@@ -98,14 +98,14 @@ public class PrepareForBundlingProcessor {
             HttpRootPathBuildItem httpRootPath) {
         if (entryPoints.isEmpty()) {
             if (!config.dependencies().autoImport().isEnabled()) {
-                LOGGER.warn("Skipping Web-Bundling because no entry-point detected (create one or enable auto-import)");
+                LOGGER.warn("Skipping Web Bundling because no entry-point detected (create one or enable auto-import)");
                 return null;
             } else {
-                if (installedWebDependencies.isEmpty()) {
-                    LOGGER.warn("Skipping Web-Bundling because no Web Dependencies found for auto-import.");
+                if (installedWebDependencies == null || installedWebDependencies.isEmpty()) {
+                    LOGGER.warn("Skipping Web Bundling because no Web Dependencies found for auto-import.");
                     return null;
                 } else {
-                    LOGGER.info("No entry points found, it will be generated based on direct Web Dependencies.");
+                    LOGGER.info("No Web Bundling entry points found, it will be generated based on direct Web Dependencies.");
                 }
             }
         }
@@ -114,7 +114,7 @@ public class PrepareForBundlingProcessor {
 
         try {
             Files.createDirectories(targetDir.webBundler());
-            LOGGER.debugf("Preparing bundle in %s", targetDir);
+            LOGGER.debugf("Preparing Web Bundle in %s", targetDir);
             final boolean browserLiveReload = launchMode.getLaunchMode().equals(LaunchMode.DEVELOPMENT)
                     && config.browserLiveReload();
             if (bundleConfig.isPresent()) {
@@ -198,9 +198,10 @@ public class PrepareForBundlingProcessor {
                                 Collectors.joining("\n"));
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debugf("Bundling '%s' (%d files):\n%s", entryPoint.key(), scripts.size(), scriptsLog);
+                    LOGGER.debugf("Preparing Web Bundling for '%s' with %d files:\n%s", entryPoint.key(), scripts.size(),
+                            scriptsLog);
                 } else {
-                    LOGGER.infof("Bundling '%s' (%d files)", entryPoint.key(), scripts.size());
+                    LOGGER.infof("Preparing Web Bundling for '%s' with %d files", entryPoint.key(), scripts.size());
                 }
 
                 if (!scripts.isEmpty()) {
@@ -224,7 +225,7 @@ public class PrepareForBundlingProcessor {
                 }
                 optionsBuilder.addAutoEntryPoint(targetDir.webBundler(), DEFAULT_ENTRY_POINT_KEY, scripts, autoDepsMode,
                         directWebDependenciesIds::contains);
-                LOGGER.info("No custom entry points found, it will be generated based on web dependencies.");
+                LOGGER.info("No custom Web Bundling entry points found, it will be generated based on web dependencies.");
             }
 
             final BundleOptions options = optionsBuilder.build();

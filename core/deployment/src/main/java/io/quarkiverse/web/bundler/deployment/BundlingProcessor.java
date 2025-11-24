@@ -114,14 +114,14 @@ class BundlingProcessor {
                     }
                 });
             }
-            LOGGER.infof("Bundle generated %d files in %sms", names.size(),
+            LOGGER.infof("Web Bundler generated %d files in %sms", names.size(),
                     Instant.now().minusMillis(startTime).toEpochMilli());
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debugf("Bundle dir: '%s'\n  - %s", bundleDir, names.size(),
+                LOGGER.debugf("Web Bundler dir: '%s'\n  - %s", bundleDir, names.size(),
                         String.join("\n  - ", names));
             }
             if (LOGGER.isDebugEnabled() || LaunchMode.current() == LaunchMode.DEVELOPMENT) {
-                LOGGER.infof("Bundle#mapping:\n%s", mappingString);
+                LOGGER.infof("Web Bundler bundle#mapping:\n%s", mappingString);
             }
 
             generatedBundleProducer.produce(new GeneratedBundleBuildItem(bundleDir, bundle));

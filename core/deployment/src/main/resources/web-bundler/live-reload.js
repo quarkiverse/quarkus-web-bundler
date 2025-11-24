@@ -1,16 +1,9 @@
-let isReco = false;
-
 console.log("web-bundler live-reload is enabled");
 
 function connectToChanges() {
-    console.debug("connecting to web-bundler live-reload: " + isReco)
+    console.debug("connecting to web-bundler live-reload");
     const eventSource = new EventSource(process.env.LIVE_RELOAD_PATH);
     eventSource.onopen = () => {
-        if (isReco) {
-            // server is back-on, let's reload to get the latest
-            location.reload();
-        }
-
         console.debug("connected to web-bundler live-reload");
     };
     eventSource.addEventListener('bundling-error', e => {
@@ -46,7 +39,7 @@ function connectToChanges() {
 
     eventSource.onerror = (e) => {
         console.debug("web-bundler live-reload connection lost");
-        isReco = true;
+        location.reload();
     };
 }
 

@@ -74,7 +74,11 @@ class WebDependenciesProcessor {
             ProjectRootBuildItem projectRoot,
             WebDependenciesBuildItem webDependencies,
             WebBundlerConfig config) {
+        if (!projectRoot.exists()) {
+            return null;
+        }
         final Path nodeModulesDir = resolveNodeModulesDir(config, outputTarget, projectRoot);
+        final Path relativeNodeModulesDir = projectRoot.path().relativize(nodeModulesDir);
         long startedInstall = Instant.now().toEpochMilli();
         try {
             final List<WebDependency> toInstall = webDependencies.toEsBuildWebDependencies();
@@ -84,16 +88,21 @@ class WebDependenciesProcessor {
                     String deps = webDependencies.list().stream().map(Dependency::id)
                             .collect(
                                     Collectors.joining(", "));
-                    LOGGER.infof("%d web dependencies installed in %sms: %s", webDependencies.list().size(),
+
+                    LOGGER.infof("%d Web Dependencies installed in node_modules in './%s' (%sms): %s",
+                            webDependencies.list().size(),
+                            relativeNodeModulesDir,
                             duration, deps);
                 } else {
-                    LOGGER.infof("%d web Dependencies installed in %sms.", webDependencies.list().size(),
+                    LOGGER.infof("%d Web Dependencies installed in './%s' (%sms).",
+                            webDependencies.list().size(),
+                            relativeNodeModulesDir,
                             duration);
                 }
             } else if (webDependencies.isEmpty()) {
-                LOGGER.info("No web dependencies to install.");
+                LOGGER.infof("No Web Dependencies to install in './%s'.", relativeNodeModulesDir);
             } else {
-                LOGGER.info("All web dependencies are already installed.");
+                LOGGER.infof("All Web Dependencies are already installed in './%s'.", relativeNodeModulesDir);
             }
             liveReload.setContextObject(InstalledWebDependenciesContext.class,
                     new InstalledWebDependenciesContext(config, nodeModulesDir, webDependencies.list()));

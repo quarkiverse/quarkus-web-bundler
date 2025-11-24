@@ -28,6 +28,7 @@ import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
+import io.quarkus.deployment.dev.filesystem.watch.FileChangeEvent;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.maven.dependency.Dependency;
@@ -55,7 +56,9 @@ public class InitAssetsScannerProcessor {
         if (launchMode.getLaunchMode() != LaunchMode.DEVELOPMENT || !config.browserLiveReload() || watchedDirs.isEmpty()) {
             return null;
         }
+        Collection<FileChangeEvent> previousChanges = null;
         if (watcher != null) {
+            previousChanges = watcher.changesHistory();
             watcher.close();
         }
         watcher = new DevWatcher();
@@ -74,7 +77,7 @@ public class InitAssetsScannerProcessor {
                 }
             }, true);
         }
-        return new DevWatcherBuildItem(watcher);
+        return new DevWatcherBuildItem(watcher, previousChanges);
     }
 
     @BuildStep
@@ -115,6 +118,10 @@ public class InitAssetsScannerProcessor {
             watchedFiles.produce(
                     HotDeploymentWatchedFileBuildItem.builder().setLocationPredicate(p -> p.startsWith(config.webRoot()))
                             .setRestartNeeded(true).build());
+            final Path rootConfigDir = projectRoot.path().resolve("config/");
+            if (Files.isDirectory(rootConfigDir)) {
+                watchedDirs.produce(new WebBundlerWatchedDirBuildItem(rootConfigDir));
+            }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debugf("Watching resources %s for changes", config.webRoot());
