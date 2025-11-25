@@ -197,7 +197,7 @@ public class PrepareForBundlingProcessor {
                         .collect(
                                 Collectors.joining("\n"));
 
-                if (!scripts.isEmpty() && !entryPoint.shared()) {
+                if (!scripts.isEmpty() && entryPoint.output()) {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debugf("Preparing Web Bundling for '%s' with %d files:\n%s", entryPoint.key(), scripts.size(),
                                 scriptsLog);

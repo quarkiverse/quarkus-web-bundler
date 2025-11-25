@@ -92,7 +92,7 @@ public interface WebBundlerConfig {
         if (!conf.containsKey(DEFAULT_ENTRY_POINT_KEY)) {
             // When the config is not empty, default app entrypoint can only be in web/app/ dir
             conf.put(DEFAULT_ENTRY_POINT_KEY, new ConfiguredEntryPoint(!appDir && conf.isEmpty() ? "" : DEFAULT_ENTRY_POINT_KEY,
-                    DEFAULT_ENTRY_POINT_KEY, DEFAULT_ENTRY_POINT_KEY, false));
+                    DEFAULT_ENTRY_POINT_KEY, DEFAULT_ENTRY_POINT_KEY, true));
         }
         return conf;
     }
@@ -391,12 +391,16 @@ public interface WebBundlerConfig {
         boolean enabled();
 
         /**
-         * When shared, the entry point is just used for import by other entry points. It won't be bundled and served.<br>
-         * For example when a directory is shared by multiple other bundle but doesn't need to be exported as a standalone
-         * bundle.
+         * Whether this entry point should produce its own output bundle.
+         * <p>
+         * When {@code output=false}, the entry point is only used as an import for
+         * other entry points. It won't be bundled or served on its own.
+         * <p>
+         * This is useful when a directory is consumed by multiple other bundles but
+         * doesn't need to be emitted as a standalone bundle.
          */
-        @WithDefault("false")
-        boolean shared();
+        @WithDefault("true")
+        boolean output();
 
         /**
          * The directory for this entry point under the web root.
