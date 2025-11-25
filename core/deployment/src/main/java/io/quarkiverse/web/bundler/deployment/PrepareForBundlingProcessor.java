@@ -197,14 +197,13 @@ public class PrepareForBundlingProcessor {
                         .collect(
                                 Collectors.joining("\n"));
 
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debugf("Preparing Web Bundling for '%s' with %d files:\n%s", entryPoint.key(), scripts.size(),
-                            scriptsLog);
-                } else {
-                    LOGGER.infof("Preparing Web Bundling for '%s' with %d files", entryPoint.key(), scripts.size());
-                }
-
-                if (!scripts.isEmpty()) {
+                if (!scripts.isEmpty() && !entryPoint.shared()) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debugf("Preparing Web Bundling for '%s' with %d files:\n%s", entryPoint.key(), scripts.size(),
+                                scriptsLog);
+                    } else {
+                        LOGGER.infof("Preparing Web Bundling for '%s' with %d files", entryPoint.key(), scripts.size());
+                    }
                     if (browserLiveReload) {
                         Files.write(targetDir.webBundler().resolve("live-reload.js"), readLiveReloadJs());
                         scripts.add("live-reload.js");
