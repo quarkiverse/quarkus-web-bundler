@@ -27,6 +27,10 @@ public final class EntryPointBuildItem extends MultiBuildItem {
         return entryPoint.assets();
     }
 
+    public boolean shared() {
+        return entryPoint.shared();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass())
@@ -40,7 +44,7 @@ public final class EntryPointBuildItem extends MultiBuildItem {
         return Objects.hashCode(entryPoint);
     }
 
-    public record EntryPoint(String key, String dir, List<BundleWebAsset> assets) {
+    public record EntryPoint(String key, String dir, boolean shared, List<BundleWebAsset> assets) {
 
     }
 }

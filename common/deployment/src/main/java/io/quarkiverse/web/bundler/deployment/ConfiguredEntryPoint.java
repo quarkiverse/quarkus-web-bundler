@@ -8,16 +8,23 @@ public class ConfiguredEntryPoint implements WebBundlerConfig.EntryPointConfig {
     private final String id;
     private final String key;
     private final String dir;
+    private final boolean shared;
 
-    public ConfiguredEntryPoint(String dir, String id, String key) {
+    public ConfiguredEntryPoint(String dir, String id, String key, boolean shared) {
         this.dir = dir;
         this.id = id;
         this.key = key;
+        this.shared = shared;
     }
 
     @Override
     public boolean enabled() {
         return true;
+    }
+
+    @Override
+    public boolean shared() {
+        return shared;
     }
 
     @Override

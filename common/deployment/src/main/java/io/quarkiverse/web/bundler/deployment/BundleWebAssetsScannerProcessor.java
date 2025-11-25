@@ -86,7 +86,8 @@ class BundleWebAssetsScannerProcessor {
 
                 final String entryPointKey = e.getValue().effectiveKey(e.getKey());
                 final String dir = e.getValue().effectiveDir(e.getKey());
-                entryPoints.putIfAbsent(entryPointKey, new EntryPoint(entryPointKey, dir, new ArrayList<>()));
+                entryPoints.putIfAbsent(entryPointKey,
+                        new EntryPoint(entryPointKey, dir, e.getValue().shared(), new ArrayList<>()));
                 // The regex is for all files but .html
                 final List<WebAsset> assets = scanner.scan(dir, null,
                         dir.isEmpty() ? config.getRootEntryPointIgnoredFiles() : config.getEntryPointIgnoredFiles(),
@@ -163,7 +164,7 @@ class BundleWebAssetsScannerProcessor {
         for (EntryPoint e : context.entryPoints().values()) {
             produceWebAssetsWithCheck(e.assets(),
                     webAssets -> {
-                        bundles.produce(new EntryPointBuildItem(new EntryPoint(e.key(), e.dir(), webAssets)));
+                        bundles.produce(new EntryPointBuildItem(new EntryPoint(e.key(), e.dir(), e.shared(), webAssets)));
                     });
         }
 
