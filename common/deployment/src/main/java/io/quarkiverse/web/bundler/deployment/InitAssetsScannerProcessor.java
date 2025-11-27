@@ -135,8 +135,10 @@ public class InitAssetsScannerProcessor {
     private static Collection<Path> findSrcDirs(CurateOutcomeBuildItem curateOutcome) {
         final Set<Path> paths = new HashSet<>();
         for (WorkspaceModule workspaceModule : curateOutcome.getApplicationModel().getWorkspaceModules()) {
-            for (SourceDir resourceDir : workspaceModule.getMainSources().getSourceDirs()) {
-                paths.add(resourceDir.getDir());
+            if (workspaceModule.getMainSources() != null) {
+                for (SourceDir resourceDir : workspaceModule.getMainSources().getSourceDirs()) {
+                    paths.add(resourceDir.getDir());
+                }
             }
         }
         return paths;
@@ -145,8 +147,10 @@ public class InitAssetsScannerProcessor {
     private static Collection<Path> findSrcResourcesDirs(CurateOutcomeBuildItem curateOutcome) {
         final Set<Path> paths = new HashSet<>();
         for (WorkspaceModule workspaceModule : curateOutcome.getApplicationModel().getWorkspaceModules()) {
-            for (SourceDir resourceDir : workspaceModule.getMainSources().getResourceDirs()) {
-                paths.add(resourceDir.getDir());
+            if (workspaceModule.getMainSources() != null) {
+                for (SourceDir resourceDir : workspaceModule.getMainSources().getResourceDirs()) {
+                    paths.add(resourceDir.getDir());
+                }
             }
         }
         return paths;
