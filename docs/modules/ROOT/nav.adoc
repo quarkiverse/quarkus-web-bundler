@@ -1,9 +1,12 @@
-include::./includes/attributes.adoc[]
+include::./_includes/attributes.adoc[]
 :config-file: application.properties
 
 * xref:index.adoc[Getting started]
 * xref:main-concepts.adoc[Main Concepts]
 * xref:advanced-guides.adoc[Advanced Guides]
+* xref:integrations.adoc[Integrations]
+** xref:integrations.adoc#tailwindcss[TailwindCSS]
+** xref:integrations.adoc#qute-components[Qute components]
 * xref:testing.adoc[Testing]
 * xref:examples.adoc[Examples]
 * xref:config-reference.adoc[Config Reference]

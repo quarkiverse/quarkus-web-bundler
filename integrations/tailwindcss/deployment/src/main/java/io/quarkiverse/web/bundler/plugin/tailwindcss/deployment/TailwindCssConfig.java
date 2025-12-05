@@ -21,7 +21,7 @@ public interface TailwindCssConfig {
     /**
      * The default glob pattern to scan in the project
      */
-    @WithDefault("**/*.{html,md,adoc,markdown,asciidoc,css}")
+    @WithDefault("**/*.{html,md,adoc,markdown,asciidoc}")
     String pattern();
 
 }

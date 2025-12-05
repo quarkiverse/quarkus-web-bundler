@@ -1,0 +1,160 @@
+= Quarkus image:logo.svg[width=25em] Web Bundler - Integrations
+
+include::./_includes/attributes.adoc[]
+
+[#tailwindcss]
+== TailwindCSS
+
+We added a Web Bundler + https://tailwindcss.com/docs/styling-with-utility-classes[TailwindCSS 4+, window="_blank"] extension which makes it very easy to use Tailwind with Quarkus (and https://iamroq.com/[Roq, window="_blank"]).
+
+=== Installation
+
+If you want to use this extension, you need to add the `io.quarkiverse.web-bundler:quarkus-web-bundler-tailwindcss` extension first to your build file.
+
+For instance, with Maven, add the following dependency to your POM file:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.web-bundler</groupId>
+    <artifactId>quarkus-web-bundler-tailwindcss</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+With Gradle, you need to add this plugin (to allow architecture based resolution) and the dependency:
+[source,kotlin,subs=attributes+]
+----
+plugins {
+  id("io.mvnpm.gradle.plugin.native-java-plugin") version "1.0.0"
+}
+
+...
+
+dependencies {
+    implementation("io.quarkiverse.web-bundler:quarkus-web-bundler-tailwindcss:{project-version}")
+}
+----
+
+=== Usage
+
+There is no need to add the TailwindCSS mvnpm dependency in your project.
+
+Then in your web directory:
+[source,css]
+.web/style.css
+----
+@import "tailwindcss";
+----
+
+*Start using Tailwind in your HTML*:
+
+For example with Qute Web, start using Tailwind’s utility classes to style your content:
+
+[source,css]
+.src/main/resources/templates/pub/index.html
+----
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{#bundle /}
+</head>
+<body>
+<h1 class="text-3xl font-bold underline">
+Hello world!
+</h1>
+</body>
+</html>
+----
+
+=== Configuration
+
+TailwindCSS is pre-configured to scan all Qute templates in your project and jars (and in Roq files) looking for class candidates in order to optimize your output css.
+
+It is possible to manually configure the pattern for scanning via the Quarkus configuration:
+include::_includes/quarkus-web-bundler-tailwindcss.adoc[leveloffset=+1, opts=optional]
+
+WARNING: The `@source` path is resolved from the bundling directory (`target`), not relative to your source file, which can make referencing source files tricky. If the default setup and pattern do not meet your needs, https://github.com/quarkiverse/quarkus-web-bundler/issues/366[vote up this issue].
+
+=== Splitting Styles
+
+You can split your Tailwind CSS by importing files from your main stylesheet:
+
+[source,css]
+.web/style.css
+----
+@import "tailwindcss";
+@import "./_theme.css";
+----
+
+Prefix imported files with `_` so they aren’t treated as root bundles, and don’t include `@import "tailwindcss";` again:
+
+[source,css]
+.web/_theme.css
+----
+@theme {
+  --color-mint-500: oklch(0.72 0.11 178);
+}
+----
+
+=== Tailwind Plugins
+
+It is possible to use Tailwind plugins (DaisyUI, Flowbite, ...). Add the mvnpm dependency in your project (as provided) and then use the `@plugin` in your Tailwind css file.
+
+==== Tailwind Typography plugin (styling rich text content)
+
+The https://github.com/tailwindlabs/tailwindcss-typography[Tailwind Typography, window="_blank"] plugin *is pre-installed* because it’s essential for styling rich text content, allowing you to use it without adding extra dependencies.:
+
+.web/style.css
+[source,css]
+----
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+----
+
+Then in your html templates:
+[source,html]
+----
+<article class="prose">
+  <h1>Hello World</h1>
+  <p>This text is styled using Tailwind Typography.</p>
+</article>
+----
+
+
+
+
+
+
+
+
+
+[#qute-components]
+== Server-Side Qute Components
+
+When you need to include custom scripts or styles in your Qute tags, Server-Side Qute Components provides an elegant solution.
+
+IMPORTANT: This requires `quarkus-qute` or `quarkus-qute-web` in the project (and this is not made to be used with the build-time template rendering).
+
+To enable server-side components, add this in the `application.properties`:
+[source,properties]
+----
+quarkus.web-bundler.bundle.components=true
+quarkus.web-bundler.bundle.components.key=app // <1>
+quarkus.web-bundler.bundle.components.qute-tags=true // <2>
+----
+<1> use `app` to have a single merged bundle with the `app` (or remove this line to use `components` as default)
+<2> activate qute-tags support (default is `false`)
+
+Here is a nice convention to define your components: `src/main/resources/web/components/[name]/[name].{html,css,scss,js,ts,...};`. The scripts, styles and assets will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
+
+Example:
+- `src/main/resources/web/components/hello/hello.html`
+- `src/main/resources/web/components/hello/hello.js`
+- `src/main/resources/web/components/hello/hello.scss`
+
+This way you can use `{#hello}` in your templates and the scripts & styles will be bundled.
+
+NOTE: You may create different qute components groups to be used in different pages.

@@ -1,6 +1,6 @@
 = Quarkus image:logo.svg[width=25em] Web Bundler - Advanced Guides
 
-include::./includes/attributes.adoc[]
+include::./_includes/attributes.adoc[]
 
 == Web Root
 
@@ -10,8 +10,9 @@ The Web Root is `src/main/resources/web`, this is where the Web Bundler will loo
 == Static files
 
 There are 2 ways to add static files (fonts, images, music, video, ...) to your app:
-- Files in `src/main/resources/web/static/&#42;&#42;` will be served statically under http://localhost:8080/static/ (you can choose another directory name xref:config-reference.adoc#quarkus-web-bundler_quarkus.web-bundler.static[Config Reference]). For convenience, those static files are excluded (marked as external) from the bundling by default. This allows to reference them from scripts or styles without errors (e.g. `import '/static/foo.png';`).
+- Files in `src/main/resources/web/public/&#42;&#42;` will be served statically under http://localhost:8080/.
 - Other files imported from scripts or styles will be bundled and processed by the configured loaders (see <<loaders>>) allowing different options (like embedding them as data-url).
+- For convenience, everything under `/static` is excluded (marked as external) from the bundling by default. This allows to reference static files from scripts or styles without errors (e.g. `import '/static/foo.png';`).
 
 [#html-templates]
 == html templates rendering
@@ -29,25 +30,26 @@ When used in `src/main/resources/web` the rendering is happening at build time (
 [#web-live-coding]
 == Web Live-Coding
 
-The Web Bundler enable browser live coding for development. This is done through a small injected https://github.com/quarkiverse/quarkus-web-bundler/blob/main/deployment/src/main/resources/web-bundler/live-reload.js[script] (only in dev-mode). This script will listen for changes from the server.
+The Web Bundler enable browser live coding for development.
 
-In this mode, script and styles will be watched by esbuild and won't require any restart from Quarkus.
+This is done through:
+- a custom project sources watcher in Quarkus Dev
+- a small injected https://github.com/quarkiverse/quarkus-web-bundler/blob/main/deployment/src/main/resources/web-bundler/live-reload.js[script] (only in dev-mode). This script will listen for changes from the server.
 
-The page will be:
+In this mode when you change the sources, the page will automatically be:
 
 - hot-reloaded (no refresh) when a style is modified (css, scss).
 - refreshed when a js, template or java file is modified.
 
 When web live coding is enabled, to allow it to work properly, minification and bundle hashes are disabled in dev-mode.
 
-NOTE: templates and java change can take a bit longer (1s) to be detected as there is no file-system watch implemented in Quarkus yet.
-
-
 This can be disabled through xref:config-reference.adoc#quarkus-web-bundler_quarkus-web-bundler-browser-live-reload[browser-live-reload config].
+
+NOTE: After a deployment/bundling error, you need to manually refresh the page to get back in live-reload mode.
 
 == Bundling
 
-By default, directory `src/main/resources/web/app` is destined to contain the scripts, styles and possibly assets for your app. It will be bundled and served into `/static/bundle/main-[hash].[ext].` (see <<entry-points>> for more options).
+By default, directory `src/main/resources/web/` is destined to contain the scripts, styles and possibly assets for your app. It will be bundled and served into `/static/bundle/app-[hash].[ext].` (see <<entry-points>> for more options).
 
 [#importing-web-dependencies]
 === Importing Web Dependencies
@@ -56,7 +58,7 @@ Once added in the pom.xml, the web dependencies can be imported and used with th
 
 WARNING: Web Dependencies (script and styles) need to be imported in order to be bundled, dead code will be eliminated during the build.
 
-.web/app/script.js
+.web/script.js
 [source,javascript]
 ----
 import $ from 'jquery';
@@ -67,7 +69,7 @@ $('.hello').innerText('Hello');
 
 Styles can be also be imported from a scss file:
 
-.web/app/style.scss
+.web/style.scss
 [source,scss]
 ----
 @import "bootstrap/dist/scss/bootstrap.scss";
@@ -83,7 +85,7 @@ Styles can be also be imported from a scss file:
 
 Of course, you can also provide this index manually (named `index.js,ts,jsx,tsx`) and choose what to import. Example:
 
-.src/main/resources/web/app/index.js
+.src/main/resources/web/index.js
 [source,javascript]
 ----
 import './my-script.js'
@@ -121,7 +123,12 @@ quarkus.web-bundler.bundle.baz.key=foo
 <1> Bundle `src/main/resources/web/foo/...` and `src/main/resources/web/baz/...` together into `/static/bundle/foo-[hash].[ext]`
 <2> Bundle `src/main/resources/web/my-dir/...` into `/static/bundle/my-key-[hash].[ext]`
 
-NOTE: By default, as soon as more than one entry-point key is configured, shared code and web dependencies are split off into a separate file. That way if the user first browses to one page and then to another page, they don't have to download all the JavaScript for the second page from scratch if the shared part has already been downloaded and cached by their browser. The path of the shared static script is `/static/bundle/chunk-[hash].js`. This setup is perfect if you create an app with different pages using different scripts, libraries and styles.
+[IMPORTANT]
+====
+As soon as one or more entry-points are configured:
+* Scripts and styles located at the root of the web directory will not be bundled. To keep things organized, move them to the web/app directory (or remove them if unnecessary).
+* When multiple output entry points exist, shared code and web dependencies are extracted into a separate file which is auto-imported in `{#bundle /}`. This ensures that if a user navigates from one page to another, they don’t need to download all the JavaScript for the second page again—shared parts are already cached by the browser.
+====
 
 
 [#loaders]
@@ -138,34 +145,6 @@ NOTE: For convenience, when using a file located in the static directory (e.g. `
 === SCSS, SASS
 
 You can use scss or sass files out of the box. Local import are supported. Importing partials is also supported begin with `_` (as in `_code.scss` imported with `@import 'code';`).
-
-[#qute-components]
-=== Server-Side Qute Components
-
-IMPORTANT: This features requires `quarkus-qute` or `quarkus-qute-web` in the project (and this is not made to be used with the build-time template rendering).
-
-This is not always needed but if you need to add specific script and/or style to your {quarkus-guides-url}/qute-reference#user_tags[Qute tags] (Server Side Qute Components). This will help you do it elegantly.
-
-To enable server-side components, add this in the `application.properties`:
-[source,properties]
-----
-quarkus.web-bundler.bundle.components=true
-quarkus.web-bundler.bundle.components.key=app // <1>
-quarkus.web-bundler.bundle.components.qute-tags=true // <2>
-----
-<1> use `app` to have a single merged bundle with the `app` (or remove this line to use `components` as default)
-<2> activate qute-tags support (default is `false`)
-
-Here is a nice convention to define your components: `src/main/resources/web/components/[name]/[name].{html,css,scss,js,ts,...};`. The scripts, styles and assets will be bundled, the html template will be usable as a {quarkus-guides-url}/qute-reference#user_tags[Qute tag].
-
-Example:
-- `src/main/resources/web/components/hello/hello.html`
-- `src/main/resources/web/components/hello/hello.js`
-- `src/main/resources/web/components/hello/hello.scss`
-
-This way you can use `{#hello}` in your templates and the scripts & styles will be bundled.
-
-NOTE: You may create different qute components groups to be used in different pages.
 
 [#web-dependencies]
 == Web Dependencies
@@ -269,8 +248,7 @@ When browser-live-reload is enabled:
 [#node_modules]
 === Node Modules for bundling
 
-To deal with Web Dependencies, the Web Bundler manages a node_modules directory. The default location for it is the build direcotry (i.e. `target/node_modules` on Maven). For a good IDE support (detection of imports and types), you may use the project directory instead `quarkus.web-bundler.dependencies.node-modules=node_modules` **and add the `node_modules/` to the `.gitignore`**, the IDE will look recursivelly in parent directories for imports and the Web Bundler too.
-
+To deal with Web Dependencies, the Web Bundler manages a `node_modules` directory. The default location for it is the project directory. **Don't forget to add the `node_modules/` to the `.gitignore`**, the IDE will look recursively in parent directories for imports and the Web Bundler too.
 
 [#locking]
 === Locking dependencies
