@@ -11,7 +11,7 @@ Create full-stack web apps and components with this Quarkus extension. It offers
 * [x] Awesome Dev experience
 * [x] Integrated with NPM dependencies through [mvnpm](https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#mvnpm) or [webjars](https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#webjars).
 * [x] Build-time index.html rendering with bundled scripts and styles
-* [*] Pre-configured TailwindCSS 4+ integration
+* [x] Pre-configured TailwindCSS 4+ integration
 * [x] Server Side Qute Components (Qute template + Script + Style)
 
 [User Documentation](https://docs.quarkiverse.io/quarkus-web-bundler/dev/).
