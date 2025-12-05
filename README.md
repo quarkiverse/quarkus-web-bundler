@@ -11,7 +11,10 @@ Create full-stack web apps and components with this Quarkus extension. It offers
 * [x] Awesome Dev experience
 * [x] Integrated with NPM dependencies through [mvnpm](https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#mvnpm) or [webjars](https://docs.quarkiverse.io/quarkus-web-bundler/dev/advanced-guides.html#webjars).
 * [x] Build-time index.html rendering with bundled scripts and styles
+* [*] Pre-configured TailwindCSS 4+ integration
 * [x] Server Side Qute Components (Qute template + Script + Style)
+
+[User Documentation](https://docs.quarkiverse.io/quarkus-web-bundler/dev/).
 
 **Is it the same as [Quinoa](https://github.com/quarkiverse/quarkus-quinoa/)?** It is very close but:
 
@@ -39,7 +42,7 @@ Yes, you just need to use a framework (like Vite) and switch to a package.json a
 
 
 
-All the information you need to use Quarkus Web Bundler is in the [user documentation](https://docs.quarkiverse.io/quarkus-web-bundler/dev/).
+All the information you need to use Quarkus Web Bundler is in the [User Documentation](https://docs.quarkiverse.io/quarkus-web-bundler/dev/).
 
 ## Contributors ✨
 

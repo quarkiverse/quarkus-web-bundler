@@ -1,5 +1,5 @@
 = Quarkus image:logo.svg[width=25em] Web Bundler - Configuration Reference
 
-include::./includes/attributes.adoc[]
+include::./_includes/attributes.adoc[]
 
-include::includes/quarkus-web-bundler.adoc[leveloffset=+1, opts=optional]
+include::_includes/quarkus-web-bundler.adoc[leveloffset=+1, opts=optional]

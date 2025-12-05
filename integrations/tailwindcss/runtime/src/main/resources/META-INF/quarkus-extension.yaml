@@ -1,5 +1,5 @@
 name: Web Bundler - Tailwind CSS
-description: Add support for bundling with Tailwind CSS
+description: Add support for bundling with Tailwind CSS 4+
 metadata:
   keywords:
     - web-bundler

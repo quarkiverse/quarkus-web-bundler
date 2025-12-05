@@ -1,6 +1,6 @@
 = Quarkus image:logo.svg[width=25em] Web Bundler - Main Concepts
 
-include::./includes/attributes.adoc[]
+include::./_includes/attributes.adoc[]
 
 == How it works
 

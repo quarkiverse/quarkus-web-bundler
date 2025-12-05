@@ -26,7 +26,7 @@ import io.quarkus.runtime.LaunchMode;
 
 public class WebBundlerTailwindCssProcessor {
     private static final Logger LOGGER = Logger.getLogger(WebBundlerTailwindCssProcessor.class);
-    private static final String FEATURE = "web-bundler-tailwind-css";
+    private static final String FEATURE = "web-bundler-tailwindcss";
 
     @BuildStep
     FeatureBuildItem feature() {
