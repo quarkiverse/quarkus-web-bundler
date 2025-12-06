@@ -44,18 +44,3 @@ The **Web Bundler** is also used in production applications:
   image:github.svg[width=16px] https://github.com/FroMage/RivieraDEV-Quarkus[Source, window="_blank"] | https://rivieradev.fr[Visit, window="_blank"]
 * **search.quarkus.io** — Quarkus guides search, a Lit full-stack web component  
   image:github.svg[width=16px] https://github.com/quarkusio/search.quarkus.io[Source, window="_blank"] | https://quarkus.io/guides[Visit, window="_blank"]
-
-
-
-== Real world
-
-The Web Bundler is also used in production applications:
-
-https://github.com/quarkusio/code.quarkus.io[image:github.svg[width=20px]] The Code Quarkus app generator, a single page app made with React: https://code.quarkus.io[code.quarkus.io, window="_blank"]
-
-https://github.com/mvnpm/mvnpm[image:github.svg[width=20px]] The mvnpm single page app made with Lit: https://mvnpm.org[mvnpm.org, window="_blank"]
-
-https://github.com/FroMage/RivieraDEV-Quarkus[image:github.svg[width=20px]] The Riviera Dev Conference website made with Renarde (MVC): https://rivieradev.fr/[rivieradev.fr, window="_blank"]
-
-https://github.com/quarkusio/search.quarkus.io[image:github.svg[width=20px]]
- Quarkus guides search is a Lit full-stack web-component https://quarkus.io/guides[quarkus.io/guides, window="_blank"]
