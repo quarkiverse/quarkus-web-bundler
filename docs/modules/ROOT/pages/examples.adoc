@@ -4,36 +4,46 @@ include::./_includes/attributes.adoc[]
 
 == Demos
 
-
-All those demos application enjoy the Web Bundler:
+All these demo applications use the **Web Bundler**:
 
 === Renarde
-
-https://github.com/ia3andy/htmx-todo[image:github.svg[width=20px]] A Todo using with Renarde and Htmx
-
-https://github.com/ia3andy/quarkus-blast[image:github.svg[width=20px]] An example board game with OIDC login using Renarde, htmx, Hyperscript and Bootstrap
-
-https://github.com/ia3andy/renotes[image:github.svg[width=20px]] A Note taking app with Markdown support using Renarde, htmx and Bootstrap
+* **htmx-todo** — A Todo app using Renarde and Htmx  
+  image:github.svg[width=20px] https://github.com/ia3andy/htmx-todo[Source]
+* **quarkus-blast** — A board game example with OIDC login using Renarde, Htmx, Hyperscript, and Bootstrap  
+  image:github.svg[width=20px] https://github.com/ia3andy/quarkus-blast[Source]
+* **renotes** — A note-taking app with Markdown support using Renarde, Htmx, and Bootstrap  
+  image:github.svg[width=20px] https://github.com/ia3andy/renotes[Source]
 
 === Lit
-
-https://github.com/quarkusio/todo-demo-app[image:github.svg[width=20px]] A Todo Demo application using Lit and Vaadin Web Components
-
-https://github.com/ia3andy/star-rating[image:github.svg[width=20px]]: A Star Rating full-stack web component using Lit
+* **todo-demo-app** — A Todo demo application using Lit and Vaadin Web Components  
+  image:github.svg[width=20px] https://github.com/quarkusio/todo-demo-app[Source]
+* **star-rating** — A full-stack star rating web component using Lit  
+  image:github.svg[width=20px] https://github.com/ia3andy/star-rating[Source]
 
 === React
+* **quarkus-bundler-react** — A minimalist SPA demo with React Bootstrap  
+  image:github.svg[width=20px] https://github.com/ia3andy/quarkus-bundler-react[Source]
+* **quarkus-wb-patternfly-react** — A minimalist SPA demo with PatternFly React  
+  image:github.svg[width=20px] https://github.com/ia3andy/quarkus-wb-patternfly-react[Source]
 
-https://github.com/ia3andy/quarkus-bundler-react[image:github.svg[width=20px]] A minimalist demo SPA with React Bootstrap
+=== jQuery
+* **web-bundler-jquery** — A jQuery example with Bootstrap  
+  image:github.svg[width=20px] https://github.com/ia3andy/web-bundler-jquery[Source]
+* **bundler-gradle-jquery** — The same example using Gradle  
+  image:github.svg[width=20px] https://github.com/ia3andy/bundler-gradle-jquery[Source]
 
-https://github.com/ia3andy/quarkus-wb-patternfly-react/[image:github.svg[width=20px]] A minimalist demo SPA with Patternfly React
+== Real World
 
+The **Web Bundler** is also used in production applications:
 
-=== JQuery
-
-https://github.com/ia3andy/web-bundler-jquery[image:github.svg[width=20px]] A JQuery example with Bootstrap
-
-https://github.com/ia3andy/bundler-gradle-jquery[image:github.svg[width=20px]] The same on top of Gradle
-
+* **code.quarkus.io** — The Code Quarkus app generator, a React SPA  
+  image:github.svg[width=20px] https://github.com/quarkusio/code.quarkus.io[Source] | https://code.quarkus.io[Visit]
+* **mvnpm** — The mvnpm SPA built with Lit  
+  image:github.svg[width=20px] https://github.com/mvnpm/mvnpm[Source] | https://mvnpm.org[Visit]
+* **RivieraDEV-Quarkus** — The Riviera Dev Conference website built with Renarde (MVC)  
+  image:github.svg[width=20px] https://github.com/FroMage/RivieraDEV-Quarkus[Source] | https://rivieradev.fr[Visit]
+* **search.quarkus.io** — Quarkus guides search, a Lit full-stack web component  
+  image:github.svg[width=20px] https://github.com/quarkusio/search.quarkus.io[Source] | https://quarkus.io/guides[Visit]
 
 
 
