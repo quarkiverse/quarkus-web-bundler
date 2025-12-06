@@ -109,10 +109,12 @@ public final class DevWatcher {
     }
 
     private void runWebBuild() {
-        LOG.info("Changes detected in web file(s), triggering a new Web Bundling...");
-        copyWebLinksIfNeed();
         if (runWebBuild != null) {
+            LOG.info("Changes detected in web file(s), triggering a new Web Bundling...");
+            copyWebLinksIfNeed();
             BUILD_EXECUTOR.execute(runWebBuild);
+        } else {
+            LOG.warn("Weird... The Web Bundler is not bound to the file watcher.");
         }
     }
 
