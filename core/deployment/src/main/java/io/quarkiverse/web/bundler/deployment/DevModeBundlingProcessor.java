@@ -68,6 +68,7 @@ public class DevModeBundlingProcessor {
                     && dev.process().isAlive()) {
                 try {
                     LOGGER.info("Web Bundling in incremental mode (hit 's' to trigger full bundling)");
+                    watcher.get().setRunWebBuild(DevModeBundlingProcessor::build);
                     dev.process().build();
                     handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, dev.process().dist(),
                             readyForBundling.fixedNames(), readyForBundling.startTime());
@@ -106,8 +107,8 @@ public class DevModeBundlingProcessor {
                     DEV_SERVICE_NAME, null, dev, new HashMap<>());
             devServices.produce(devService.toBuildItem());
             resetRemoteProblem();
-            dev.process().build();
             watcher.get().setRunWebBuild(DevModeBundlingProcessor::build);
+            dev.process().build();
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, dev.process().dist(),
                     readyForBundling.fixedNames(), readyForBundling.startTime());
             processGeneratedEntryPoints(readyForBundling.bundleOptions().workDir(), generatedEntryPointProducer);
