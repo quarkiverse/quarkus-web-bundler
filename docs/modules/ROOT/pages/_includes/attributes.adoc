@@ -1,4 +1,4 @@
-:project-version: 2.0.1
+:project-version: 2.0.2
 
 :maven-version: 3.8.1+
 
