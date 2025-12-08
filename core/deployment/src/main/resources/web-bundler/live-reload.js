@@ -1,5 +1,10 @@
 console.log("web-bundler live-reload is enabled");
 
+// Firefox calls onerror when navigating causing weird reload issues
+// When the page is unloaded, we stop acting on events
+let pageClosed = false;
+window.addEventListener('beforeunload', () => { pageClosed = true; });
+
 function connectToChanges() {
     console.debug("connecting to web-bundler live-reload");
     const eventSource = new EventSource(process.env.LIVE_RELOAD_PATH);
@@ -7,11 +12,14 @@ function connectToChanges() {
         console.debug("connected to web-bundler live-reload");
     };
     eventSource.addEventListener('bundling-error', e => {
+        if (pageClosed) {
+            return;
+        }
         eventSource.close();
         location.reload();
     });
     eventSource.addEventListener('change', e => {
-        if (!e.data) {
+        if (!e.data || pageClosed) {
             return;
         }
         const {added, removed, updated} = JSON.parse(e.data);
@@ -29,7 +37,7 @@ function connectToChanges() {
                             next.remove();
                             console.error(e);
                         };
-                        link.parentNode.insertBefore(next, link.nextSibling);
+                        link.parentNode.insertBefore(next, link.nextSibling);g
                         return;
                     }
             }
@@ -38,6 +46,9 @@ function connectToChanges() {
     });
 
     eventSource.onerror = (e) => {
+        if (pageClosed) {
+           return;
+        }
         console.debug("web-bundler live-reload connection lost");
         location.reload();
     };
