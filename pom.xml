@@ -31,7 +31,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <esbuild-java.version>2.0.1</esbuild-java.version>
         <quarkus.version>3.29.4</quarkus.version>
-        <quarkus-playwright.version>2.2.1</quarkus-playwright.version>
+        <quarkus-playwright.version>2.3.0</quarkus-playwright.version>
     </properties>
     <dependencyManagement>
         <dependencies>
