@@ -5,7 +5,7 @@ metadata:
     - web-bundler
     - tailwind
     - css
-  guide: https://docs.quarkiverse.io/quarkus-web-bundler/dev/
+  guide: https://docs.quarkiverse.io/quarkus-web-bundler/dev/integrations.html#tailwindcss
   categories:
     - "web"
   status: "experimental"
