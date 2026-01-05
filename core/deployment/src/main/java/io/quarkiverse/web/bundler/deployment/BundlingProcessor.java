@@ -32,12 +32,18 @@ import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
 
 class BundlingProcessor {
-
+    private static final String FEATURE = "web-bundler";
     private static final Logger LOGGER = Logger.getLogger(BundlingProcessor.class);
+
+    @BuildStep
+    FeatureBuildItem feature() {
+        return new FeatureBuildItem(FEATURE);
+    }
 
     @BuildStep(onlyIfNot = IsDevelopment.class)
     void bundle(WebBundlerConfig config,

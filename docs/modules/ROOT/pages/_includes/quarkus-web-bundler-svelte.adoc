@@ -1,0 +1,47 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler-svelte_quarkus-web-bundler-svelte-custom-element]] [.property-path]##link:#quarkus-web-bundler-svelte_quarkus-web-bundler-svelte-custom-element[`quarkus.web-bundler.svelte.custom-element`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.web-bundler.svelte.custom-element+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Determines whether the Svelte component should be compiled as a custom element (Web Component).
+
+When enabled, the component is wrapped in a standard Custom Element interface, allowing it to be used natively in HTML without requiring the Svelte runtime.
+
+See: link:https://svelte.dev/docs/svelte/customSvelte[Custom Elements Documentation]
+
+When disabled, add the `org.mvnpm:svelte:provided` dependency to your project POM and include the following in your `app.js` script to mount the component:
+
+```
+`import ++{++ mount` from "svelte";
+import MyComponent from "./MyComponent.svelte";
+
+// Mount the component on page load in #target
+mount(MyComponent, { target: document.querySelector("#target") });
+}
+```
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_WEB_BUNDLER_SVELTE_CUSTOM_ELEMENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_WEB_BUNDLER_SVELTE_CUSTOM_ELEMENT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+|===
+

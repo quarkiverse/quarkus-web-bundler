@@ -1,0 +1,14 @@
+name: Web Bundler - Svelte
+description: Add support for bundling with Svelte
+metadata:
+  keywords:
+    - web-bundler
+    - svelte
+    - web component
+    - UI
+    - html
+    - css
+  guide: https://docs.quarkiverse.io/quarkus-web-bundler/dev/integrations.html#svelte
+  categories:
+    - "web"
+  status: "experimental"

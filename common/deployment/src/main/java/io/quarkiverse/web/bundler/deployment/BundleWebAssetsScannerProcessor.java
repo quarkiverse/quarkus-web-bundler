@@ -30,14 +30,9 @@ import io.quarkus.deployment.util.FileUtil;
 class BundleWebAssetsScannerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(BundleWebAssetsScannerProcessor.class);
-    private static final String FEATURE = "web-bundler";
+
     public static final String TARGET_DIR_NAME = "web-bundler/";
     public static final String DIST = "dist";
-
-    @BuildStep
-    FeatureBuildItem feature() {
-        return new FeatureBuildItem(FEATURE);
-    }
 
     @BuildStep
     WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode,

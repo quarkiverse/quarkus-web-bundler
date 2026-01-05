@@ -123,13 +123,66 @@ Then in your html templates:
 </article>
 ----
 
+[#svelte]
+== Svelte
 
+We added a Web Bundler + https://svelte.dev/[Svelte, window="_blank"] extension which makes it very easy to use Svelte with Quarkus.
 
+=== Installation
 
+If you want to use this extension, you need to add the `io.quarkiverse.web-bundler:quarkus-web-bundler-svelte` extension first to your build file.
 
+For instance, with Maven, add the following dependency to your POM file:
 
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.web-bundler</groupId>
+    <artifactId>quarkus-web-bundler-svelte</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
 
+With Gradle, you need to add this plugin (to allow architecture based resolution) and the dependency:
+[source,kotlin,subs=attributes+]
+----
+plugins {
+  id("io.mvnpm.gradle.plugin.native-java-plugin") version "1.0.0"
+}
 
+...
+
+dependencies {
+    implementation("io.quarkiverse.web-bundler:quarkus-web-bundler-svelte:{project-version}")
+}
+----
+
+=== Usage
+
+There is no need to add the Svelte mvnpm dependency in your project when using custom elements (configurable).
+
+In your web directory:
+[source,sveltehtml]
+.web/App.svelte
+----
+<svelte:options customElement="my-component" />
+<script>
+	let count = $state(0);
+
+	function increment() {
+		count += 1;
+	}
+</script>
+
+<button onclick={increment}>
+	Clicked {count}
+	{count === 1 ? 'time' : 'times'}
+</button>
+----
+
+=== Configuration
+
+include::_includes/quarkus-web-bundler-svelte.adoc[leveloffset=+1, opts=optional]
 
 [#qute-components]
 == Server-Side Qute Components
