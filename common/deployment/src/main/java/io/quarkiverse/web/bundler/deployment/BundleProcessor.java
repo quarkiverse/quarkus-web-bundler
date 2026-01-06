@@ -18,6 +18,7 @@ import org.jboss.logging.Logger;
 
 import io.mvnpm.esbuild.Bundler;
 import io.mvnpm.esbuild.model.BundleResult;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedEntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
@@ -36,9 +37,9 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
 
-class BundlingProcessor {
+class BundleProcessor {
     private static final String FEATURE = "web-bundler";
-    private static final Logger LOGGER = Logger.getLogger(BundlingProcessor.class);
+    private static final Logger LOGGER = Logger.getLogger(BundleProcessor.class);
 
     @BuildStep
     FeatureBuildItem feature() {

@@ -195,7 +195,8 @@ public final class ProjectResourcesScannerBuildItem extends SimpleBuildItem {
         }
         final String resourcePath = PathUtils.join(resourceWebDir, webPath);
         if (srcFilePath != null) {
-            return new ProjectResourceWebAsset(webPath, srcFilePath, resourcePath, WebAsset.Type.PROJECT_SOURCE, charset);
+            return new ProjectResourceWebAsset(webPath, srcFilePath, resourcePath, WebAsset.Type.PROJECT_RESOURCE_WITH_SOURCE,
+                    charset);
         }
         if (isLocalFileSystem) {
             return new ProjectResourceWebAsset(webPath, filePath, resourcePath, WebAsset.Type.PROJECT_RESOURCE, charset);

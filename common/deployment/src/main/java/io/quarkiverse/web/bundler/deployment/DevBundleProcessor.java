@@ -1,8 +1,8 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.bundleAndProcess;
-import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.handleBundleDistDir;
-import static io.quarkiverse.web.bundler.deployment.BundlingProcessor.processGeneratedEntryPoints;
+import static io.quarkiverse.web.bundler.deployment.BundleProcessor.bundleAndProcess;
+import static io.quarkiverse.web.bundler.deployment.BundleProcessor.handleBundleDistDir;
+import static io.quarkiverse.web.bundler.deployment.BundleProcessor.processGeneratedEntryPoints;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -16,7 +16,8 @@ import io.mvnpm.esbuild.Bundler;
 import io.mvnpm.esbuild.BundlingException;
 import io.mvnpm.esbuild.model.BundleOptions;
 import io.mvnpm.esbuild.model.DevResult;
-import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
+import io.quarkiverse.web.bundler.deployment.items.DevWatcherStartedBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedEntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
@@ -26,24 +27,26 @@ import io.quarkiverse.web.bundler.runtime.devmode.WebBundlingException;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.dev.RuntimeUpdatesProcessor;
 import io.quarkus.deployment.util.FileUtil;
 
-public class DevModeBundlingProcessor {
+public class DevBundleProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(DevModeBundlingProcessor.class);
+    private static final Logger LOGGER = Logger.getLogger(DevBundleProcessor.class);
 
     private static final String DEV_SERVICE_NAME = "web-bundler-dev";
     private static volatile DevServicesResultBuildItem.RunningDevService devService;
     private static volatile DevResult dev;
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    void watch(WebBundlerConfig config,
+    @Consume(DevWatcherStartedBuildItem.class)
+    void watch(
+            WebBundlerConfig config,
             WebBundlerTargetDirBuildItem targetDir,
-            DevWatcherBuildItem watcher,
             ReadyForBundlingBuildItem readyForBundling,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             BuildProducer<GeneratedBundleBuildItem> generatedBundleProducer,
@@ -55,7 +58,7 @@ public class DevModeBundlingProcessor {
             return;
         }
 
-        if (watcher == null) {
+        if (!config.browserLiveReload()) {
             // We use normal bundling when esbuild watch is disabled
             bundleAndProcess(config, readyForBundling, staticResourceProducer,
                     generatedBundleProducer,
@@ -68,7 +71,6 @@ public class DevModeBundlingProcessor {
                     && dev.process().isAlive()) {
                 try {
                     LOGGER.info("Web Bundling in incremental mode (hit 's' to trigger full bundling)");
-                    watcher.get().setRunWebBuild(DevModeBundlingProcessor::build);
                     dev.process().build();
                     handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, dev.process().dist(),
                             readyForBundling.fixedNames(), readyForBundling.startTime());
@@ -98,7 +100,7 @@ public class DevModeBundlingProcessor {
         }
 
         if (!liveReload.isLiveReload()) {
-            shutdown.addCloseTask(DevModeBundlingProcessor::shutdownDevService, true);
+            shutdown.addCloseTask(DevBundleProcessor::shutdownDevService, true);
         }
 
         try {
@@ -107,7 +109,6 @@ public class DevModeBundlingProcessor {
                     DEV_SERVICE_NAME, null, dev, new HashMap<>());
             devServices.produce(devService.toBuildItem());
             resetRemoteProblem();
-            watcher.get().setRunWebBuild(DevModeBundlingProcessor::build);
             dev.process().build();
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, dev.process().dist(),
                     readyForBundling.fixedNames(), readyForBundling.startTime());

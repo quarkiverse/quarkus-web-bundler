@@ -19,7 +19,7 @@ Determines whether the Svelte component should be compiled as a custom element (
 
 When enabled, the component is wrapped in a standard Custom Element interface, allowing it to be used natively in HTML without requiring the Svelte runtime.
 
-See: link:https://svelte.dev/docs/svelte/customSvelte[Custom Elements Documentation]
+See: link:https://svelte.dev/docs/svelte/custom-elements[Custom Elements Documentation]
 
 When disabled, add the `org.mvnpm:svelte:provided` dependency to your project POM and include the following in your `app.js` script to mount the component:
 

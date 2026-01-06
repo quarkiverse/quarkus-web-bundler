@@ -27,13 +27,13 @@ public interface WebAsset {
 
     enum Type {
         EXTERNAL, // File is in an external web directory
-        PROJECT_SOURCE, // File is in the project root resources and src is detected
+        PROJECT_RESOURCE_WITH_SOURCE, // File is in the project root resources and src is detected
         PROJECT_RESOURCE, // File is in the project root resources and src is not detected
         JAR_RESOURCE // File is in a jar
         ;
 
         public boolean canLink() {
-            return this == EXTERNAL || this == PROJECT_SOURCE;
+            return this == EXTERNAL || this == PROJECT_RESOURCE_WITH_SOURCE;
         }
     }
 

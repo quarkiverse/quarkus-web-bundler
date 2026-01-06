@@ -1,4 +1,4 @@
-package io.quarkiverse.web.bundler.deployment;
+package io.quarkiverse.web.bundler.deployment.config;
 
 import java.util.Objects;
 import java.util.Optional;
