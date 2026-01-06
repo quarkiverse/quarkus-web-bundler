@@ -17,7 +17,6 @@
         <module>core/runtime</module>
         <module>core/deployment</module>
         <module>integrations</module>
-        <module>integration-tests</module>
     </modules>
     <scm>
         <connection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</connection>
@@ -83,6 +82,7 @@
             </activation>
             <modules>
                 <module>docs</module>
+                <module>integration-tests</module>
             </modules>
         </profile>
 
