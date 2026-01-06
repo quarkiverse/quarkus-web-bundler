@@ -7,6 +7,8 @@ include::./_includes/attributes.adoc[]
 
 We added a Web Bundler + https://tailwindcss.com/docs/styling-with-utility-classes[TailwindCSS 4+, window="_blank"] extension which makes it very easy to use Tailwind with Quarkus (and https://iamroq.com/[Roq, window="_blank"]).
 
+Tailwind CSS lets you rapidly build modern websites by applying utility classes directly in your HTML or through your CSS.
+
 === Installation
 
 If you want to use this extension, you need to add the `io.quarkiverse.web-bundler:quarkus-web-bundler-tailwindcss` extension first to your build file.
@@ -128,7 +130,7 @@ Then in your html templates:
 
 We added a Web Bundler + https://svelte.dev/[Svelte, window="_blank"] extension which makes it very easy to use Svelte with Quarkus.
 
-Svelte is a UI framework that uses a compiler to let you write breathtakingly concise components that do minimal work in the browser, using languages you already know — HTML, CSS and JavaScript.
+Svelte is a UI framework that uses a compiler to let you write breathtakingly concise javascript components that do minimal work in the browser, using languages you already know — HTML, CSS and JavaScript. It may be used to create Javascript components for Qute for example.
 
 === Installation
 
