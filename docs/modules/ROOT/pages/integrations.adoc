@@ -128,6 +128,8 @@ Then in your html templates:
 
 We added a Web Bundler + https://svelte.dev/[Svelte, window="_blank"] extension which makes it very easy to use Svelte with Quarkus.
 
+Svelte is a UI framework that uses a compiler to let you write breathtakingly concise components that do minimal work in the browser, using languages you already know — HTML, CSS and JavaScript.
+
 === Installation
 
 If you want to use this extension, you need to add the `io.quarkiverse.web-bundler:quarkus-web-bundler-svelte` extension first to your build file.
