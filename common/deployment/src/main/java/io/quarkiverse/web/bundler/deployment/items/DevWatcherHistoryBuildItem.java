@@ -2,22 +2,16 @@ package io.quarkiverse.web.bundler.deployment.items;
 
 import java.util.Collection;
 
-import io.quarkiverse.web.bundler.deployment.DevWatcher;
+import io.quarkiverse.web.bundler.deployment.DevWatcherProcessor;
 import io.quarkus.builder.item.SimpleBuildItem;
 import io.quarkus.deployment.dev.filesystem.watch.FileChangeEvent;
 
-public final class DevWatcherBuildItem extends SimpleBuildItem {
+public final class DevWatcherHistoryBuildItem extends SimpleBuildItem {
 
-    private final DevWatcher devWatcher;
     private final Collection<FileChangeEvent> previousChanges;
 
-    public DevWatcherBuildItem(DevWatcher devWatcher, Collection<FileChangeEvent> previousChanges) {
-        this.devWatcher = devWatcher;
+    public DevWatcherHistoryBuildItem(Collection<FileChangeEvent> previousChanges) {
         this.previousChanges = previousChanges;
-    }
-
-    public DevWatcher get() {
-        return devWatcher;
     }
 
     public Collection<FileChangeEvent> previousChanges() {
@@ -25,7 +19,7 @@ public final class DevWatcherBuildItem extends SimpleBuildItem {
     }
 
     public boolean detectedAddOrRemoveChanges() {
-        return DevWatcher.detectedAddOrRemoveChanges(previousChanges);
+        return DevWatcherProcessor.detectedAddOrRemoveChanges(previousChanges);
     }
 
     public boolean detectedConfigChange() {

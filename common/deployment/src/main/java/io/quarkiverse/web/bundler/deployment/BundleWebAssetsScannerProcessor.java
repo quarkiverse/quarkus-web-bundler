@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
+import static io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
 
 import java.io.IOException;
@@ -14,13 +14,15 @@ import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.EntryPointConfig;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.EntryPointConfig;
 import io.quarkiverse.web.bundler.deployment.items.*;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem.EntryPoint;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem.Scanner;
 import io.quarkiverse.web.bundler.deployment.util.PathUtils;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
+import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.*;
@@ -34,29 +36,38 @@ class BundleWebAssetsScannerProcessor {
     public static final String TARGET_DIR_NAME = "web-bundler/";
     public static final String DIST = "dist";
 
-    @BuildStep
-    WebBundlerTargetDirBuildItem initTargetDir(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode,
-            DevWatcherBuildItem watcher, LiveReloadBuildItem liveReload) {
-        final String targetDirName = TARGET_DIR_NAME + launchMode.getLaunchMode().getDefaultProfile();
-        final Path targetDir = outputTarget.getOutputDirectory().resolve(targetDirName);
-        final Path distDir = targetDir.resolve(DIST);
-        if (Files.isDirectory(distDir)
-                && liveReload.isLiveReload()
+    @BuildStep(onlyIfNot = IsDevelopment.class)
+    WebBundlerTargetDirBuildItem initTargetDirProd(OutputTargetBuildItem outputTarget, LaunchModeBuildItem launchMode) {
+        return getWebBundlerTargetDirBuildItem(outputTarget, launchMode, false);
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    WebBundlerTargetDirBuildItem initTargetDirDev(OutputTargetBuildItem outputTarget,
+            LaunchModeBuildItem launchMode,
+            DevWatcherHistoryBuildItem watcher, LiveReloadBuildItem liveReload) {
+        final boolean keepDir = liveReload.isLiveReload()
                 // create or delete = re-bundle
                 && watcher != null
                 && !watcher.detectedConfigChange()
                 && !watcher.detectedAddOrRemoveChanges()
                 // Probably a user initiated reload = re-bundle
-                && !liveReload.getChangedResources().isEmpty()) {
-            return new WebBundlerTargetDirBuildItem(targetDir, distDir, true);
-        }
+                && !liveReload.getChangedResources().isEmpty();
+        return getWebBundlerTargetDirBuildItem(outputTarget, launchMode, keepDir);
+    }
 
-        try {
-            FileUtil.deleteDirectory(targetDir);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+    private static WebBundlerTargetDirBuildItem getWebBundlerTargetDirBuildItem(OutputTargetBuildItem outputTarget,
+            LaunchModeBuildItem launchMode, boolean keepDir) {
+        final String targetDirName = TARGET_DIR_NAME + launchMode.getLaunchMode().getDefaultProfile();
+        final Path targetDir = outputTarget.getOutputDirectory().resolve(targetDirName);
+        final Path distDir = targetDir.resolve(DIST);
+        if (!keepDir) {
+            try {
+                FileUtil.deleteDirectory(targetDir);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
-        return new WebBundlerTargetDirBuildItem(targetDir, distDir, false);
+        return new WebBundlerTargetDirBuildItem(targetDir, distDir, keepDir && Files.isDirectory(distDir));
     }
 
     @BuildStep

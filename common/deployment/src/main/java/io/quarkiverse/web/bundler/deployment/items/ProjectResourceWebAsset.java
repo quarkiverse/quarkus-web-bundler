@@ -19,6 +19,7 @@ public final class ProjectResourceWebAsset extends LocalFileWebAsset {
 
     @Override
     public String watchPath() {
+        // Quarkus HotDeploymentWatchedFileBuildItem needs the relative resource path in the case of resources
         return resourcePath;
     }
 

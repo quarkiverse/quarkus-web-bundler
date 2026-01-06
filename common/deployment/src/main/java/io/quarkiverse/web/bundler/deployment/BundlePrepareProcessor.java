@@ -1,7 +1,7 @@
 package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.DIST;
-import static io.quarkiverse.web.bundler.deployment.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
+import static io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourcesProcessor.WEB_BUNDLER_LIVE_RELOAD_PATH;
@@ -35,12 +35,14 @@ import io.mvnpm.esbuild.model.BundleOptionsBuilder;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
 import io.mvnpm.esbuild.plugin.EsBuildPluginSass;
-import io.quarkiverse.web.bundler.deployment.WebBundlerConfig.LoadersConfig;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.LoadersConfig;
 import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
-import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.DevWatchedLinkBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerEsbuildPluginBuiltItem;
@@ -55,9 +57,9 @@ import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 
-public class PrepareForBundlingProcessor {
+public class BundlePrepareProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(PrepareForBundlingProcessor.class);
+    private static final Logger LOGGER = Logger.getLogger(BundlePrepareProcessor.class);
     private static final Map<EsBuildConfig.Loader, Function<LoadersConfig, Optional<Set<String>>>> LOADER_CONFIGS = Map
             .ofEntries(
                     entry(EsBuildConfig.Loader.JS, LoadersConfig::js),
@@ -87,13 +89,14 @@ public class PrepareForBundlingProcessor {
 
     @BuildStep
     ReadyForBundlingBuildItem prepareForBundling(WebBundlerConfig config,
-            DevWatcherBuildItem watcher,
+            ProjectRootBuildItem projectRoot,
             InstalledWebDependenciesBuildItem installedWebDependencies,
             List<WebBundlerEsbuildPluginBuiltItem> plugins,
             List<EntryPointBuildItem> entryPoints,
             WebBundlerTargetDirBuildItem targetDir,
             Optional<BundleConfigAssetsBuildItem> bundleConfig,
             LaunchModeBuildItem launchMode,
+            BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             HttpRootPathBuildItem httpRootPath) {
         if (entryPoints.isEmpty()) {
@@ -120,7 +123,7 @@ public class PrepareForBundlingProcessor {
             if (bundleConfig.isPresent()) {
                 for (WebAsset webAsset : bundleConfig.get().getWebAssets()) {
                     final Path targetConfig = targetDir.webBundler().resolve(webAsset.webPath());
-                    createAsset(config, watchedFiles, webAsset, targetConfig, watcher);
+                    createAsset(launchMode, config, watchedLinks, watchedFiles, webAsset, targetConfig);
                 }
             }
 
@@ -186,7 +189,7 @@ public class PrepareForBundlingProcessor {
                 for (BundleWebAsset webAsset : entryPoint.assets()) {
                     String destination = PathUtils.join("web", webAsset.webPath());
                     final Path scriptPath = targetDir.webBundler().resolve(destination);
-                    createAsset(config, watchedFiles, webAsset, scriptPath, watcher);
+                    createAsset(launchMode, config, watchedLinks, watchedFiles, webAsset, scriptPath);
                     // Manual assets are supposed to be imported by the entry point
                     if (!webAsset.bundleType().equals(MANUAL)) {
                         scripts.add(destination);
@@ -234,13 +237,17 @@ public class PrepareForBundlingProcessor {
         }
     }
 
-    static void createAsset(WebBundlerConfig config, BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
-            WebAsset webAsset, Path targetPath,
-            DevWatcherBuildItem watcher) throws IOException {
+    static void createAsset(
+            LaunchModeBuildItem launchMode,
+            WebBundlerConfig config,
+            BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
+            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
+            WebAsset webAsset,
+            Path targetPath) throws IOException {
         Files.createDirectories(targetPath.getParent());
         if (webAsset.type() != WebAsset.Type.JAR_RESOURCE) {
-            if (watcher != null) {
-                createSymbolicLinkOrFallback(watcher, watchedFiles, webAsset, targetPath);
+            if (launchMode.getLaunchMode().isDev() && config.browserLiveReload()) {
+                createSymbolicLinkOrFallback(watchedLinks, watchedFiles, webAsset, targetPath);
             } else {
                 Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -251,8 +258,9 @@ public class PrepareForBundlingProcessor {
 
     }
 
-    static void createSymbolicLinkOrFallback(DevWatcherBuildItem watcher,
-            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles, WebAsset webAsset,
+    static void createSymbolicLinkOrFallback(BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
+            BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
+            WebAsset webAsset,
             Path targetPath) throws IOException {
         Files.deleteIfExists(targetPath);
         if (webAsset.type() == WebAsset.Type.JAR_RESOURCE) {
@@ -262,7 +270,7 @@ public class PrepareForBundlingProcessor {
         if (webAsset.type().canLink()) {
             try {
                 Files.createSymbolicLink(targetPath, webAsset.path());
-                watcher.get().addWatchedLink(webAsset.path(), targetPath, true);
+                watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.path(), targetPath, true));
                 watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
                         .setRestartNeeded(false)
                         .setLocation(webAsset.watchPath())
@@ -272,7 +280,7 @@ public class PrepareForBundlingProcessor {
                 // Falling back to copy
             }
         }
-        watcher.get().addWatchedLink(webAsset.path(), targetPath, false);
+        watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.path(), targetPath, false));
         Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
     }

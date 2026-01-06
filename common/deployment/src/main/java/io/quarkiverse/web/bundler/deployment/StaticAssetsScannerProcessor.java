@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.PublicAssetsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebAsset;

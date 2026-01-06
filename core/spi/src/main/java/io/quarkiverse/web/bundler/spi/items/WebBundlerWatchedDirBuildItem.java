@@ -8,7 +8,7 @@ public final class WebBundlerWatchedDirBuildItem extends MultiBuildItem {
     private final Path path;
 
     public WebBundlerWatchedDirBuildItem(Path path) {
-        this.path = path;
+        this.path = path.normalize();
     }
 
     public Path path() {

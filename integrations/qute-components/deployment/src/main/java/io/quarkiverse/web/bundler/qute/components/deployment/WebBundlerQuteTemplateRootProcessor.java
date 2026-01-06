@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.qute.components.deployment;
 
-import io.quarkiverse.web.bundler.deployment.WebBundlerConfig;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.qute.deployment.TemplateRootBuildItem;

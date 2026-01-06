@@ -1,4 +1,4 @@
-package io.quarkiverse.web.bundler.deployment;
+package io.quarkiverse.web.bundler.deployment.config;
 
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;

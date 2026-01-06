@@ -17,7 +17,6 @@
         <module>core/runtime</module>
         <module>core/deployment</module>
         <module>integrations</module>
-        <module>integration-tests</module>
     </modules>
     <scm>
         <connection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</connection>
@@ -30,7 +29,7 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <esbuild-java.version>2.1.0</esbuild-java.version>
+        <esbuild-java.version>2.1.1</esbuild-java.version>
         <quarkus.version>3.29.4</quarkus.version>
         <quarkus-playwright.version>2.3.1</quarkus-playwright.version>
     </properties>
@@ -83,6 +82,7 @@
             </activation>
             <modules>
                 <module>docs</module>
+                <module>integration-tests</module>
             </modules>
         </profile>
 

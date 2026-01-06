@@ -19,6 +19,7 @@ import io.mvnpm.esbuild.install.WebDepsInstaller;
 import io.mvnpm.esbuild.model.BundleOptions;
 import io.mvnpm.esbuild.model.WebDependency;
 import io.mvnpm.esbuild.model.WebDependency.WebDependencyType;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;

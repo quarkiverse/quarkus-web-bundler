@@ -30,11 +30,7 @@
             <artifactId>quarkus-web-bundler</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.mvnpm</groupId>
-            <artifactId>esbuild-java-plugin-sass</artifactId>
-            <version>${esbuild-java.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>io.quarkiverse.web-bundler</groupId>
             <artifactId>quarkus-web-bundler-common-deployment</artifactId>

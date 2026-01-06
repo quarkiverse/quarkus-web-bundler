@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.web.bundler.deployment.items.DevWatcherBuildItem;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDirBuildItem;
@@ -24,11 +24,8 @@ import io.quarkus.deployment.ApplicationArchive;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
-import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.deployment.builditem.LiveReloadBuildItem;
-import io.quarkus.deployment.dev.filesystem.watch.FileChangeEvent;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.maven.dependency.Dependency;
@@ -38,46 +35,11 @@ import io.quarkus.runtime.LaunchMode;
 public class InitAssetsScannerProcessor {
 
     private static final Logger LOG = Logger.getLogger(InitAssetsScannerProcessor.class);
-    private static volatile DevWatcher watcher;
 
     @BuildStep
     ProjectRootBuildItem initProjectRoot(OutputTargetBuildItem outputTarget) {
         final Path projectRoot = findProjectRoot(outputTarget.getOutputDirectory());
         return new ProjectRootBuildItem(projectRoot);
-    }
-
-    @BuildStep
-    DevWatcherBuildItem startWatch(WebBundlerConfig config,
-            LiveReloadBuildItem liveReload,
-            LaunchModeBuildItem launchMode,
-            List<WebBundlerWatchedDirBuildItem> watchedDirs,
-            List<WebDirBuildItem> webDirs,
-            CuratedApplicationShutdownBuildItem shutdown) {
-        if (launchMode.getLaunchMode() != LaunchMode.DEVELOPMENT || !config.browserLiveReload() || watchedDirs.isEmpty()) {
-            return null;
-        }
-        Collection<FileChangeEvent> previousChanges = null;
-        if (watcher != null) {
-            previousChanges = watcher.changesHistory();
-            watcher.close();
-        }
-        watcher = new DevWatcher();
-        Set<Path> uniquePaths = new HashSet<>();
-        for (WebBundlerWatchedDirBuildItem watchedDir : watchedDirs) {
-            if (uniquePaths.add(watchedDir.path())) {
-                watcher.watchDirectoryRecursively(watchedDir.path());
-            }
-        }
-        watcher.setWebDirs(webDirs.stream().map(WebDirBuildItem::path).toList());
-        if (!liveReload.isLiveReload()) {
-            shutdown.addCloseTask(() -> {
-                if (watcher != null) {
-                    watcher.close();
-                    watcher = null;
-                }
-            }, true);
-        }
-        return new DevWatcherBuildItem(watcher, previousChanges);
     }
 
     @BuildStep
@@ -196,10 +158,6 @@ public class InitAssetsScannerProcessor {
                 return null;
             }
         } while (true);
-    }
-
-    public static void watch(BuildProducer<HotDeploymentWatchedFileBuildItem> watch, String dir) {
-
     }
 
 }
