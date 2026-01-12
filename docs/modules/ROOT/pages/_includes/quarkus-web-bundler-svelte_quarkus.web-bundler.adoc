@@ -24,12 +24,11 @@ See: link:https://svelte.dev/docs/svelte/customSvelte[Custom Elements Documentat
 When disabled, add the `org.mvnpm:svelte:provided` dependency to your project POM and include the following in your `app.js` script to mount the component:
 
 ```
-`import ++{++ mount` from "svelte";
+import { mount } from "svelte";
 import MyComponent from "./MyComponent.svelte";
 
 // Mount the component on page load in #target
 mount(MyComponent, { target: document.querySelector("#target") });
-}
 ```
 
 
