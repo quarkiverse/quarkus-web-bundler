@@ -116,6 +116,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "yakanet",
+      "name": "Mathieu BROUTIN",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1936518?v=4",
+      "profile": "https://github.com/yakanet",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
