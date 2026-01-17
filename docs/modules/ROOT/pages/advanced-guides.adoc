@@ -128,6 +128,7 @@ quarkus.web-bundler.bundle.baz.key=foo
 [IMPORTANT]
 ====
 As soon as one or more entry-points are configured:
+
 * Scripts and styles located at the root of the web directory will not be bundled. To keep things organized, move them to the web/app directory (or remove them if unnecessary).
 * When multiple output entry points exist, shared code and web dependencies are extracted into a separate file which is auto-imported in `{#bundle /}`. This ensures that if a user navigates from one page to another, they don’t need to download all the JavaScript for the second page again—shared parts are already cached by the browser.
 ====
