@@ -10,6 +10,7 @@ The Web Root is `src/main/resources/web`, this is where the Web Bundler will loo
 == Static files
 
 There are 2 ways to add static files (fonts, images, music, video, ...) to your app:
+
 - Files in `src/main/resources/web/public/&#42;&#42;` will be served statically under http://localhost:8080/.
 - Other files imported from scripts or styles will be bundled and processed by the configured loaders (see <<loaders>>) allowing different options (like embedding them as data-url).
 - For convenience, everything under `/static` is excluded (marked as external) from the bundling by default. This allows to reference static files from scripts or styles without errors (e.g. `import '/static/foo.png';`).
@@ -33,6 +34,7 @@ When used in `src/main/resources/web` the rendering is happening at build time (
 The Web Bundler enable browser live coding for development.
 
 This is done through:
+
 - a custom project sources watcher in Quarkus Dev
 - a small injected https://github.com/quarkiverse/quarkus-web-bundler/blob/main/deployment/src/main/resources/web-bundler/live-reload.js[script] (only in dev-mode). This script will listen for changes from the server.
 
