@@ -28,7 +28,7 @@
             <dependency>
                 <groupId>org.mvnpm</groupId>
                 <artifactId>jquery</artifactId>
-                <version>3.7.0</version>
+                <version>4.0.0</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
