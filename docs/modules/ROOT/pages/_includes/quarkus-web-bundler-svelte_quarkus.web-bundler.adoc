@@ -24,11 +24,12 @@ See: link:https://svelte.dev/docs/svelte/custom-elements[Custom Elements Documen
 When disabled, add the `org.mvnpm:svelte:provided` dependency to your project POM and include the following in your `app.js` script to mount the component:
 
 ```
-import { mount } from "svelte";
+`import ++{++ mount` from "svelte";
 import MyComponent from "./MyComponent.svelte";
 
 // Mount the component on page load in #target
 mount(MyComponent, { target: document.querySelector("#target") });
+}
 ```
 
 
@@ -40,7 +41,7 @@ Environment variable: `+++QUARKUS_WEB_BUNDLER_SVELTE_CUSTOM_ELEMENT+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`+++true+++`
+|true
 
 |===
 
