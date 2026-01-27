@@ -57,9 +57,11 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Add new ignored files to the default list.
+Files to ignore, specified relative to the web directory.
 
-The ignored files (relative to the web directory).
+Additional ignored files may be specified using the `regex:` or `glob:` prefix to indicate whether the value should be interpreted as a regular expression or a glob pattern.
+
+These entries are added to the default set of ignored files, so the defaults do not need to be repeated unless customization is required.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -80,10 +82,15 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The default ignored files (relative to the web directory) include:
+The default set of ignored files, specified relative to the web directory.
 
- - `.DS_Store`
- - `Thumbs.db`
+These defaults are intended to be extended via `ignored-files`, which allows additional patterns to be configured, but if needed they can also be overriden.
+
+Entries may be prefixed with `regex:` or `glob:`. The default ignored files include:
+
+ - `glob:++**++.DS_Store`
+ - `glob:++**++Thumbs.db`
+ - `glob:++**++.++*++~`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -94,7 +101,7 @@ Environment variable: `+++QUARKUS_WEB_BUNDLER_DEFAULT_IGNORED_FILES+++`
 endif::add-copy-button-to-env-var[]
 --
 |list of string
-|glob:**.DS_Store, glob:**Thumbs.db
+|glob:**.DS_Store, glob:**Thumbs.db, glob:**.*~
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler_quarkus-web-bundler-bundle-bundle]] [.property-path]##link:#quarkus-web-bundler_quarkus-web-bundler-bundle-bundle[`quarkus.web-bundler.bundle."bundle"`]##
 ifdef::add-copy-button-to-config-props[]

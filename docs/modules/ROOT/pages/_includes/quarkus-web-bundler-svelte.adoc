@@ -41,7 +41,7 @@ Environment variable: `+++QUARKUS_WEB_BUNDLER_SVELTE_CUSTOM_ELEMENT+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`+++true+++`
+|true
 
 |===
 

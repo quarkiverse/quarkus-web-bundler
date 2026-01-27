@@ -44,20 +44,30 @@ public interface WebBundlerConfig {
     Optional<String> projectWebDir();
 
     /**
-     * Add new ignored files to the default list.
+     * Files to ignore, specified relative to the web directory.
      * <p>
-     * The ignored files (relative to the web directory).
-     *
+     * Additional ignored files may be specified using the {@code regex:} or {@code glob:}
+     * prefix to indicate whether the value should be interpreted as a regular expression
+     * or a glob pattern.
+     * <p>
+     * These entries are added to the default set of ignored files, so the defaults do not
+     * need to be repeated unless customization is required.
      */
     Optional<List<String>> ignoredFiles();
 
     /**
-     * The default ignored files (relative to the web directory) include:
+     * The default set of ignored files, specified relative to the web directory.
+     * <p>
+     * These defaults are intended to be extended via {@code ignored-files},
+     * which allows additional patterns to be configured, but if needed they can also be overriden.
+     * <p>
+     * Entries may be prefixed with {@code regex:} or {@code glob:}.
+     * The default ignored files include:
      * <ul>
-     * <li><code>.DS_Store</code></li>
-     * <li><code>Thumbs.db</code></li>
+     * <li><code>glob:**.DS_Store</code></li>
+     * <li><code>glob:**Thumbs.db</code></li>
+     * <li><code>glob:**.*~</code></li>
      * </ul>
-     *
      */
     @WithDefault(IGNORED_FILES)
     List<String> defaultIgnoredFiles();
