@@ -25,7 +25,7 @@ import io.smallrye.config.WithParentName;
 public interface WebBundlerConfig {
     String DIR_NAME_PATTERN = "^[a-zA-Z0-9._-]{1,255}$";
     String DEFAULT_ENTRY_POINT_KEY = "app";
-    String IGNORED_FILES = "glob:**.DS_Store,glob:**Thumbs.db";
+    String IGNORED_FILES = "glob:**.DS_Store,glob:**Thumbs.db,glob:**.*~";
 
     /**
      * The directory in the resources which serves as root for the web assets
