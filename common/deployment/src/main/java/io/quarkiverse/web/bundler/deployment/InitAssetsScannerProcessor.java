@@ -152,7 +152,7 @@ public class InitAssetsScannerProcessor {
                     || Files.exists(currentPath.resolve(Paths.get("config", "application.yml")))) {
                 return currentPath.normalize();
             }
-            if (currentPath.getParent() != null && Files.exists(currentPath.getParent())) {
+            if (currentPath.getParent() != null) {
                 currentPath = currentPath.getParent();
             } else {
                 return null;
