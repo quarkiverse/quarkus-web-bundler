@@ -53,14 +53,14 @@ jobs:
           cache: 'maven'
 
       - name: Print os info
-        run: mvn --version
+        run: ./mvnw --version
 
       - name: Ensure browsers are installed
-        run: mvn -P playwright-cli exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium --with-deps"
+        run: ./mvnw -P playwright-cli exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium --with-deps"
 
       - name: Build with Maven
-        run: mvn -B clean install -Dno-format
+        run: ./mvnw -B clean install -Dno-format
 
       - name: Build with Maven (Native)
-        run: mvn -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
+        run: ./mvnw -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
