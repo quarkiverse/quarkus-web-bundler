@@ -82,7 +82,7 @@ class BundleWebAssetsScannerProcessor {
 
         final List<Scanner> bundleConfigAssetsScanners = new ArrayList<>();
 
-        final Map<String, EntryPoint> entryPoints = new HashMap<>();
+        final Map<String, EntryPoint> entryPoints = new TreeMap<>();
 
         // This is legacy support for web/app dir
         boolean appDir = checkAppDir(config);

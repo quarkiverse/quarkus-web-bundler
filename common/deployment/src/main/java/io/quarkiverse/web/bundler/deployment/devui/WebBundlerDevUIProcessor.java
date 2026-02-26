@@ -56,6 +56,7 @@ public class WebBundlerDevUIProcessor {
         if (!entryPoints.isEmpty()) {
             final List<EntryPoint> entryPointsForDevUI = entryPoints.stream()
                     .map(e -> new EntryPoint(e.key(), getEntryPointItems(generatedEntryPointsMap, e)))
+                    .sorted(Comparator.comparing(EntryPoint::key))
                     .toList();
 
             cardPageBuildItem.addBuildTimeData("entryPoints",
