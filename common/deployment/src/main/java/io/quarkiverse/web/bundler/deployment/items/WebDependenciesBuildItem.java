@@ -1,6 +1,7 @@
 package io.quarkiverse.web.bundler.deployment.items;
 
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 
 import io.mvnpm.esbuild.model.WebDependency;
@@ -16,7 +17,7 @@ public final class WebDependenciesBuildItem extends SimpleBuildItem {
     }
 
     public List<Dependency> list() {
-        return list;
+        return list.stream().sorted(Comparator.comparing(Dependency::path)).toList();
     }
 
     public boolean isEmpty() {

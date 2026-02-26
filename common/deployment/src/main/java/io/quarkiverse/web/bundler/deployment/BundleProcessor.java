@@ -101,7 +101,7 @@ class BundleProcessor {
             List<String> names = new ArrayList<>();
             StringBuilder mappingString = new StringBuilder();
             try (Stream<Path> stream = Files.find(bundleDir, 20, (p, i) -> Files.isRegularFile(p))) {
-                stream.forEach(path -> {
+                stream.sorted().forEach(path -> {
                     final String relativePath = toUnixPath(bundleDir.relativize(path).toString());
                     final String key = fixedNames && !relativePath.contains("chunk") ? relativePath
                             : relativePath.replaceAll("-[^-.]+\\.", ".");
