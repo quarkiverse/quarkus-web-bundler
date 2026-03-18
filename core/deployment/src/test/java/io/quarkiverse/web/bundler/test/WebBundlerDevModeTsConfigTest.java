@@ -46,8 +46,8 @@ public class WebBundlerDevModeTsConfigTest {
 
         Assertions.assertTrue(Files.exists(webBundlerDevDir.resolve("web").resolve("tsconfig.json")),
                 "tsconfig.json should be placed under target/web-bundler/dev/web");
-        Assertions.assertFalse(Files.exists(webBundlerDevDir.resolve("tsconfig.json")),
-                "tsconfig.json should not be placed at target/web-bundler/dev");
+        Assertions.assertTrue(Files.exists(webBundlerDevDir.resolve("tsconfig.json")),
+                "tsconfig.json should be placed at target/web-bundler/dev");
     }
 
     private static boolean hasDuplicateKeyFailure() {
