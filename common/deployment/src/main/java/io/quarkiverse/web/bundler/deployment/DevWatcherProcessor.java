@@ -58,8 +58,9 @@ public class DevWatcherProcessor {
             return;
         }
         final List<Path> webDirs = webDirItems.stream().map(WebDirBuildItem::path).toList();
-        final Map<Path, DevWatcher.Link> linkedDirs = linkedDirItems.stream().collect(
-                Collectors.toMap(DevWatchedLinkBuildItem::source, d -> new DevWatcher.Link(d.target(), d.symbolic())));
+        final Map<Path, List<DevWatcher.Link>> linkedDirs = linkedDirItems.stream().collect(
+                Collectors.groupingBy(DevWatchedLinkBuildItem::source,
+                        Collectors.mapping(d -> new DevWatcher.Link(d.target(), d.symbolic()), Collectors.toList())));
         final Set<Path> watchedDirs = watchedDirItems.stream().map(WebBundlerWatchedDirBuildItem::path)
                 .collect(Collectors.toSet());
         if (watcher == null) {
@@ -83,11 +84,11 @@ public class DevWatcherProcessor {
         private volatile boolean started = false;
         private final AtomicReference<List<Path>> webDirs;
         private Set<Path> watchedDirs = new HashSet<>();
-        private final AtomicReference<Map<Path, Link>> watchedLinks;
+        private final AtomicReference<Map<Path, List<Link>>> watchedLinks;
         private final FileChangeCallback callback;
         private final AtomicReference<List<FileChangeEvent>> changesHistory;
 
-        public DevWatcher(List<Path> webDirs, Map<Path, Link> links, Set<Path> watchedDirs) {
+        public DevWatcher(List<Path> webDirs, Map<Path, List<Link>> links, Set<Path> watchedDirs) {
             this.webDirs = new AtomicReference<>(webDirs);
             this.watchedLinks = new AtomicReference<>(links);
             this.changesHistory = new AtomicReference<>(new ArrayList<>());
@@ -114,7 +115,7 @@ public class DevWatcherProcessor {
             return changesHistory.get();
         }
 
-        public void reload(List<Path> webDirs, Map<Path, Link> links, Set<Path> watchedDirs) {
+        public void reload(List<Path> webDirs, Map<Path, List<Link>> links, Set<Path> watchedDirs) {
             changesHistory.getAndSet(new ArrayList<>());
             this.watchedLinks.set(links);
             this.webDirs.set(webDirs);
@@ -171,12 +172,14 @@ public class DevWatcherProcessor {
         }
 
         private void copyWebLinksIfNeed() {
-            for (Map.Entry<Path, Link> entry : watchedLinks.get().entrySet()) {
-                if (!entry.getValue().symbolic()) {
-                    try {
-                        Files.copy(entry.getKey(), entry.getValue().target(), StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+            for (Map.Entry<Path, List<Link>> entry : watchedLinks.get().entrySet()) {
+                for (Link link : entry.getValue()) {
+                    if (!link.symbolic()) {
+                        try {
+                            Files.copy(entry.getKey(), link.target(), StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
             }
