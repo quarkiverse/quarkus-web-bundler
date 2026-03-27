@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_WEB_BUNDLER_TAILWINDCSS_BASE+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|the project root
+|`+++the project root+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler-tailwindcss_quarkus-web-bundler-tailwindcss-pattern]] [.property-path]##link:#quarkus-web-bundler-tailwindcss_quarkus-web-bundler-tailwindcss-pattern[`quarkus.web-bundler.tailwindcss.pattern`]##
 ifdef::add-copy-button-to-config-props[]
@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_WEB_BUNDLER_TAILWINDCSS_PATTERN+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|**/*.{html,md,adoc,markdown,asciidoc}
+|`+++**/*.{html,md,adoc,markdown,asciidoc}+++`
 
 |===
 

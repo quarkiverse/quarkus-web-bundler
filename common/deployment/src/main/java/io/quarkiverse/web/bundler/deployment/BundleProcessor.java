@@ -1,6 +1,9 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.*;
+import static io.quarkiverse.tools.stringpaths.StringPaths.join;
+import static io.quarkiverse.tools.stringpaths.StringPaths.prefixWithSlash;
+import static io.quarkiverse.tools.stringpaths.StringPaths.surroundWithSlashes;
+import static io.quarkiverse.tools.stringpaths.StringPaths.toUnixPath;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
 import java.io.IOException;

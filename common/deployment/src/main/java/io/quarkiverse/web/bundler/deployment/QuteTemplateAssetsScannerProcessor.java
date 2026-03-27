@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.tools.projectscanner.ProjectFile;
+import io.quarkiverse.tools.projectscanner.ProjectScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
-import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkus.deployment.annotations.BuildStep;
 
 public class QuteTemplateAssetsScannerProcessor {
@@ -16,18 +16,18 @@ public class QuteTemplateAssetsScannerProcessor {
     private static final Logger LOGGER = Logger.getLogger(QuteTemplateAssetsScannerProcessor.class);
 
     @BuildStep
-    QuteTemplatesBuildItem scan(ProjectResourcesScannerBuildItem scanner,
+    QuteTemplatesBuildItem scan(ProjectScannerBuildItem scanner,
             WebBundlerConfig config)
             throws IOException {
 
         LOGGER.debug("Web Bundler scan - html templates: start");
-        final List<WebAsset> assets = scanner
-                .scan(new ProjectResourcesScannerBuildItem.Scanner("glob:*.html", config.getEffectiveIgnoredFiles(),
-                        config.charset()));
+        final List<ProjectFile> assets = scanner.query()
+                .scopeDirs(config.webRoot())
+                .matchingGlob("*.html")
+                .addExcluded(config.ignoredFilesOrEmpty())
+                .list();
         LOGGER.debugf("Web Bundler scan - html templates: %d found.", assets.size());
         return new QuteTemplatesBuildItem(assets);
     }
 
-    private record HtmlTemplatesContext(WebBundlerConfig config, List<WebAsset> assets) {
-    }
 }

@@ -1,6 +1,6 @@
 package io.quarkiverse.web.bundler.deployment;
 
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
+import static io.quarkiverse.tools.stringpaths.StringPaths.prefixWithSlash;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import java.io.IOException;
@@ -17,11 +17,12 @@ import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
+import io.quarkiverse.tools.projectscanner.ProjectFile;
+import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedBundleBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -48,7 +49,8 @@ public class QuteTemplateWebAssetsProcessor {
             WebBundlerTargetDirBuildItem targetDirBuildItem,
             GeneratedBundleBuildItem generatedBundle,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
-            LaunchModeBuildItem launchMode) {
+            LaunchModeBuildItem launchMode,
+            WebBundlerConfig config) {
         if (htmlTemplates.getWebAssets().isEmpty()) {
             return;
         }
@@ -84,11 +86,12 @@ public class QuteTemplateWebAssetsProcessor {
                 .addParserHook(new Qute.IndexedArgumentsParserHook())
                 .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
                 .build();
-        for (WebAsset webAsset : htmlTemplates.getWebAssets()) {
+        for (ProjectFile webAsset : htmlTemplates.getWebAssets()) {
             final byte[] bytes = webAsset.content();
             Template template = engine.parse(new String(bytes, webAsset.charset()));
             final String content = template.render();
-            staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(prefixWithSlash(webAsset.webPath()),
+            final String servePath = webAsset.scopedPath();
+            staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(prefixWithSlash(servePath),
                     content.getBytes(), SourceType.BUILD_TIME_TEMPLATE));
         }
     }

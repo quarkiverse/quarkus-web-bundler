@@ -2,14 +2,14 @@ package io.quarkiverse.web.bundler.qute.components.deployment;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.tools.projectscanner.ProjectFile;
+import io.quarkiverse.tools.projectscanner.ProjectScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
-import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.QuteTagsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
@@ -21,7 +21,7 @@ class WebBundlerQuteComponentsProcessor {
     private static final Logger LOGGER = Logger.getLogger(WebBundlerQuteComponentsProcessor.class);
 
     @BuildStep
-    QuteTagsBuildItem scan(ProjectResourcesScannerBuildItem scanner,
+    QuteTagsBuildItem scan(ProjectScannerBuildItem scanner,
             WebBundlerConfig config,
             BuildProducer<GeneratedResourceBuildItem> generatedResourceProducer,
             BuildProducer<NativeImageResourceBuildItem> nativeImageResourceProducer,
@@ -29,21 +29,22 @@ class WebBundlerQuteComponentsProcessor {
             throws IOException {
 
         LOGGER.debug("Web Bundler scan - Qute Web Components: start");
-        List<ProjectResourcesScannerBuildItem.Scanner> quteTagsAssetsScanners = new ArrayList<>();
-        for (Map.Entry<String, WebBundlerConfig.EntryPointConfig> entryPoint : config.bundleWithDefault(true).entrySet()
-                .stream()
-                .filter(e -> e.getValue().quteTags()).toList()) {
-            final String dir = entryPoint.getValue().effectiveDir(entryPoint.getKey());
-            quteTagsAssetsScanners.add(new ProjectResourcesScannerBuildItem.Scanner(dir,
-                    "glob:**.html", config.getEffectiveIgnoredFiles(), config.charset()));
+        List<String> dirs = config.bundleWithDefault(true).entrySet().stream()
+                .filter(e -> e.getValue().quteTags())
+                .map(e -> config.prefixWithWebRoot(e.getValue().effectiveDir(e.getKey())))
+                .toList();
+        if (dirs.isEmpty()) {
+            return new QuteTagsBuildItem(List.of());
         }
-
-        final List<WebAsset> assets = scanner
-                .scan(quteTagsAssetsScanners);
+        final List<ProjectFile> assets = scanner.query()
+                .scopeDirs(dirs)
+                .matchingGlob("**.html")
+                .addExcluded(config.ignoredFilesOrEmpty())
+                .list();
         LOGGER.debugf(
                 "Web Bundler scan - Qute Web Components: %d found.", assets.size());
-        for (WebAsset asset : assets) {
-            final String tag = Path.of(asset.webPath()).getFileName().toString();
+        for (ProjectFile asset : assets) {
+            final String tag = Path.of(asset.scopedPath()).getFileName().toString();
             final String templateId = "tags/%s".formatted(tag);
             final String templateResource = "templates/" + templateId;
             generatedResourceProducer

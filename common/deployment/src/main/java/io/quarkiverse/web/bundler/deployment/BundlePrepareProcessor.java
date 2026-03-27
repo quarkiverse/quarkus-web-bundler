@@ -1,9 +1,9 @@
 package io.quarkiverse.web.bundler.deployment;
 
+import static io.quarkiverse.tools.stringpaths.StringPaths.join;
 import static io.quarkiverse.web.bundler.deployment.BundleWebAssetsScannerProcessor.DIST;
 import static io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
 import static io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType.MANUAL;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
 import static io.quarkiverse.web.bundler.deployment.web.GeneratedWebResourcesProcessor.WEB_BUNDLER_LIVE_RELOAD_PATH;
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
@@ -35,6 +35,9 @@ import io.mvnpm.esbuild.model.BundleOptionsBuilder;
 import io.mvnpm.esbuild.model.EsBuildConfig;
 import io.mvnpm.esbuild.model.EsBuildConfigBuilder;
 import io.mvnpm.esbuild.plugin.EsBuildPluginSass;
+import io.quarkiverse.tools.projectscanner.ProjectFile;
+import io.quarkiverse.tools.projectscanner.ProjectRootBuildItem;
+import io.quarkiverse.tools.stringpaths.StringPaths;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.LoadersConfig;
 import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
@@ -42,13 +45,10 @@ import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.DevWatchedLinkBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerEsbuildPluginBuiltItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
-import io.quarkiverse.web.bundler.deployment.util.PathUtils;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
@@ -121,8 +121,8 @@ public class BundlePrepareProcessor {
             final boolean browserLiveReload = launchMode.getLaunchMode().equals(LaunchMode.DEVELOPMENT)
                     && config.browserLiveReload();
             if (bundleConfig.isPresent()) {
-                for (WebAsset webAsset : bundleConfig.get().getWebAssets()) {
-                    final Path targetConfig = targetDir.webBundler().resolve(webAsset.webPath());
+                for (ProjectFile webAsset : bundleConfig.get().getWebAssets()) {
+                    final Path targetConfig = targetDir.webBundler().resolve(webAsset.indexPath());
                     createAsset(launchMode, config, watchedLinks, watchedFiles, webAsset, targetConfig);
                 }
             }
@@ -130,7 +130,7 @@ public class BundlePrepareProcessor {
             final Map<String, EsBuildConfig.Loader> loaders = computeLoaders(config);
             final EsBuildConfigBuilder esBuildConfigBuilder = EsBuildConfig.builder()
                     .loader(loaders)
-                    .outDir(PathUtils.join(DIST, config.bundlePath()))
+                    .outDir(StringPaths.join(DIST, config.bundlePath()))
                     .publicPath(config.publicBundlePath())
                     .splitting(config.bundling().splitting())
                     .sourceMap(config.bundling().sourceMapEnabled())
@@ -141,7 +141,7 @@ public class BundlePrepareProcessor {
                         .preserveSymlinks()
                         .minify(false)
                         .define("process.env.LIVE_RELOAD_PATH",
-                                "'" + PathUtils.join(httpRootPath.getRootPath(), WEB_BUNDLER_LIVE_RELOAD_PATH)
+                                "'" + StringPaths.join(httpRootPath.getRootPath(), WEB_BUNDLER_LIVE_RELOAD_PATH)
                                         + "'")
                         .fixedEntryNames();
                 fixedNames = true;
@@ -187,7 +187,7 @@ public class BundlePrepareProcessor {
                 final List<String> scripts = new ArrayList<>();
 
                 for (BundleWebAsset webAsset : entryPoint.assets()) {
-                    String destination = PathUtils.join("web", webAsset.webPath());
+                    String destination = webAsset.indexPath();
                     final Path scriptPath = targetDir.webBundler().resolve(destination);
                     createAsset(launchMode, config, watchedLinks, watchedFiles, webAsset, scriptPath);
                     // Manual assets are supposed to be imported by the entry point
@@ -242,10 +242,10 @@ public class BundlePrepareProcessor {
             WebBundlerConfig config,
             BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
-            WebAsset webAsset,
+            ProjectFile webAsset,
             Path targetPath) throws IOException {
         Files.createDirectories(targetPath.getParent());
-        if (webAsset.type() != WebAsset.Type.JAR_RESOURCE) {
+        if (webAsset.origin() != ProjectFile.Origin.DEPENDENCY_RESOURCE) {
             if (launchMode.getLaunchMode().isDev() && config.browserLiveReload()) {
                 createSymbolicLinkOrFallback(watchedLinks, watchedFiles, webAsset, targetPath);
             } else {
@@ -260,14 +260,15 @@ public class BundlePrepareProcessor {
 
     static void createSymbolicLinkOrFallback(BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
-            WebAsset webAsset,
+            ProjectFile webAsset,
             Path targetPath) throws IOException {
         Files.deleteIfExists(targetPath);
-        if (webAsset.type() == WebAsset.Type.JAR_RESOURCE) {
+        if (webAsset.origin() == ProjectFile.Origin.DEPENDENCY_RESOURCE) {
             throw new IllegalStateException("createSymbolicLinkOrFallback must not be called on a resource web asset");
         }
 
-        if (webAsset.type().canLink()) {
+        if (webAsset.isSrcFile()) {
+            // Create a symbolic link
             try {
                 Files.createSymbolicLink(targetPath, webAsset.path());
                 watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.path(), targetPath, true));
@@ -280,6 +281,7 @@ public class BundlePrepareProcessor {
                 // Falling back to copy
             }
         }
+        // Copy file
         watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.path(), targetPath, false));
         Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 

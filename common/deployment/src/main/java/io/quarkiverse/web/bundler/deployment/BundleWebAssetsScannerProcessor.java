@@ -1,31 +1,42 @@
 package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.DEFAULT_ENTRY_POINT_KEY;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.addTrailingSlash;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.tools.projectscanner.DependencyResourceProjectFile;
+import io.quarkiverse.tools.projectscanner.ProjectFile;
+import io.quarkiverse.tools.projectscanner.ProjectScannerBuildItem;
+import io.quarkiverse.tools.stringpaths.StringPaths;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig.EntryPointConfig;
-import io.quarkiverse.web.bundler.deployment.items.*;
+import io.quarkiverse.web.bundler.deployment.items.BundleConfigAssetsBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset;
 import io.quarkiverse.web.bundler.deployment.items.BundleWebAsset.BundleType;
+import io.quarkiverse.web.bundler.deployment.items.DevWatcherHistoryBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem.EntryPoint;
-import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem.Scanner;
-import io.quarkiverse.web.bundler.deployment.util.PathUtils;
+import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.*;
+import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
+import io.quarkus.deployment.builditem.LaunchModeBuildItem;
+import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.util.FileUtil;
 
@@ -71,17 +82,13 @@ class BundleWebAssetsScannerProcessor {
     }
 
     @BuildStep
-    void collect(ProjectResourcesScannerBuildItem scanner,
+    void collect(ProjectScannerBuildItem scanner,
             BuildProducer<EntryPointBuildItem> bundles,
             BuildProducer<GeneratedResourceBuildItem> generatedResourceProducer,
             BuildProducer<BundleConfigAssetsBuildItem> bundleConfigAssets,
             WebBundlerConfig config)
             throws IOException {
-
         LOGGER.debug("Web Bundler scan - Bundles: start");
-
-        final List<Scanner> bundleConfigAssetsScanners = new ArrayList<>();
-
         final Map<String, EntryPoint> entryPoints = new TreeMap<>();
 
         // This is legacy support for web/app dir
@@ -94,19 +101,25 @@ class BundleWebAssetsScannerProcessor {
                 final String dir = e.getValue().effectiveDir(e.getKey());
                 entryPoints.putIfAbsent(entryPointKey,
                         new EntryPoint(entryPointKey, dir, e.getValue().output(), new ArrayList<>()));
+
                 // The regex is for all files but .html
-                final List<WebAsset> assets = scanner.scan(dir, null,
-                        dir.isEmpty() ? config.getRootEntryPointIgnoredFiles() : config.getEntryPointIgnoredFiles(),
-                        config.charset());
-                final Optional<WebAsset> entryPoint = assets.stream()
-                        .filter(w -> w.webPath().startsWith(addTrailingSlash(dir) + "index."))
+                final String fullDir = config.prefixWithWebRoot(dir);
+                final List<ProjectFile> assets = scanner.query()
+                        .scopeDirs(fullDir)
+                        .addExcluded(config.ignoredFilesOrEmpty())
+                        .addExcluded(
+                                dir.isEmpty() ? List.of("glob:templates/**", "glob:public/**", "glob:static/**", "glob:**.html")
+                                        : List.of("glob:**.html"))
+                        .list();
+                final Optional<ProjectFile> entryPoint = assets.stream()
+                        .filter(w -> w.scopedPath().startsWith("index."))
                         .findAny();
-                for (WebAsset webAsset : assets) {
+                for (ProjectFile webAsset : assets) {
                     BundleType bundleType = entryPoint
                             // If it's not the entry point we consider it as a manual asset (imported by the entry point)
                             .map(ep -> webAsset.equals(ep) ? BundleType.INDEX : BundleType.MANUAL)
                             // When there is no entry point we consider it as a auto asset unless it's a sass import file (_*.sass)
-                            .orElse(isImportSassFile(webAsset.webPath()) ? BundleType.MANUAL : BundleType.AUTO);
+                            .orElse(isImportSassFile(webAsset.scopedPath()) ? BundleType.MANUAL : BundleType.AUTO);
                     entryPoints.get(entryPointKey).assets().add(new BundleWebAsset(webAsset, bundleType));
                 }
             }
@@ -116,22 +129,26 @@ class BundleWebAssetsScannerProcessor {
                 && entryPoints.get(DEFAULT_ENTRY_POINT_KEY).assets().isEmpty()) {
 
             // Let's create an empty app javascript when there is nothing provided
-            final String appJsResource = PathUtils.join(config.webRoot(), "app.js");
+            final String appJsResource = StringPaths.join(config.webRoot(), "app.js");
             final byte[] appJsContent = "".getBytes(StandardCharsets.UTF_8);
             generatedResourceProducer.produce(new GeneratedResourceBuildItem(appJsResource, appJsContent));
             entryPoints.get(DEFAULT_ENTRY_POINT_KEY)
                     .assets()
                     .add(new BundleWebAsset(
-                            new JarResourceWebAsset("app.js", null, appJsResource, appJsContent, StandardCharsets.UTF_8),
+                            new DependencyResourceProjectFile(appJsResource, "app.js", null, appJsResource,
+                                    appJsContent,
+                                    StandardCharsets.UTF_8),
                             BundleType.AUTO));
         }
 
-        bundleConfigAssetsScanners.add(new Scanner("glob:tsconfig.json", config.getEffectiveIgnoredFiles(), config.charset()));
-
+        final List<ProjectFile> bundleConfigWebAssets = scanner.query()
+                .scopeDirs(config.webRoot())
+                .matchingGlob("tsconfig.json")
+                .list();
         final WebAssetsLookupDevContext context = new WebAssetsLookupDevContext(
                 config,
                 entryPoints,
-                scanner.scan(bundleConfigAssetsScanners));
+                bundleConfigWebAssets);
         produceWebAssets(bundles, bundleConfigAssets, context);
         LOGGER.debugf("Web Bundler scan - Bundles: %d entrypoints found", entryPoints.size());
     }
@@ -179,7 +196,7 @@ class BundleWebAssetsScannerProcessor {
 
     }
 
-    private static <T extends WebAsset> void produceWebAssetsWithCheck(List<T> e,
+    private static <T extends ProjectFile> void produceWebAssetsWithCheck(List<T> e,
             Consumer<List<T>> consumer) {
         if (!e.isEmpty()) {
             consumer.accept(e);
@@ -187,7 +204,7 @@ class BundleWebAssetsScannerProcessor {
     }
 
     record WebAssetsLookupDevContext(WebBundlerConfig config, Map<String, EntryPoint> entryPoints,
-            List<WebAsset> bundleConfigWebAssets) {
+            List<ProjectFile> bundleConfigWebAssets) {
 
     }
 
