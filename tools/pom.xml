@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.quarkiverse</groupId>
+        <artifactId>quarkiverse-parent</artifactId>
+        <version>21</version>
+        <relativePath/>
+    </parent>
+    <groupId>io.quarkiverse.tools</groupId>
+    <artifactId>quarkiverse-tools-parent</artifactId>
+    <version>999-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Quarkus Tools - Parent</name>
+    <modules>
+        <module>string-paths</module>
+        <module>scanner</module>
+    </modules>
+    <scm>
+        <connection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</connection>
+        <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-web-bundler.git</developerConnection>
+        <url>https://github.com/quarkiverse/quarkus-web-bundler</url>
+        <tag>HEAD</tag>
+    </scm>
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <quarkus.version>3.29.4</quarkus.version>
+        <assertj-core.version>3.27.3</assertj-core.version>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${quarkus.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj-core.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

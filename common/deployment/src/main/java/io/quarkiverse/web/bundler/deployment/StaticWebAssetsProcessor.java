@@ -1,19 +1,19 @@
 package io.quarkiverse.web.bundler.deployment;
 
+import static io.quarkiverse.tools.stringpaths.StringPaths.prefixWithSlash;
 import static io.quarkiverse.web.bundler.deployment.BundlePrepareProcessor.createSymbolicLinkOrFallback;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import io.quarkiverse.tools.projectscanner.ProjectFile;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.DevWatchedLinkBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.deployment.items.PublicAssetsBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebAsset;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -31,11 +31,11 @@ public class StaticWebAssetsProcessor {
             BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer) {
-        for (WebAsset webAsset : staticAssets.getWebAssets()) {
-            final String publicPath = webAsset.webPath().replace("public/", "");
+        for (ProjectFile webAsset : staticAssets.getWebAssets()) {
+            final String publicPath = config.stripWebRootPrefix(webAsset.indexPath()).replace("public/", "");
             final Path targetPath = targetDir.dist().resolve(publicPath);
             try {
-                if (webAsset.type() != WebAsset.Type.JAR_RESOURCE) {
+                if (webAsset.origin() != ProjectFile.Origin.DEPENDENCY_RESOURCE) {
                     if (launchMode.getLaunchMode().isDev() && config.browserLiveReload()) {
                         Files.createDirectories(targetPath.getParent());
                         createSymbolicLinkOrFallback(watchedLinks, watchedFiles, webAsset, targetPath);

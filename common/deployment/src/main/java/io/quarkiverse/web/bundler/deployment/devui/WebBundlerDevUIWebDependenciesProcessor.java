@@ -21,8 +21,8 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.tools.stringpaths.StringPaths;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
-import io.quarkiverse.web.bundler.deployment.util.PathUtils;
 import io.quarkus.bootstrap.classloading.ClassPathElement;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsDevelopment;
@@ -82,7 +82,7 @@ public class WebBundlerDevUIWebDependenciesProcessor {
     private DevUIWebDependency getDep(String rootPath, Map<ArtifactKey, ClassPathElement> providersByKeys,
             WebDependenciesBuildItem.Dependency webDependency) {
         String path = getTypePath(webDependency);
-        final String webDependencyRootPath = PathUtils.addTrailingSlash(resolveFromRootPath(rootPath, path));
+        final String webDependencyRootPath = StringPaths.addTrailingSlash(resolveFromRootPath(rootPath, path));
 
         return createWebDependency(webDependency, webDependencyRootPath, providersByKeys, path);
     }

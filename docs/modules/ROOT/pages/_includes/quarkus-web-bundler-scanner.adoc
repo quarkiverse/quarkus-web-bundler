@@ -1,0 +1,60 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler-scanner_quarkus-project-scanner-default-ignored-files]] [.property-path]##link:#quarkus-web-bundler-scanner_quarkus-project-scanner-default-ignored-files[`+++quarkus.project-scanner.default-ignored-files+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.project-scanner.default-ignored-files+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default set of ignored files during project resources and files indexation.
+
+Entries may be prefixed with `regex:` or `glob:`. The default ignored files include:
+
+ - `glob:++**++.DS_Store`
+ - `glob:++**++Thumbs.db`
+ - `glob:++**++.++*++~`
+ - `glob:++**++.class`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PROJECT_SCANNER_DEFAULT_IGNORED_FILES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PROJECT_SCANNER_DEFAULT_IGNORED_FILES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|glob:**.DS_Store, glob:**Thumbs.db, glob:**.*~, glob:**.class
+
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler-scanner_quarkus-project-scanner-charset]] [.property-path]##link:#quarkus-web-bundler-scanner_quarkus-project-scanner-charset[`+++quarkus.project-scanner.charset+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.project-scanner.charset+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default charset used when reading web assets.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PROJECT_SCANNER_CHARSET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PROJECT_SCANNER_CHARSET+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html[Charset]
+|UTF-8
+
+|===
+

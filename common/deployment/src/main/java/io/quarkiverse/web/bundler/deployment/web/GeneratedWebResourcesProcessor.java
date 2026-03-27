@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.tools.stringpaths.StringPaths;
 import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.ProjectResourcesScannerBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WatchedWebDirsBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
-import io.quarkiverse.web.bundler.deployment.util.PathUtils;
 import io.quarkiverse.web.bundler.runtime.WebBundlerResourceRecorder;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -52,18 +52,18 @@ public class GeneratedWebResourcesProcessor {
     @Record(RUNTIME_INIT)
     public void initChangeEventHandler(
             WebBundlerConfig config,
-            ProjectResourcesScannerBuildItem scanner,
+            WatchedWebDirsBuildItem webDirs,
             WebBundlerTargetDirBuildItem targetDir,
             WebBundlerResourceRecorder recorder,
             ReadyForBundlingBuildItem readyForBundling,
             List<GeneratedWebResourceBuildItem> staticResources,
             ShutdownContextBuildItem shutdownContext,
             BuildProducer<RouteBuildItem> routes) {
-        if (config.browserLiveReload() && readyForBundling != null) {
+        if (config.browserLiveReload() && readyForBundling != null && webDirs != null) {
             routes.produce(RouteBuildItem.builder().route(WEB_BUNDLER_LIVE_RELOAD_PATH)
                     .handler(recorder.createChangeEventHandler(targetDir.dist().toAbsolutePath().toString(),
                             config.webRoot(),
-                            scanner.webDirs(),
+                            webDirs.webDirsWatchedPaths(),
                             staticResources.stream()
                                     .map(GeneratedWebResourceBuildItem::publicPath)
                                     .collect(Collectors.toSet()),
@@ -73,6 +73,6 @@ public class GeneratedWebResourcesProcessor {
     }
 
     public static String resolveFromRootPath(String rootPath, String path) {
-        return PathUtils.join(rootPath, path);
+        return StringPaths.join(rootPath, path);
     }
 }

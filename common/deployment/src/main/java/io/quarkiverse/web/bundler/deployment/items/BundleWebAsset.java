@@ -3,7 +3,9 @@ package io.quarkiverse.web.bundler.deployment.items;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
-public record BundleWebAsset(WebAsset webAsset, BundleType bundleType) implements WebAsset {
+import io.quarkiverse.tools.projectscanner.ProjectFile;
+
+public record BundleWebAsset(ProjectFile webAsset, BundleType bundleType) implements ProjectFile {
 
     public enum BundleType {
         GENERATED_ENTRY_POINT("generated entry-point"), // a named generated entry-point app.js, page1.js
@@ -34,8 +36,13 @@ public record BundleWebAsset(WebAsset webAsset, BundleType bundleType) implement
     }
 
     @Override
-    public String webPath() {
-        return webAsset.webPath();
+    public String indexPath() {
+        return webAsset.indexPath();
+    }
+
+    @Override
+    public String scopedPath() {
+        return webAsset.scopedPath();
     }
 
     @Override
@@ -49,7 +56,7 @@ public record BundleWebAsset(WebAsset webAsset, BundleType bundleType) implement
     }
 
     @Override
-    public Type type() {
-        return webAsset.type();
+    public ProjectFile.Origin origin() {
+        return webAsset.origin();
     }
 }

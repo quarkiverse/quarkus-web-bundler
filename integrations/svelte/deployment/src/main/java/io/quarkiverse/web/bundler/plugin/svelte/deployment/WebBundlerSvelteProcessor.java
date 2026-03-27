@@ -1,7 +1,7 @@
 package io.quarkiverse.web.bundler.plugin.svelte.deployment;
 
 import io.mvnpm.esbuild.plugin.EsBuildPluginSvelte;
-import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
+import io.quarkiverse.tools.projectscanner.ProjectRootBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerEsbuildPluginBuiltItem;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.FeatureBuildItem;

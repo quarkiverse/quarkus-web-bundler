@@ -95,7 +95,7 @@ public class WebBundlerDevUIProcessor {
         }
         list.addAll(e.assets().stream()
                 .map(a -> new EntryPointItem(
-                        a.webPath(),
+                        a.scopedPath(),
                         a.bundleType().label()))
                 .toList());
         return list;

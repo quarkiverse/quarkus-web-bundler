@@ -22,7 +22,7 @@ import io.quarkiverse.web.bundler.deployment.config.WebBundlerConfig;
 import io.quarkiverse.web.bundler.deployment.items.DevWatchedLinkBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.DevWatcherHistoryBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.DevWatcherStartedBuildItem;
-import io.quarkiverse.web.bundler.deployment.items.WebDirBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WatchedWebDirsBuildItem;
 import io.quarkiverse.web.bundler.spi.items.WebBundlerWatchedDirBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -53,11 +53,11 @@ public class DevWatcherProcessor {
     void startWatch(WebBundlerConfig config,
             List<WebBundlerWatchedDirBuildItem> watchedDirItems,
             List<DevWatchedLinkBuildItem> linkedDirItems,
-            List<WebDirBuildItem> webDirItems) {
+            WatchedWebDirsBuildItem watchedWebDirs) {
         if (!config.browserLiveReload()) {
             return;
         }
-        final List<Path> webDirs = webDirItems.stream().map(WebDirBuildItem::path).toList();
+        final List<Path> webDirs = watchedWebDirs.webDirs();
         final Map<Path, DevWatcher.Link> linkedDirs = linkedDirItems.stream().collect(
                 Collectors.toMap(DevWatchedLinkBuildItem::source, d -> new DevWatcher.Link(d.target(), d.symbolic())));
         final Set<Path> watchedDirs = watchedDirItems.stream().map(WebBundlerWatchedDirBuildItem::path)

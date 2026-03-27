@@ -1,10 +1,10 @@
 package io.quarkiverse.web.bundler.deployment.config;
 
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.join;
-import static io.quarkiverse.web.bundler.deployment.util.PathUtils.prefixWithSlash;
+import static io.quarkiverse.tools.stringpaths.StringPaths.join;
+import static io.quarkiverse.tools.stringpaths.StringPaths.prefixWithSlash;
+import static io.quarkiverse.tools.stringpaths.StringPaths.stripPrefix;
 import static java.util.function.Predicate.not;
 
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,7 +25,6 @@ import io.smallrye.config.WithParentName;
 public interface WebBundlerConfig {
     String DIR_NAME_PATTERN = "^[a-zA-Z0-9._-]{1,255}$";
     String DEFAULT_ENTRY_POINT_KEY = "app";
-    String IGNORED_FILES = "glob:**.DS_Store,glob:**Thumbs.db,glob:**.*~";
 
     /**
      * The directory in the resources which serves as root for the web assets
@@ -37,11 +36,16 @@ public interface WebBundlerConfig {
         return join(webRoot(), dir);
     }
 
+    default String stripWebRootPrefix(String path) {
+        return stripPrefix(path, webRoot());
+    }
+
     /**
-     * The directory in the project root dir which contains web assets (relative to the project root)
+     * If enabled, scan a local directory in the project root for web assets (e.g. {@code project-root/web/}).
+     * This is separate from classpath resources which are scanned automatically.
      */
-    @WithDefault("web")
-    Optional<String> projectWebDir();
+    @WithDefault("true")
+    boolean localWebDir();
 
     /**
      * Files to ignore, specified relative to the web directory.
@@ -50,45 +54,14 @@ public interface WebBundlerConfig {
      * prefix to indicate whether the value should be interpreted as a regular expression
      * or a glob pattern.
      * <p>
-     * These entries are added to the default set of ignored files, so the defaults do not
+     * These entries are added to the default set of scanner ignored files
+     * {@code quarkus.project-scanner.default-ignored-files}, so the defaults do not
      * need to be repeated unless customization is required.
      */
     Optional<List<String>> ignoredFiles();
 
-    /**
-     * The default set of ignored files, specified relative to the web directory.
-     * <p>
-     * These defaults are intended to be extended via {@code ignored-files},
-     * which allows additional patterns to be configured, but if needed they can also be overriden.
-     * <p>
-     * Entries may be prefixed with {@code regex:} or {@code glob:}.
-     * The default ignored files include:
-     * <ul>
-     * <li><code>glob:**.DS_Store</code></li>
-     * <li><code>glob:**Thumbs.db</code></li>
-     * <li><code>glob:**.*~</code></li>
-     * </ul>
-     */
-    @WithDefault(IGNORED_FILES)
-    List<String> defaultIgnoredFiles();
-
-    default List<String> getEffectiveIgnoredFiles(List<String> moreIgnoredFiles) {
-        List<String> ignored = new ArrayList<>(defaultIgnoredFiles());
-        ignoredFiles().ifPresent(ignored::addAll);
-        ignored.addAll(moreIgnoredFiles);
-        return ignored;
-    }
-
-    default List<String> getEntryPointIgnoredFiles() {
-        return getEffectiveIgnoredFiles(List.of("glob:**.html"));
-    }
-
-    default List<String> getRootEntryPointIgnoredFiles() {
-        return getEffectiveIgnoredFiles(List.of("glob:templates/**", "glob:public/**", "glob:static/**", "glob:**.html"));
-    }
-
-    default List<String> getEffectiveIgnoredFiles() {
-        return getEffectiveIgnoredFiles(List.of());
+    default List<String> ignoredFilesOrEmpty() {
+        return ignoredFiles().orElse(List.of());
     }
 
     /**
@@ -160,12 +133,6 @@ public interface WebBundlerConfig {
      */
     @WithDefault("false")
     Boolean bundleRedirect();
-
-    /**
-     * The default charset
-     */
-    @WithDefault("UTF-8")
-    Charset charset();
 
     default String httpRootPath() {
         Config allConfig = ConfigProvider.getConfig();

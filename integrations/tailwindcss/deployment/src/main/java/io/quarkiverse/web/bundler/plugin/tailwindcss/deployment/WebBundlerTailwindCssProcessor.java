@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.jboss.logging.Logger;
 
 import io.mvnpm.esbuild.plugin.EsBuildPluginTailwind;
-import io.quarkiverse.web.bundler.deployment.items.ProjectRootBuildItem;
+import io.quarkiverse.tools.projectscanner.ProjectRootBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerEsbuildPluginBuiltItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;

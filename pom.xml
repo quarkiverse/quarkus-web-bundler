@@ -12,6 +12,7 @@
     <packaging>pom</packaging>
     <name>Quarkus Web Bundler - Parent</name>
     <modules>
+        <module>tools</module>
         <module>common</module>
         <module>core/spi</module>
         <module>core/runtime</module>
@@ -31,6 +32,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <esbuild-java.version>2.1.2</esbuild-java.version>
         <quarkus.version>3.29.4</quarkus.version>
+        <assertj-core.version>3.27.3</assertj-core.version>
         <quarkus-playwright.version>2.3.3</quarkus-playwright.version>
     </properties>
     <dependencyManagement>
@@ -48,6 +50,11 @@
                 <version>${esbuild-java.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj-core.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
