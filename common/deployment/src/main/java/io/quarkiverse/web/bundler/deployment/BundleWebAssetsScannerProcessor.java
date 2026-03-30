@@ -108,7 +108,9 @@ class BundleWebAssetsScannerProcessor {
                         .scopeDirs(fullDir)
                         .addExcluded(config.ignoredFilesOrEmpty())
                         .addExcluded(
-                                dir.isEmpty() ? List.of("glob:templates/**", "glob:public/**", "glob:static/**", "glob:**.html")
+                                dir.isEmpty()
+                                        ? List.of("glob:templates/**", "glob:public/**", "glob:static/**", "glob:**.html",
+                                                "glob:tsconfig.json")
                                         : List.of("glob:**.html"))
                         .list();
                 final Optional<ProjectFile> entryPoint = assets.stream()
