@@ -246,16 +246,19 @@ public final class ProjectScanner {
         // Compile default ignored patterns once for all indexing operations
         List<PathMatcher> ignoredMatchers = compilePatterns(defaultIgnoredFiles);
 
-        // Collect extension artifact keys so app archives loop can skip them (avoid double-indexing)
-        final Set<ArtifactKey> extensionArtifactKeys = new HashSet<>();
-        for (ResolvedDependency artifact : curateOutcome.getApplicationModel()
-                .getDependencies(DependencyFlags.RUNTIME_EXTENSION_ARTIFACT)) {
-            extensionArtifactKeys.add(artifact.getKey());
+        // Build app archive keys to skip extension artifacts that are also app archives (same as Qute core)
+        final Set<ApplicationArchive> allApplicationArchives = applicationArchives.getAllApplicationArchives();
+        final Set<ArtifactKey> appArtifactKeys = new HashSet<>(allApplicationArchives.size());
+        for (var archive : allApplicationArchives) {
+            appArtifactKeys.add(archive.getKey());
         }
 
-        // Index extension artifacts as DEPENDENCY_RESOURCE (including those that are also application archives)
+        // Index extension artifacts as DEPENDENCY_RESOURCE (skip those that are also app archives)
         for (ResolvedDependency artifact : curateOutcome.getApplicationModel()
                 .getDependencies(DependencyFlags.RUNTIME_EXTENSION_ARTIFACT)) {
+            if (appArtifactKeys.contains(artifact.getKey())) {
+                continue;
+            }
             for (Path rootDir : artifact.getResolvedPaths()) {
                 if (Files.isDirectory(rootDir)) {
                     indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
@@ -274,16 +277,13 @@ public final class ProjectScanner {
             }
         }
 
-        // Index non-root application archives (skip extension artifacts to avoid double-indexing)
+        // Index non-root application archives as DEPENDENCY_RESOURCE
         for (ApplicationArchive archive : applicationArchives.getApplicationArchives()) {
-            if (extensionArtifactKeys.contains(archive.getKey())) {
-                continue;
-            }
             archive.accept(tree -> {
                 for (Path rootDir : tree.getRoots()) {
                     try {
                         indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
-                                ProjectFile.Origin.APPLICATION_RESOURCE, ignoredMatchers, declarations);
+                                ProjectFile.Origin.DEPENDENCY_RESOURCE, ignoredMatchers, declarations);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }
