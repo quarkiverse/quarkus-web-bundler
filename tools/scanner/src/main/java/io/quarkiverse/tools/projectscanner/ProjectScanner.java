@@ -246,19 +246,16 @@ public final class ProjectScanner {
         // Compile default ignored patterns once for all indexing operations
         List<PathMatcher> ignoredMatchers = compilePatterns(defaultIgnoredFiles);
 
-        // Build ArtifactKey set for application archives to skip overlap with extension artifacts
-        final Set<ApplicationArchive> allApplicationArchives = applicationArchives.getAllApplicationArchives();
-        final Set<ArtifactKey> appArtifactKeys = new HashSet<>(allApplicationArchives.size());
-        for (var archive : allApplicationArchives) {
-            appArtifactKeys.add(archive.getKey());
-        }
-
-        // Index extension artifacts (skip those that are also application archives)
+        // Collect extension artifact keys so app archives loop can skip them (avoid double-indexing)
+        final Set<ArtifactKey> extensionArtifactKeys = new HashSet<>();
         for (ResolvedDependency artifact : curateOutcome.getApplicationModel()
                 .getDependencies(DependencyFlags.RUNTIME_EXTENSION_ARTIFACT)) {
-            if (appArtifactKeys.contains(artifact.getKey())) {
-                continue;
-            }
+            extensionArtifactKeys.add(artifact.getKey());
+        }
+
+        // Index extension artifacts as DEPENDENCY_RESOURCE (including those that are also application archives)
+        for (ResolvedDependency artifact : curateOutcome.getApplicationModel()
+                .getDependencies(DependencyFlags.RUNTIME_EXTENSION_ARTIFACT)) {
             for (Path rootDir : artifact.getResolvedPaths()) {
                 if (Files.isDirectory(rootDir)) {
                     indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
@@ -277,8 +274,11 @@ public final class ProjectScanner {
             }
         }
 
-        // Index non-root application archives
+        // Index non-root application archives (skip extension artifacts to avoid double-indexing)
         for (ApplicationArchive archive : applicationArchives.getApplicationArchives()) {
+            if (extensionArtifactKeys.contains(archive.getKey())) {
+                continue;
+            }
             archive.accept(tree -> {
                 for (Path rootDir : tree.getRoots()) {
                     try {
