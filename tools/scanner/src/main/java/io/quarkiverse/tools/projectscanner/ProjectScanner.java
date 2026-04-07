@@ -99,19 +99,22 @@ public final class ProjectScanner {
 
         for (Path path : paths) {
             if (Files.isDirectory(path)) {
-                indexDirectory(path, path, List.of(), index, false, ignoredMatchers, declarations);
+                indexDirectory(path, path, List.of(), index, ProjectFile.Origin.APPLICATION_RESOURCE, ignoredMatchers,
+                        declarations);
             } else {
                 try (FileSystem fs = ZipUtils.newFileSystem(path)) {
                     Path root = fs.getPath("/");
                     if (Files.exists(root)) {
-                        indexDirectory(root, root, List.of(), index, false, ignoredMatchers, declarations);
+                        indexDirectory(root, root, List.of(), index, ProjectFile.Origin.APPLICATION_RESOURCE,
+                                ignoredMatchers, declarations);
                     }
                 }
             }
         }
 
         for (LocalDirEntry entry : localDirEntries) {
-            indexDirectory(entry.indexBase(), entry.dir(), List.of(), index, true, ignoredMatchers, declarations);
+            indexDirectory(entry.indexBase(), entry.dir(), List.of(), index, ProjectFile.Origin.LOCAL_PROJECT_FILE,
+                    ignoredMatchers, declarations);
         }
 
         List<IndexedFile> sorted = sortIndex(index);
@@ -258,12 +261,14 @@ public final class ProjectScanner {
             }
             for (Path rootDir : artifact.getResolvedPaths()) {
                 if (Files.isDirectory(rootDir)) {
-                    indexDirectory(rootDir, rootDir, srcResourcesDirs, index, false, ignoredMatchers, declarations);
+                    indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
+                            ProjectFile.Origin.DEPENDENCY_RESOURCE, ignoredMatchers, declarations);
                 } else {
                     try (FileSystem artifactFs = ZipUtils.newFileSystem(rootDir)) {
                         Path rootDirFs = artifactFs.getPath("/");
                         if (Files.exists(rootDirFs)) {
-                            indexDirectory(rootDirFs, rootDirFs, srcResourcesDirs, index, false, ignoredMatchers, declarations);
+                            indexDirectory(rootDirFs, rootDirFs, srcResourcesDirs, index,
+                                    ProjectFile.Origin.DEPENDENCY_RESOURCE, ignoredMatchers, declarations);
                         }
                     } catch (IOException e) {
                         LOGGER.warnf(e, "Unable to create the file system from the rootDir: %s", rootDir);
@@ -277,7 +282,8 @@ public final class ProjectScanner {
             archive.accept(tree -> {
                 for (Path rootDir : tree.getRoots()) {
                     try {
-                        indexDirectory(rootDir, rootDir, srcResourcesDirs, index, false, ignoredMatchers, declarations);
+                        indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
+                                ProjectFile.Origin.APPLICATION_RESOURCE, ignoredMatchers, declarations);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }
@@ -289,7 +295,8 @@ public final class ProjectScanner {
         applicationArchives.getRootArchive().accept(tree -> {
             for (Path rootDir : tree.getRoots()) {
                 try {
-                    indexDirectory(rootDir, rootDir, srcResourcesDirs, index, false, ignoredMatchers, declarations);
+                    indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
+                            ProjectFile.Origin.APPLICATION_RESOURCE, ignoredMatchers, declarations);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -298,7 +305,8 @@ public final class ProjectScanner {
 
         // Index local directories
         for (LocalDirEntry entry : localDirs) {
-            indexDirectory(entry.indexBase(), entry.dir(), srcResourcesDirs, index, true, ignoredMatchers, declarations);
+            indexDirectory(entry.indexBase(), entry.dir(), srcResourcesDirs, index,
+                    ProjectFile.Origin.LOCAL_PROJECT_FILE, ignoredMatchers, declarations);
         }
 
         return sortIndex(index);
@@ -372,7 +380,7 @@ public final class ProjectScanner {
             Path directory,
             Collection<Path> srcResourcesDirs,
             List<IndexedFile> index,
-            boolean nonResource,
+            ProjectFile.Origin origin,
             List<PathMatcher> ignoredMatchers,
             List<ScanDeclarationBuildItem> declarations) throws IOException {
         boolean isLocalFileSystem = ProjectFile.isLocalFileSystem(directory);
@@ -406,18 +414,8 @@ public final class ProjectScanner {
                         continue;
                     }
 
-                    final Path srcFilePath = nonResource ? filePath
+                    final Path srcFilePath = origin == ProjectFile.Origin.LOCAL_PROJECT_FILE ? filePath
                             : (isLocalFileSystem ? findSrc(indexPath, srcResourcesDirs) : null);
-
-                    // Determine the file origin
-                    ProjectFile.Origin origin;
-                    if (nonResource) {
-                        origin = ProjectFile.Origin.LOCAL_PROJECT_FILE;
-                    } else if (srcFilePath != null || isLocalFileSystem) {
-                        origin = ProjectFile.Origin.APPLICATION_RESOURCE;
-                    } else {
-                        origin = ProjectFile.Origin.DEPENDENCY_RESOURCE;
-                    }
 
                     index.add(new IndexedFile(indexPath, filePath.normalize(), srcFilePath, origin));
                 }
@@ -574,16 +572,13 @@ public final class ProjectScanner {
          * Creates a new ProjectFile with the specified scoped path and charset.
          */
         ProjectFile toProjectFile(String scopedPath, Charset charset) {
-            return switch (origin) {
-                case LOCAL_PROJECT_FILE -> new LocalProjectFile(indexPath, scopedPath, filePath, charset);
-                case APPLICATION_RESOURCE -> {
-                    final Path path = srcFilePath != null ? srcFilePath : filePath;
-                    yield new ApplicationResourceProjectFile(indexPath, scopedPath, path, indexPath,
-                            srcFilePath != null, charset);
-                }
-                case DEPENDENCY_RESOURCE ->
-                    new DependencyResourceProjectFile(indexPath, scopedPath, filePath, indexPath, charset);
-            };
+            if (ProjectFile.isLocalFileSystem(filePath)) {
+                String resPath = (origin != ProjectFile.Origin.LOCAL_PROJECT_FILE) ? indexPath : null;
+                Path source = (origin == ProjectFile.Origin.LOCAL_PROJECT_FILE) ? filePath : srcFilePath;
+                return new LocalProjectFile(indexPath, scopedPath, filePath, source, origin, resPath, charset);
+            } else {
+                return new ClasspathProjectFile(indexPath, scopedPath, filePath, origin, indexPath, charset);
+            }
         }
 
     }

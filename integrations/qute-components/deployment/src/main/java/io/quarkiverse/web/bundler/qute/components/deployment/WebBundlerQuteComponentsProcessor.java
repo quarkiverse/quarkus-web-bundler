@@ -53,7 +53,7 @@ class WebBundlerQuteComponentsProcessor {
                             asset.content()));
             nativeImageResourceProducer.produce(new NativeImageResourceBuildItem(templateResource));
             templatePathProducer.produce(TemplatePathBuildItem.builder()
-                    .fullPath(asset.path())
+                    .fullPath(asset.file())
                     .content(new String(asset.content(), asset.charset()))
                     .path(templateId)
                     .extensionInfo("web-bundler")

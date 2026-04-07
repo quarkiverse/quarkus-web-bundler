@@ -31,8 +31,13 @@ public record BundleWebAsset(ProjectFile webAsset, BundleType bundleType) implem
     }
 
     @Override
-    public Path path() {
-        return webAsset.path();
+    public Path file() {
+        return webAsset.file();
+    }
+
+    @Override
+    public Path source() {
+        return webAsset.source();
     }
 
     @Override
@@ -48,11 +53,6 @@ public record BundleWebAsset(ProjectFile webAsset, BundleType bundleType) implem
     @Override
     public Charset charset() {
         return webAsset.charset();
-    }
-
-    @Override
-    public String watchPath() {
-        return webAsset.watchPath();
     }
 
     @Override

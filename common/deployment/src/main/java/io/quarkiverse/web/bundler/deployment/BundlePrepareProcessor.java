@@ -123,7 +123,7 @@ public class BundlePrepareProcessor {
             if (bundleConfig.isPresent()) {
                 for (ProjectFile webAsset : bundleConfig.get().getWebAssets()) {
                     final Path targetConfig = targetDir.webBundler().resolve(webAsset.indexPath());
-                    createAsset(launchMode, config, watchedLinks, watchedFiles, webAsset, targetConfig);
+                    createAsset(launchMode, browserLiveReload, watchedLinks, watchedFiles, webAsset, targetConfig);
                 }
             }
 
@@ -189,7 +189,7 @@ public class BundlePrepareProcessor {
                 for (BundleWebAsset webAsset : entryPoint.assets()) {
                     String destination = webAsset.indexPath();
                     final Path scriptPath = targetDir.webBundler().resolve(destination);
-                    createAsset(launchMode, config, watchedLinks, watchedFiles, webAsset, scriptPath);
+                    createAsset(launchMode, browserLiveReload, watchedLinks, watchedFiles, webAsset, scriptPath);
                     // Manual assets are supposed to be imported by the entry point
                     if (!webAsset.bundleType().equals(MANUAL)) {
                         scripts.add(destination);
@@ -239,18 +239,14 @@ public class BundlePrepareProcessor {
 
     static void createAsset(
             LaunchModeBuildItem launchMode,
-            WebBundlerConfig config,
+            boolean browserLiveReload,
             BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             ProjectFile webAsset,
             Path targetPath) throws IOException {
         Files.createDirectories(targetPath.getParent());
-        if (webAsset.origin() != ProjectFile.Origin.DEPENDENCY_RESOURCE) {
-            if (launchMode.getLaunchMode().isDev() && config.browserLiveReload()) {
-                createSymbolicLinkOrFallback(watchedLinks, watchedFiles, webAsset, targetPath);
-            } else {
-                Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-            }
+        if (launchMode.getLaunchMode().isDev()) {
+            createLinkOrCopy(browserLiveReload, watchedLinks, watchedFiles, webAsset, targetPath);
         } else {
             Files.write(targetPath, webAsset.content(), StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
@@ -258,33 +254,41 @@ public class BundlePrepareProcessor {
 
     }
 
-    static void createSymbolicLinkOrFallback(BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
+    /**
+     * In dev mode, creates a symbolic link (if source is available and live reload is enabled),
+     * copies the local file, or writes content bytes as a fallback.
+     * Registers watchers so changes are picked up during live reload.
+     */
+    static void createLinkOrCopy(boolean browserLiveReload,
+            BuildProducer<DevWatchedLinkBuildItem> watchedLinks,
             BuildProducer<HotDeploymentWatchedFileBuildItem> watchedFiles,
             ProjectFile webAsset,
             Path targetPath) throws IOException {
         Files.deleteIfExists(targetPath);
-        if (webAsset.origin() == ProjectFile.Origin.DEPENDENCY_RESOURCE) {
-            throw new IllegalStateException("createSymbolicLinkOrFallback must not be called on a resource web asset");
-        }
 
-        if (webAsset.isSrcFile()) {
-            // Create a symbolic link
+        if (webAsset.hasSource() && browserLiveReload) {
             try {
-                Files.createSymbolicLink(targetPath, webAsset.path());
-                watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.path(), targetPath, true));
+                Files.createSymbolicLink(targetPath, webAsset.source());
+                watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.source(), targetPath, true));
                 watchedFiles.produce(HotDeploymentWatchedFileBuildItem.builder()
                         .setRestartNeeded(false)
-                        .setLocation(webAsset.watchPath())
+                        .setLocation(webAsset.liveReloadWatchPath())
                         .build());
                 return;
             } catch (FileSystemException e) {
-                // Falling back to copy
+                // Symlink not supported, falling back to copy
             }
+            watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.source(), targetPath, false));
+            Files.copy(webAsset.source(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } else if (webAsset.isLocalFile()) {
+            // In that case we copy the target file
+            watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.file(), targetPath, false));
+            Files.copy(webAsset.file(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            // We write the content
+            Files.write(targetPath, webAsset.content(), StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
         }
-        // Copy file
-        watchedLinks.produce(new DevWatchedLinkBuildItem(webAsset.path(), targetPath, false));
-        Files.copy(webAsset.path(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-
     }
 
     private byte[] readLiveReloadJs() throws IOException {
