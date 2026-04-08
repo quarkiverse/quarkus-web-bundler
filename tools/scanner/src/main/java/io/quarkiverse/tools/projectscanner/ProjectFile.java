@@ -79,7 +79,7 @@ public interface ProjectFile {
     default String liveReloadWatchPath() {
         return switch (origin()) {
             case LOCAL_PROJECT_FILE -> file() != null ? file().toString() : null;
-            case DEPENDENCY_RESOURCE, APPLICATION_RESOURCE -> indexPath();
+            case DEPENDENCY_RESOURCE, ROOT_APPLICATION_RESOURCE -> indexPath();
         };
     }
 
@@ -93,7 +93,7 @@ public interface ProjectFile {
 
     enum Origin {
         LOCAL_PROJECT_FILE, // File is in a project root subdirectory (not a Java resource)
-        APPLICATION_RESOURCE, // File is in the project root resources
+        ROOT_APPLICATION_RESOURCE, // File is in the root application archive resources
         DEPENDENCY_RESOURCE // File is in a dependency (jar or local)
         ;
 

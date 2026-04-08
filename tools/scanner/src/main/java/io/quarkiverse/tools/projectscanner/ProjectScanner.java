@@ -100,7 +100,7 @@ public final class ProjectScanner {
         for (Path path : paths) {
             try (OpenPathTree tree = PathTree.ofDirectoryOrArchive(path).open()) {
                 for (Path root : tree.getRoots()) {
-                    indexDirectory(root, root, List.of(), index, ProjectFile.Origin.APPLICATION_RESOURCE,
+                    indexDirectory(root, root, List.of(), index, ProjectFile.Origin.ROOT_APPLICATION_RESOURCE,
                             ignoredMatchers, declarations);
                 }
             }
@@ -280,7 +280,7 @@ public final class ProjectScanner {
             for (Path rootDir : tree.getRoots()) {
                 try {
                     indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
-                            ProjectFile.Origin.APPLICATION_RESOURCE, ignoredMatchers, declarations);
+                            ProjectFile.Origin.ROOT_APPLICATION_RESOURCE, ignoredMatchers, declarations);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -347,11 +347,11 @@ public final class ProjectScanner {
                             file.indexPath(), existing.origin(), file.origin());
                     case PREFER_APP -> {
                         // First seen is already highest priority (index is sorted by priority descending),
-                        // so keep it: LOCAL_PROJECT_FILE > APPLICATION_RESOURCE > DEPENDENCY_RESOURCE
+                        // so keep it: LOCAL_PROJECT_FILE > ROOT_APPLICATION_RESOURCE > DEPENDENCY_RESOURCE
                     }
                     case PREFER_DEPENDENCY -> {
                         // Replace with later entry which has lower priority (index is sorted by priority
-                        // descending), so the last seen wins: DEPENDENCY_RESOURCE > APPLICATION_RESOURCE > LOCAL_PROJECT_FILE
+                        // descending), so the last seen wins: DEPENDENCY_RESOURCE > ROOT_APPLICATION_RESOURCE > LOCAL_PROJECT_FILE
                         byPath.put(file.indexPath(), file);
                     }
                 }
@@ -539,7 +539,7 @@ public final class ProjectScanner {
         int priority() {
             return switch (origin) {
                 case LOCAL_PROJECT_FILE -> 40;
-                case APPLICATION_RESOURCE -> 30;
+                case ROOT_APPLICATION_RESOURCE -> 30;
                 case DEPENDENCY_RESOURCE -> 10;
             };
         }

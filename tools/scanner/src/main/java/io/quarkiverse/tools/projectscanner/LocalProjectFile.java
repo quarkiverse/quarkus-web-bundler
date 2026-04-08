@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /**
  * A project file on the local filesystem.
- * Covers LOCAL_PROJECT_FILE, APPLICATION_RESOURCE, and local DEPENDENCY_RESOURCE origins.
+ * Covers LOCAL_PROJECT_FILE, ROOT_APPLICATION_RESOURCE, and local DEPENDENCY_RESOURCE origins.
  * Content is read via Files.readAllBytes.
  */
 public final class LocalProjectFile extends AbstractProjectFile {
