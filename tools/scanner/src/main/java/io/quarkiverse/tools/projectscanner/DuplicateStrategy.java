@@ -5,7 +5,7 @@ package io.quarkiverse.tools.projectscanner;
  * <p>
  * When the same file path exists from multiple sources (e.g. a local project file
  * and a dependency JAR), this strategy determines which version is kept.
- * Source priority is: {@code LOCAL_PROJECT_FILE > APPLICATION_RESOURCE > DEPENDENCY_RESOURCE}.
+ * Source priority is: {@code LOCAL_PROJECT_FILE > ROOT_APPLICATION_RESOURCE > DEPENDENCY_RESOURCE}.
  */
 public enum DuplicateStrategy {
 
@@ -16,13 +16,13 @@ public enum DuplicateStrategy {
 
     /**
      * Keep the application version (highest priority wins).
-     * Priority: {@code LOCAL_PROJECT_FILE > APPLICATION_RESOURCE > DEPENDENCY_RESOURCE}.
+     * Priority: {@code LOCAL_PROJECT_FILE > ROOT_APPLICATION_RESOURCE > DEPENDENCY_RESOURCE}.
      */
     PREFER_APP,
 
     /**
      * Keep the dependency version (lowest priority wins).
-     * Priority: {@code DEPENDENCY_RESOURCE > APPLICATION_RESOURCE > LOCAL_PROJECT_FILE}.
+     * Priority: {@code DEPENDENCY_RESOURCE > ROOT_APPLICATION_RESOURCE > LOCAL_PROJECT_FILE}.
      */
     PREFER_DEPENDENCY
 }
