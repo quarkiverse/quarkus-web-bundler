@@ -1,5 +1,7 @@
 package io.quarkiverse.web.bundler.qute.components.deployment;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -53,7 +55,8 @@ class WebBundlerQuteComponentsProcessor {
                             asset.content()));
             nativeImageResourceProducer.produce(new NativeImageResourceBuildItem(templateResource));
             templatePathProducer.produce(TemplatePathBuildItem.builder()
-                    .fullPath(asset.file())
+                    .fullPath(requireNonNull(asset.file(),
+                            "Qute component template must have a local file: " + asset.scopedPath()))
                     .content(new String(asset.content(), asset.charset()))
                     .path(templateId)
                     .extensionInfo("web-bundler")

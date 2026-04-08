@@ -5,9 +5,10 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * A project file backed by a non-local resource whose content is read via the classloader.
- * Covers classpath-readable resources, including JAR-based dependency resources and other
- * non-local application resources.
+ * A project file inside an archive (JAR, ZIP), with content read via the classloader.
+ * Can hold any {@link ProjectFile.Origin} (e.g. {@code ROOT_APPLICATION_RESOURCE} in prod builds).
+ *
+ * @see LocalProjectFile
  */
 public final class ClasspathProjectFile extends AbstractProjectFile {
 

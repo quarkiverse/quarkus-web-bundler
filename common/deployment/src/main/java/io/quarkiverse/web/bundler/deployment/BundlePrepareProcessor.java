@@ -246,8 +246,13 @@ public class BundlePrepareProcessor {
             Path targetPath) throws IOException {
         Files.createDirectories(targetPath.getParent());
         if (launchMode.getLaunchMode().isDev()) {
+            // Dev mode: symlink or copy with live-reload watchers
             createLinkOrCopy(browserLiveReload, watchedLinks, watchedFiles, webAsset, targetPath);
+        } else if (webAsset.isLocalFile()) {
+            // Local file (e.g. during the build): copy directly to avoid loading into memory
+            Files.copy(webAsset.file(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         } else {
+            // Archive resource (JAR): read content bytes
             Files.write(targetPath, webAsset.content(), StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
         }

@@ -5,9 +5,10 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * A project file on the local filesystem.
- * Covers LOCAL_PROJECT_FILE, ROOT_APPLICATION_RESOURCE, and local DEPENDENCY_RESOURCE origins.
- * Content is read via Files.readAllBytes.
+ * A project file on the local filesystem, with content read via {@code Files.readAllBytes}.
+ * Can hold any {@link ProjectFile.Origin} (e.g. {@code ROOT_APPLICATION_RESOURCE} in dev mode).
+ *
+ * @see ClasspathProjectFile
  */
 public final class LocalProjectFile extends AbstractProjectFile {
 
