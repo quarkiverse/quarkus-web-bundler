@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,10 +33,11 @@ import io.quarkus.deployment.ApplicationArchive;
 import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
-import io.quarkus.fs.util.ZipUtils;
 import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.DependencyFlags;
 import io.quarkus.maven.dependency.ResolvedDependency;
+import io.quarkus.paths.OpenPathTree;
+import io.quarkus.paths.PathTree;
 
 /**
  * Scans all project resources once during initialization and provides fast filtering
@@ -98,16 +98,10 @@ public final class ProjectScanner {
         List<PathMatcher> ignoredMatchers = compilePatterns(defaultIgnoredFiles);
 
         for (Path path : paths) {
-            if (Files.isDirectory(path)) {
-                indexDirectory(path, path, List.of(), index, ProjectFile.Origin.APPLICATION_RESOURCE, ignoredMatchers,
-                        declarations);
-            } else {
-                try (FileSystem fs = ZipUtils.newFileSystem(path)) {
-                    Path root = fs.getPath("/");
-                    if (Files.exists(root)) {
-                        indexDirectory(root, root, List.of(), index, ProjectFile.Origin.APPLICATION_RESOURCE,
-                                ignoredMatchers, declarations);
-                    }
+            try (OpenPathTree tree = PathTree.ofDirectoryOrArchive(path).open()) {
+                for (Path root : tree.getRoots()) {
+                    indexDirectory(root, root, List.of(), index, ProjectFile.Origin.APPLICATION_RESOURCE,
+                            ignoredMatchers, declarations);
                 }
             }
         }
@@ -259,20 +253,10 @@ public final class ProjectScanner {
             if (appArtifactKeys.contains(artifact.getKey())) {
                 continue;
             }
-            for (Path rootDir : artifact.getResolvedPaths()) {
-                if (Files.isDirectory(rootDir)) {
+            try (OpenPathTree tree = artifact.getContentTree().open()) {
+                for (Path rootDir : tree.getRoots()) {
                     indexDirectory(rootDir, rootDir, srcResourcesDirs, index,
                             ProjectFile.Origin.DEPENDENCY_RESOURCE, ignoredMatchers, declarations);
-                } else {
-                    try (FileSystem artifactFs = ZipUtils.newFileSystem(rootDir)) {
-                        Path rootDirFs = artifactFs.getPath("/");
-                        if (Files.exists(rootDirFs)) {
-                            indexDirectory(rootDirFs, rootDirFs, srcResourcesDirs, index,
-                                    ProjectFile.Origin.DEPENDENCY_RESOURCE, ignoredMatchers, declarations);
-                        }
-                    } catch (IOException e) {
-                        LOGGER.warnf(e, "Unable to create the file system from the rootDir: %s", rootDir);
-                    }
                 }
             }
         }
