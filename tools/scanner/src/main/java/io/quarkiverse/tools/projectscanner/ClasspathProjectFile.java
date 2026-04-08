@@ -5,8 +5,9 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * A project file in a JAR dependency, content read via classloader.
- * Covers JAR-based DEPENDENCY_RESOURCE origin.
+ * A project file backed by a non-local resource whose content is read via the classloader.
+ * Covers classpath-readable resources, including JAR-based dependency resources and other
+ * non-local application resources.
  */
 public final class ClasspathProjectFile extends AbstractProjectFile {
 
