@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -62,9 +63,25 @@ class WebDependenciesProcessor {
                 .map(WebDependenciesProcessor::toWebDep)
                 .filter(Objects::nonNull)
                 .toList();
-        final List<Dependency> dependencies = new ArrayList<>(buildDependencies.size() + runtimeDependencies.size());
+        // Discover Quarkus extension JARs that ship META-INF/importmap.json (e.g. extensions with JS assets)
+        final List<Dependency> importMapDependencies = StreamSupport.stream(curateOutcome.getApplicationModel()
+                .getDependencies(DependencyFlags.RUNTIME_EXTENSION_ARTIFACT).spliterator(), false)
+                .filter(io.quarkus.maven.dependency.Dependency::isJar)
+                .filter(d -> !WebDependencyType.anyMatch(d.toCompactCoords()))
+                .filter(WebDependenciesProcessor::hasImportMap)
+                .map(d -> toWebDep(d, WebDependencyType.MVNPM))
+                .filter(Objects::nonNull)
+                .toList();
+        if (!importMapDependencies.isEmpty()) {
+            LOGGER.debugf("Discovered %d web dependencies via META-INF/importmap.json: %s",
+                    importMapDependencies.size(),
+                    importMapDependencies.stream().map(Dependency::id).collect(Collectors.joining(", ")));
+        }
+        final List<Dependency> dependencies = new ArrayList<>(
+                buildDependencies.size() + runtimeDependencies.size() + importMapDependencies.size());
         dependencies.addAll(buildDependencies);
         dependencies.addAll(runtimeDependencies);
+        dependencies.addAll(importMapDependencies);
         return new WebDependenciesBuildItem(dependencies);
     }
 
@@ -124,10 +141,30 @@ class WebDependenciesProcessor {
     }
 
     private static Dependency toWebDep(ResolvedDependency d) {
+        return toWebDep(d, resolveType(d.toCompactCoords()).orElseThrow());
+    }
+
+    private static Dependency toWebDep(ResolvedDependency d, WebDependencyType type) {
         return d.getResolvedPaths().stream().filter(p -> p.getFileName().toString().endsWith(".jar")).findFirst()
-                .map(j -> new Dependency(d, d.toCompactCoords(), j, resolveType(d.toCompactCoords()).orElseThrow(),
-                        d.isDirect()))
+                .map(j -> new Dependency(d, d.toCompactCoords(), j, type, d.isDirect()))
                 .orElse(null);
+    }
+
+    private static boolean hasImportMap(ResolvedDependency d) {
+        return d.getResolvedPaths().stream()
+                .filter(p -> p.getFileName().toString().endsWith(".jar"))
+                .findFirst()
+                .map(WebDependenciesProcessor::jarContainsImportMap)
+                .orElse(false);
+    }
+
+    private static boolean jarContainsImportMap(Path jarPath) {
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
+            return jarFile.getEntry("META-INF/importmap.json") != null;
+        } catch (IOException e) {
+            LOGGER.debugf("Could not inspect JAR for importmap.json: %s", jarPath);
+            return false;
+        }
     }
 
     private static Path resolveNodeModulesDir(WebBundlerConfig config, OutputTargetBuildItem outputTarget,
