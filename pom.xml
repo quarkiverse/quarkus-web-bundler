@@ -31,7 +31,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <esbuild-java.version>2.1.2</esbuild-java.version>
-        <quarkus.version>3.29.4</quarkus.version>
+        <quarkus.version>3.34.4</quarkus.version>
         <assertj-core.version>3.27.7</assertj-core.version>
         <quarkus-playwright.version>2.3.3</quarkus-playwright.version>
     </properties>
