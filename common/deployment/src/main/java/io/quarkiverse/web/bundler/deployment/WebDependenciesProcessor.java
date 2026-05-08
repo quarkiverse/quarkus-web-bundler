@@ -9,7 +9,9 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -30,9 +32,11 @@ import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
+import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.DependencyFlags;
 import io.quarkus.maven.dependency.ResolvedDependency;
 import io.quarkus.runtime.configuration.ConfigurationException;
+import io.quarkus.vertx.http.deployment.spi.WebDependencyJarBuildItem;
 
 class WebDependenciesProcessor {
 
@@ -42,6 +46,7 @@ class WebDependenciesProcessor {
     WebDependenciesBuildItem collectDependencies(LaunchModeBuildItem launchMode,
             CurateOutcomeBuildItem curateOutcome,
             List<EntryPointBuildItem> entryPoints,
+            List<WebDependencyJarBuildItem> webDependencyJars,
             WebBundlerConfig config) {
         if (entryPoints.isEmpty() && !config.dependencies().autoImport().isEnabled()) {
             return new WebDependenciesBuildItem(List.of());
@@ -62,9 +67,17 @@ class WebDependenciesProcessor {
                 .map(WebDependenciesProcessor::toWebDep)
                 .filter(Objects::nonNull)
                 .toList();
-        final List<Dependency> dependencies = new ArrayList<>(buildDependencies.size() + runtimeDependencies.size());
+        final List<Dependency> extensionDependencies = toExtensionWebDeps(curateOutcome, webDependencyJars);
+        if (!extensionDependencies.isEmpty()) {
+            LOGGER.debugf("Discovered %d extension web dependencies: %s",
+                    extensionDependencies.size(),
+                    extensionDependencies.stream().map(Dependency::id).collect(Collectors.joining(", ")));
+        }
+        final List<Dependency> dependencies = new ArrayList<>(
+                buildDependencies.size() + runtimeDependencies.size() + extensionDependencies.size());
         dependencies.addAll(buildDependencies);
         dependencies.addAll(runtimeDependencies);
+        dependencies.addAll(extensionDependencies);
         return new WebDependenciesBuildItem(dependencies);
     }
 
@@ -128,6 +141,29 @@ class WebDependenciesProcessor {
                 .map(j -> new Dependency(d, d.toCompactCoords(), j, resolveType(d.toCompactCoords()).orElseThrow(),
                         d.isDirect()))
                 .orElse(null);
+    }
+
+    private static List<Dependency> toExtensionWebDeps(CurateOutcomeBuildItem curateOutcome,
+            List<WebDependencyJarBuildItem> webDependencyJars) {
+        if (webDependencyJars.isEmpty()) {
+            return List.of();
+        }
+        final Map<ArtifactKey, ResolvedDependency> depsByKey = curateOutcome.getApplicationModel()
+                .getDependencies().stream()
+                .collect(Collectors.toMap(ResolvedDependency::getKey, Function.identity(), (a, b) -> a));
+        return webDependencyJars.stream()
+                .map(item -> {
+                    ResolvedDependency resolved = depsByKey.get(item.getArtifactKey());
+                    if (resolved == null) {
+                        LOGGER.debugf("WebDependencyJarBuildItem for %s has no matching resolved dependency",
+                                item.getArtifactKey());
+                        return null;
+                    }
+                    return new Dependency(resolved, resolved.toCompactCoords(), item.getJarPath(),
+                            WebDependencyType.MVNPM, resolved.isDirect());
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private static Path resolveNodeModulesDir(WebBundlerConfig config, OutputTargetBuildItem outputTarget,
