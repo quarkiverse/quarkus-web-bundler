@@ -160,7 +160,7 @@ class WebDependenciesProcessor {
                         return null;
                     }
                     return new Dependency(resolved, resolved.toCompactCoords(), item.getJarPath(),
-                            WebDependencyType.MVNPM, resolved.isDirect());
+                            WebDependencyType.MVNPM, resolved.isDirect(), item.getImportMappings());
                 })
                 .filter(Objects::nonNull)
                 .toList();
