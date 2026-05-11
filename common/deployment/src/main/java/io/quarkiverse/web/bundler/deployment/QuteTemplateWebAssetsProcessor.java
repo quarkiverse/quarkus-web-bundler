@@ -24,6 +24,7 @@ import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.deployment.items.QuteTemplatesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebDependencyImportMappingsBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -48,6 +49,7 @@ public class QuteTemplateWebAssetsProcessor {
     void processHtmlTemplateWebAssets(QuteTemplatesBuildItem htmlTemplates,
             WebBundlerTargetDirBuildItem targetDirBuildItem,
             GeneratedBundleBuildItem generatedBundle,
+            WebDependencyImportMappingsBuildItem webDependencyImportMappings,
             BuildProducer<GeneratedWebResourceBuildItem> staticResourceProducer,
             LaunchModeBuildItem launchMode,
             WebBundlerConfig config) {
@@ -64,6 +66,11 @@ public class QuteTemplateWebAssetsProcessor {
             @Override
             public Set<String> names() {
                 return bundle.keySet();
+            }
+
+            @Override
+            public Map<String, String> importMappings() {
+                return webDependencyImportMappings.importMappings();
             }
         };
         final Engine engine = Engine.builder()

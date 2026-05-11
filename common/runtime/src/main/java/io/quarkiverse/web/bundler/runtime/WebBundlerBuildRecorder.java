@@ -9,7 +9,7 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class WebBundlerBuildRecorder {
 
-    public Supplier<?> createContext(Map<String, String> bundle) {
+    public Supplier<?> createContext(Map<String, String> bundle, Map<String, String> importMappings) {
         return new Supplier<Bundle.Mapping>() {
             @Override
             public Bundle.Mapping get() {
@@ -22,6 +22,11 @@ public class WebBundlerBuildRecorder {
                     @Override
                     public Set<String> names() {
                         return bundle.keySet();
+                    }
+
+                    @Override
+                    public Map<String, String> importMappings() {
+                        return importMappings;
                     }
                 };
             }

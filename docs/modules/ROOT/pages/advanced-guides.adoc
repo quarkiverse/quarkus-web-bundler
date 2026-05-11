@@ -303,6 +303,22 @@ WebJars are client-side web libraries (e.g. jQuery & Bootstrap) packaged into JA
 </dependency>
 ----
 
+[#extension-web-dependencies]
+=== Web Dependencies provided by Quarkus extensions
+
+Some Quarkus extensions ship JavaScript modules for the browser (for example the https://github.com/quarkiverse/quarkus-json-rpc[JSON-RPC] extension client). They are not `org.mvnpm` or `org.webjars` dependencies, so they declare them by producing a `WebDependencyJarBuildItem` (from `quarkus-vertx-http-deployment-spi`, Quarkus 3.40 LTS+). The Web Bundler picks them up the same way as the https://quarkus.io/guides/web-dependency-locator[Web Dependency Locator]; you don't have to configure anything:
+
+- If the extension provides import mappings (e.g. `@quarkiverse/json-rpc` -> `/_static/quarkus-json-rpc/jsonrpc-client.js`), the modules are served by the extension. They are excluded from the bundling (marked as external) and added to the <<bundle-import-map>>, so the browser resolves them at runtime. Prefix mappings (ending with `/`) exclude everything under them.
+- Otherwise, the extension JAR follows the mvnpm layout (with a `package.json`) and it is installed in the <<node_modules>> to be bundled like any other <<mvnpm>> dependency.
+
+For modules served by an extension, add the `{#bundleImportMap /}` tag to your page, *before* the `{#bundle /}` tag. Then import them from your scripts as usual:
+
+.web/app/app.js
+[source,javascript]
+----
+import { JsonRPCClient } from '@quarkiverse/json-rpc';
+----
+
 [#bundle-paths]
 == Bundle Paths
 
@@ -345,12 +361,17 @@ Output:
 
 ----
 
+[#bundle-import-map]
 === Bundle Import Map
 
 The `{#bundleImportMap /}` tag generates an import map that allows you to import modules directly from your bundled application within HTML `<script type="module">` blocks.
 
 When used together with `{#bundle /}`, the `{#bundleImportMap /}` tag automatically creates an import map linking your bundle exports (e.g. 'app' -> `/static/bundle/app-3HNF28.js`) to the correct bundled file path which is changing on every build with a different hash.
 This makes it possible to use ES module imports in HTML.
+
+It also contains the import mappings of the modules served by Quarkus extensions (see <<extension-web-dependencies>>), which is required for your bundle to load them.
+
+NOTE: Place `{#bundleImportMap /}` before `{#bundle /}` and any other module script, browsers only apply an import map to modules loaded after it.
 
 ==== Example
 
@@ -366,8 +387,8 @@ export const name = "import!";
 <html>
 <head>
 
-{#bundle /}
 {#bundleImportMap /}
+{#bundle /}
 
 <script type="module">
   import { name } from 'app';

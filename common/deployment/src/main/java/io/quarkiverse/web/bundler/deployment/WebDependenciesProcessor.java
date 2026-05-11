@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +28,7 @@ import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
+import io.quarkiverse.web.bundler.deployment.items.WebDependencyImportMappingsBuildItem;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
@@ -143,15 +145,33 @@ class WebDependenciesProcessor {
                 .orElse(null);
     }
 
+    @BuildStep
+    WebDependencyImportMappingsBuildItem collectImportMappings(List<WebDependencyJarBuildItem> webDependencyJars) {
+        // Same as the web-dependency-locator: mappings provided directly are used as-is (no JAR inspection)
+        final Map<String, String> importMappings = new HashMap<>();
+        for (WebDependencyJarBuildItem item : webDependencyJars) {
+            importMappings.putAll(item.getImportMappings());
+        }
+        if (!importMappings.isEmpty()) {
+            LOGGER.debugf("Extension web dependency import mappings (served by Quarkus, not bundled): %s", importMappings);
+        }
+        return new WebDependencyImportMappingsBuildItem(importMappings);
+    }
+
     private static List<Dependency> toExtensionWebDeps(CurateOutcomeBuildItem curateOutcome,
             List<WebDependencyJarBuildItem> webDependencyJars) {
-        if (webDependencyJars.isEmpty()) {
+        // Items providing import mappings are served by Quarkus at runtime (see collectImportMappings),
+        // the others follow the mvnpm layout and are installed in node_modules for bundling.
+        final List<WebDependencyJarBuildItem> jarsToInstall = webDependencyJars.stream()
+                .filter(item -> item.getImportMappings().isEmpty())
+                .toList();
+        if (jarsToInstall.isEmpty()) {
             return List.of();
         }
         final Map<ArtifactKey, ResolvedDependency> depsByKey = curateOutcome.getApplicationModel()
                 .getDependencies().stream()
                 .collect(Collectors.toMap(ResolvedDependency::getKey, Function.identity(), (a, b) -> a));
-        return webDependencyJars.stream()
+        return jarsToInstall.stream()
                 .map(item -> {
                     ResolvedDependency resolved = depsByKey.get(item.getArtifactKey());
                     if (resolved == null) {
