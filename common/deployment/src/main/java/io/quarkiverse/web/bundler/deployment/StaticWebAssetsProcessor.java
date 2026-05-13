@@ -1,7 +1,7 @@
 package io.quarkiverse.web.bundler.deployment;
 
 import static io.quarkiverse.tools.stringpaths.StringPaths.prefixWithSlash;
-import static io.quarkiverse.web.bundler.deployment.BundlePrepareProcessor.createSymbolicLinkOrFallback;
+import static io.quarkiverse.web.bundler.deployment.BundlePrepareProcessor.createLinkOrCopy;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,19 +35,12 @@ public class StaticWebAssetsProcessor {
             final String publicPath = config.stripWebRootPrefix(webAsset.indexPath()).replace("public/", "");
             final Path targetPath = targetDir.dist().resolve(publicPath);
             try {
-                if (webAsset.origin() != ProjectFile.Origin.DEPENDENCY_RESOURCE) {
-                    if (launchMode.getLaunchMode().isDev() && config.browserLiveReload()) {
-                        Files.createDirectories(targetPath.getParent());
-                        createSymbolicLinkOrFallback(watchedLinks, watchedFiles, webAsset, targetPath);
-                        staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(
-                                prefixWithSlash(publicPath),
-                                webAsset.content(), SourceType.STATIC_ASSET));
-                    } else {
-                        // We can read the file
-                        staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(
-                                prefixWithSlash(publicPath),
-                                webAsset.content(), SourceType.STATIC_ASSET));
-                    }
+                if (launchMode.getLaunchMode().isDev()) {
+                    Files.createDirectories(targetPath.getParent());
+                    createLinkOrCopy(config.browserLiveReload(), watchedLinks, watchedFiles, webAsset, targetPath);
+                    staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromFile(
+                            prefixWithSlash(publicPath),
+                            targetPath, SourceType.STATIC_ASSET));
                 } else {
                     staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(
                             prefixWithSlash(publicPath),

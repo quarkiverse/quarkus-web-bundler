@@ -81,7 +81,7 @@ class ScanOrderingTest {
 
     /**
      * PREFER_APP: local project files (highest priority) take priority over classpath resources.
-     * The scanner indexes the same files as both LOCAL_PROJECT_FILE and APPLICATION_RESOURCE;
+     * The scanner indexes the same files as both LOCAL_PROJECT_FILE and ROOT_APPLICATION_RESOURCE;
      * PREFER_APP must keep LOCAL_PROJECT_FILE for every path.
      */
     @Test
@@ -120,7 +120,7 @@ class ScanOrderingTest {
     /**
      * PREFER_DEPENDENCY: lower-priority sources win over higher-priority ones.
      * The scanner indexes the same files as both LOCAL_PROJECT_FILE (priority 40) and
-     * APPLICATION_RESOURCE (priority 30); PREFER_DEPENDENCY must keep APPLICATION_RESOURCE.
+     * ROOT_APPLICATION_RESOURCE (priority 30); PREFER_DEPENDENCY must keep ROOT_APPLICATION_RESOURCE.
      */
     @Test
     void preferDependency_lowerPriorityWins() throws IOException {
@@ -131,11 +131,11 @@ class ScanOrderingTest {
                 .list();
 
         assertNoDuplicatePaths(results);
-        assertThat(results).allMatch(f -> f.origin() == ProjectFile.Origin.APPLICATION_RESOURCE,
-                "Lower-priority APPLICATION_RESOURCE should win with PREFER_DEPENDENCY");
+        assertThat(results).allMatch(f -> f.origin() == ProjectFile.Origin.ROOT_APPLICATION_RESOURCE,
+                "Lower-priority ROOT_APPLICATION_RESOURCE should win with PREFER_DEPENDENCY");
         // Verify a specific known file to ensure the assertion is not vacuous
         assertThat(results).anyMatch(f -> f.scopedPath().equals("index.html")
-                && f.origin() == ProjectFile.Origin.APPLICATION_RESOURCE);
+                && f.origin() == ProjectFile.Origin.ROOT_APPLICATION_RESOURCE);
     }
 
     /**
@@ -239,7 +239,7 @@ class ScanOrderingTest {
     // -- Helpers --
 
     /**
-     * Creates a scanner where the same directory is indexed as both classpath (APPLICATION_RESOURCE)
+     * Creates a scanner where the same directory is indexed as both classpath (ROOT_APPLICATION_RESOURCE)
      * and local project dir (LOCAL_PROJECT_FILE), producing duplicates in the index.
      * This simulates a dev-mode scenario where src/main/resources files are available both
      * as classpath resources and as local project files.

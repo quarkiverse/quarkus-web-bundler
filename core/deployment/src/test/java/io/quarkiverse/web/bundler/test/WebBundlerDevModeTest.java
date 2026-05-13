@@ -43,6 +43,19 @@ public class WebBundlerDevModeTest {
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("console.log(\"Hello World! Modified!\");"));
+        // Test public/static resource change
+        RestAssured.given()
+                .get("/foo/bar/static/hello.txt")
+                .then()
+                .statusCode(200)
+                .body(Matchers.containsString("Hello World!"));
+        test.modifyResourceFile("web/static/hello.txt", s -> s.replace("Hello World!", "Hello Static Modified!"));
+        RestAssured.given()
+                .get("/foo/bar/static/hello.txt")
+                .then()
+                .statusCode(200)
+                .body(Matchers.containsString("Hello Static Modified!"));
+
         test.modifyResourceFile("web/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: #123456;"));
         test.modifyResourceFile("web/other.scss", s -> s.replace("color: #AAAAAA;", "color: #567890;"));
         RestAssured.given()

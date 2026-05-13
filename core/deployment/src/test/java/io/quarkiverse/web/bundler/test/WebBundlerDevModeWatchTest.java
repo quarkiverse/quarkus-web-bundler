@@ -3,15 +3,12 @@ package io.quarkiverse.web.bundler.test;
 import org.hamcrest.Matchers;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.test.QuarkusDevModeTest;
 import io.restassured.RestAssured;
 
-// This require
-@Disabled
 public class WebBundlerDevModeWatchTest {
 
     // Start hot reload (DevMode) test with your extension loaded
@@ -47,6 +44,20 @@ public class WebBundlerDevModeWatchTest {
                 .then()
                 .statusCode(200)
                 .body(Matchers.containsString("console.log(\"Hello World! Modified!\");"));
+        // Test public/static resource change
+        RestAssured.given()
+                .get("/foo/bar/static/hello.txt")
+                .then()
+                .statusCode(200)
+                .body(Matchers.containsString("Hello World!"));
+        test.modifyResourceFile("web/static/hello.txt", s -> s.replace("Hello World!", "Hello Static Modified!"));
+        Thread.sleep(2000);
+        RestAssured.given()
+                .get("/foo/bar/static/hello.txt")
+                .then()
+                .statusCode(200)
+                .body(Matchers.containsString("Hello Static Modified!"));
+
         test.modifyResourceFile("web/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: #123456;"));
         test.modifyResourceFile("web/other.scss", s -> s.replace("color: #AAAAAA;", "color: #567890;"));
         Thread.sleep(2000);

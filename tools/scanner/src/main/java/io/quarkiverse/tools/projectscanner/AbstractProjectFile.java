@@ -8,33 +8,33 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public abstract class LazyContentProjectFile implements ProjectFile {
+public abstract class AbstractProjectFile implements ProjectFile {
     private final String indexPath;
     private final String scopedPath;
-    private final Path path;
+    private final Path file;
     private final Charset charset;
     private final LazyValue<byte[]> lazyContent;
     private final Origin origin;
 
-    public LazyContentProjectFile(String indexPath, String scopedPath, Path path, Origin origin, Charset charset) {
-        this(indexPath, scopedPath, path, origin, new LazyValue<>(() -> {
+    public AbstractProjectFile(String indexPath, String scopedPath, Path file, Origin origin, Charset charset) {
+        this(indexPath, scopedPath, file, origin, new LazyValue<>(() -> {
             try {
-                return Files.readAllBytes(path);
+                return Files.readAllBytes(file);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         }), charset);
     }
 
-    public LazyContentProjectFile(String indexPath, String scopedPath, Path path, Origin origin,
+    public AbstractProjectFile(String indexPath, String scopedPath, Path file, Origin origin,
             LazyValue<byte[]> lazyContent,
             Charset charset) {
-        this.indexPath = indexPath;
-        this.scopedPath = scopedPath;
-        this.path = path;
-        this.charset = charset;
-        this.origin = origin;
-        this.lazyContent = lazyContent;
+        this.indexPath = Objects.requireNonNull(indexPath, "indexPath must not be null");
+        this.scopedPath = Objects.requireNonNull(scopedPath, "scopedPath must not be null");
+        this.file = file;
+        this.charset = Objects.requireNonNull(charset, "charset must not be null");
+        this.origin = Objects.requireNonNull(origin, "origin must not be null");
+        this.lazyContent = Objects.requireNonNull(lazyContent, "lazyContent must not be null");
     }
 
     @Override
@@ -48,8 +48,8 @@ public abstract class LazyContentProjectFile implements ProjectFile {
     }
 
     @Override
-    public Path path() {
-        return path;
+    public Path file() {
+        return file;
     }
 
     @Override
@@ -71,23 +71,23 @@ public abstract class LazyContentProjectFile implements ProjectFile {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass())
             return false;
-        LazyContentProjectFile that = (LazyContentProjectFile) o;
+        AbstractProjectFile that = (AbstractProjectFile) o;
         return Objects.equals(indexPath, that.indexPath) && Objects.equals(scopedPath, that.scopedPath)
-                && Objects.equals(path, that.path)
+                && Objects.equals(file, that.file)
                 && Objects.equals(charset, that.charset) && origin == that.origin;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(indexPath, scopedPath, path, charset, origin);
+        return Objects.hash(indexPath, scopedPath, file, charset, origin);
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", LazyContentProjectFile.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", AbstractProjectFile.class.getSimpleName() + "[", "]")
                 .add("indexPath='" + indexPath + "'")
                 .add("scopedPath='" + scopedPath + "'")
-                .add("path=" + path)
+                .add("file=" + file)
                 .add("charset=" + charset)
                 .add("origin=" + origin)
                 .toString();

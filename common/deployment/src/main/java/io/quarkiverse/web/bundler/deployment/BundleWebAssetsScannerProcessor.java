@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.tools.projectscanner.DependencyResourceProjectFile;
+import io.quarkiverse.tools.projectscanner.ClasspathProjectFile;
 import io.quarkiverse.tools.projectscanner.ProjectFile;
 import io.quarkiverse.tools.projectscanner.ProjectScannerBuildItem;
 import io.quarkiverse.tools.stringpaths.StringPaths;
@@ -137,8 +137,8 @@ class BundleWebAssetsScannerProcessor {
             entryPoints.get(DEFAULT_ENTRY_POINT_KEY)
                     .assets()
                     .add(new BundleWebAsset(
-                            new DependencyResourceProjectFile(appJsResource, "app.js", null, appJsResource,
-                                    appJsContent,
+                            new ClasspathProjectFile(appJsResource, "app.js", null,
+                                    ProjectFile.Origin.DEPENDENCY_RESOURCE, appJsResource, appJsContent,
                                     StandardCharsets.UTF_8),
                             BundleType.AUTO));
         }
