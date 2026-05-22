@@ -125,11 +125,13 @@ public class DevWatcherProcessor {
         }
 
         public void reconcileWatchedDirs(Collection<Path> previousDirs, Collection<Path> watchedDirs) {
-            for (Path previousDir : previousDirs) {
-                watcher.unwatchPath(previousDir, callback);
-            }
+            // Only add new directories. Unwatching during reload can deadlock with the
+            // PollingWatchService timer thread (AB-BA lock ordering in JDK internals).
+            // Stale watches are harmless since handleChanges filters by webDirs/started.
             for (Path watchedDir : watchedDirs) {
-                watcher.watchDirectoryRecursively(watchedDir, callback);
+                if (!previousDirs.contains(watchedDir)) {
+                    watcher.watchDirectoryRecursively(watchedDir, callback);
+                }
             }
         }
 
