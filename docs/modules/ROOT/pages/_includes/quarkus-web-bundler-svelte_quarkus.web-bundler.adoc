@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler-svelte_quarkus-web-bundler-svelte-custom-element]] [.property-path]##link:#quarkus-web-bundler-svelte_quarkus-web-bundler-svelte-custom-element[`quarkus.web-bundler.svelte.custom-element`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-web-bundler-svelte_quarkus-web-bundler-svelte-custom-element]] [.property-path]##link:#quarkus-web-bundler-svelte_quarkus-web-bundler-svelte-custom-element[`+++quarkus.web-bundler.svelte.custom-element+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.web-bundler.svelte.custom-element+++[]
 endif::add-copy-button-to-config-props[]

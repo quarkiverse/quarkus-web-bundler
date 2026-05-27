@@ -298,6 +298,29 @@ WebJars are client-side web libraries (e.g. jQuery & Bootstrap) packaged into JA
 </dependency>
 ----
 
+[#sbom]
+== SBOM (Software Bill of Materials)
+
+When a Quarkus SBOM generating extension is present (such as `quarkus-cyclonedx`), web dependencies managed by the Web Bundler are automatically included in the generated SBOM with proper `pkg:npm/` Package URLs. Dependency relationships between web dependencies are also recorded.
+
+For example, a Maven dependency declared as:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.mvnpm</groupId>
+    <artifactId>jquery</artifactId>
+    <version>4.0.0</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+will appear in the SBOM as a component with PURL `pkg:npm/jquery@4.0.0`.
+
+Scoped npm packages (e.g., `@hotwired/stimulus` declared as `org.mvnpm.at.hotwired:stimulus`) are also handled correctly, producing PURLs like `pkg:npm/%40hotwired/stimulus@3.2.2`.
+
+No additional configuration is required.
+
 [#bundle-paths]
 == Bundle Paths
 
