@@ -31,7 +31,7 @@ class WebBundlerQuteComponentsProcessor {
             throws IOException {
 
         LOGGER.debug("Web Bundler scan - Qute Web Components: start");
-        List<String> dirs = config.bundleWithDefault(true).entrySet().stream()
+        List<String> dirs = config.bundleWithDefault().entrySet().stream()
                 .filter(e -> e.getValue().quteTags())
                 .map(e -> config.prefixWithWebRoot(e.getValue().effectiveDir(e.getKey())))
                 .toList();
