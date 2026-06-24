@@ -21,6 +21,8 @@ public class WebBundlerDevModeWatchTest {
 
     @Test
     public void test() throws InterruptedException {
+        // Reset basePath since QuarkusDevModeTest may set it from quarkus.http.root-path
+        RestAssured.basePath = "";
         RestAssured.given()
                 .get("/foo/bar/")
                 .then()
