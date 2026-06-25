@@ -3,6 +3,7 @@ package io.quarkiverse.web.bundler.deployment.items;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import io.mvnpm.esbuild.model.WebDependency;
 import io.quarkus.builder.item.SimpleBuildItem;
@@ -29,7 +30,12 @@ public final class WebDependenciesBuildItem extends SimpleBuildItem {
     }
 
     public record Dependency(ResolvedDependency resolvedDependency, String id, Path path, WebDependency.WebDependencyType type,
-            boolean direct) {
+            boolean direct, Map<String, String> importMappings) {
+
+        public Dependency(ResolvedDependency resolvedDependency, String id, Path path, WebDependency.WebDependencyType type,
+                boolean direct) {
+            this(resolvedDependency, id, path, type, direct, null);
+        }
 
         public WebDependency toEsBuildWebDependency() {
             return WebDependency.of(id, path, type);
