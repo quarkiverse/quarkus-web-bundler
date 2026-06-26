@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
@@ -30,7 +29,6 @@ import io.quarkiverse.web.bundler.deployment.items.DevWatcherHistoryBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem.EntryPoint;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
-import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -91,10 +89,17 @@ class BundleWebAssetsScannerProcessor {
         LOGGER.debug("Web Bundler scan - Bundles: start");
         final Map<String, EntryPoint> entryPoints = new TreeMap<>();
 
-        // This is legacy support for web/app dir
-        boolean appDir = checkAppDir(config);
+        final Map<String, EntryPointConfig> entryPointConfigs = config.bundleWithDefault();
 
-        for (Map.Entry<String, EntryPointConfig> e : config.bundleWithDefault(appDir).entrySet()) {
+        // Collect all entry point directory names for root-scan exclusion
+        final List<String> allEntryPointDirs = new ArrayList<>();
+        for (Map.Entry<String, EntryPointConfig> e : entryPointConfigs.entrySet()) {
+            if (e.getValue().enabled()) {
+                allEntryPointDirs.add(e.getValue().effectiveDir(e.getKey()));
+            }
+        }
+
+        for (Map.Entry<String, EntryPointConfig> e : entryPointConfigs.entrySet()) {
             if (e.getValue().enabled()) {
 
                 final String entryPointKey = e.getValue().effectiveKey(e.getKey());
@@ -102,25 +107,46 @@ class BundleWebAssetsScannerProcessor {
                 entryPoints.putIfAbsent(entryPointKey,
                         new EntryPoint(entryPointKey, dir, e.getValue().output(), new ArrayList<>()));
 
-                // The regex is for all files but .html
                 final String fullDir = config.prefixWithWebRoot(dir);
                 final List<ProjectFile> assets = scanner.query()
                         .scopeDirs(fullDir)
                         .addExcluded(config.ignoredFilesOrEmpty())
-                        .addExcluded(
-                                dir.isEmpty()
-                                        ? List.of("glob:templates/**", "glob:public/**", "glob:static/**", "glob:**.html",
-                                                "glob:tsconfig.json")
-                                        : List.of("glob:**.html"))
+                        .addExcluded(List.of("glob:**.html"))
                         .list();
+
+                // For the default "app" entry point, also collect loose root-level files
+                // (only once for the canonical 'app' entry, not for other dirs merged into key 'app')
+                final List<ProjectFile> allAssets;
+                if (DEFAULT_ENTRY_POINT_KEY.equals(entryPointKey) && DEFAULT_ENTRY_POINT_KEY.equals(e.getKey())) {
+                    List<String> rootExclusions = new ArrayList<>(
+                            List.of("glob:templates/**", "glob:public/**", "glob:static/**",
+                                    "glob:**.html", "glob:tsconfig.json"));
+                    for (String epDir : allEntryPointDirs) {
+                        rootExclusions.add("glob:" + epDir + "/**");
+                    }
+                    final List<ProjectFile> rootAssets = scanner.query()
+                            .scopeDirs(config.webRoot())
+                            .addExcluded(config.ignoredFilesOrEmpty())
+                            .addExcluded(rootExclusions)
+                            .list();
+                    allAssets = new ArrayList<>(assets.size() + rootAssets.size());
+                    allAssets.addAll(assets);
+                    allAssets.addAll(rootAssets);
+                } else {
+                    allAssets = assets;
+                }
+
+                // Prefer index.* from the entry point dir, fall back to root
                 final Optional<ProjectFile> entryPoint = assets.stream()
                         .filter(w -> w.scopedPath().startsWith("index."))
-                        .findAny();
-                for (ProjectFile webAsset : assets) {
+                        .findAny()
+                        .or(() -> allAssets.stream()
+                                .filter(w -> w.scopedPath().startsWith("index."))
+                                .findAny());
+
+                for (ProjectFile webAsset : allAssets) {
                     BundleType bundleType = entryPoint
-                            // If it's not the entry point we consider it as a manual asset (imported by the entry point)
                             .map(ep -> webAsset.equals(ep) ? BundleType.INDEX : BundleType.MANUAL)
-                            // When there is no entry point we consider it as a auto asset unless it's a sass import file (_*.sass)
                             .orElse(isImportSassFile(webAsset.scopedPath()) ? BundleType.MANUAL : BundleType.AUTO);
                     entryPoints.get(entryPointKey).assets().add(new BundleWebAsset(webAsset, bundleType));
                 }
@@ -130,7 +156,6 @@ class BundleWebAssetsScannerProcessor {
         if (entryPoints.size() == 1 && entryPoints.get(DEFAULT_ENTRY_POINT_KEY) != null
                 && entryPoints.get(DEFAULT_ENTRY_POINT_KEY).assets().isEmpty()) {
 
-            // Let's create an empty app javascript when there is nothing provided
             final String appJsResource = StringPaths.join(config.webRoot(), "app.js");
             final byte[] appJsContent = "".getBytes(StandardCharsets.UTF_8);
             generatedResourceProducer.produce(new GeneratedResourceBuildItem(appJsResource, appJsContent));
@@ -153,24 +178,6 @@ class BundleWebAssetsScannerProcessor {
                 bundleConfigWebAssets);
         produceWebAssets(bundles, bundleConfigAssets, context);
         LOGGER.debugf("Web Bundler scan - Bundles: %d entrypoints found", entryPoints.size());
-    }
-
-    private static boolean checkAppDir(WebBundlerConfig config) {
-        AtomicBoolean appDir = new AtomicBoolean(false);
-        QuarkusClassLoader.visitRuntimeResources(config.webRoot(), p -> {
-            final Path appDirPath = p.getPath().resolve("app");
-            if (!Files.isDirectory(appDirPath)) {
-                appDir.set(false);
-                return;
-            }
-            try (var entries = Files.list(appDirPath)) {
-                final boolean app = Files.isDirectory(appDirPath) && entries.findFirst().isPresent();
-                appDir.set(app);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        return appDir.get();
     }
 
     private static boolean isImportSassFile(String resourceName) {
