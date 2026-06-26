@@ -115,8 +115,9 @@ class BundleWebAssetsScannerProcessor {
                         .list();
 
                 // For the default "app" entry point, also collect loose root-level files
+                // (only once for the canonical 'app' entry, not for other dirs merged into key 'app')
                 final List<ProjectFile> allAssets;
-                if (DEFAULT_ENTRY_POINT_KEY.equals(entryPointKey)) {
+                if (DEFAULT_ENTRY_POINT_KEY.equals(entryPointKey) && DEFAULT_ENTRY_POINT_KEY.equals(e.getKey())) {
                     List<String> rootExclusions = new ArrayList<>(
                             List.of("glob:templates/**", "glob:public/**", "glob:static/**",
                                     "glob:**.html", "glob:tsconfig.json"));
