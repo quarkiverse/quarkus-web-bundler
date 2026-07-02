@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -25,18 +27,27 @@ import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
+import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.LiveReloadBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
+import io.quarkus.deployment.sbom.SbomContributionBuildItem;
+import io.quarkus.maven.dependency.ArtifactCoords;
+import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.DependencyFlags;
 import io.quarkus.maven.dependency.ResolvedDependency;
 import io.quarkus.runtime.configuration.ConfigurationException;
+import io.quarkus.sbom.ComponentDependencies;
+import io.quarkus.sbom.ComponentDescriptor;
+import io.quarkus.sbom.Purl;
+import io.quarkus.sbom.SbomContribution;
 
 class WebDependenciesProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(WebDependenciesProcessor.class);
+    private static final String ORG_MVNPM_AT = "org.mvnpm.at.";
 
     @BuildStep
     WebDependenciesBuildItem collectDependencies(LaunchModeBuildItem launchMode,
@@ -121,6 +132,71 @@ class WebDependenciesProcessor {
                             " Use a compile only scope (e.g. provided) or set quarkus.web-bundler.dependencies.compile-only=false to allow runtime web dependencies.")
                             .formatted(d.toCompactCoords()));
         }
+    }
+
+    @BuildStep
+    void produceSbomContribution(
+            InstalledWebDependenciesBuildItem installed,
+            BuildProducer<SbomContributionBuildItem> sbomProducer) {
+        if (installed == null || installed.isEmpty()) {
+            return;
+        }
+        final SbomContribution contribution = toSbomContribution(installed.list());
+        if (!contribution.components().isEmpty()) {
+            sbomProducer.produce(new SbomContributionBuildItem(contribution));
+        }
+    }
+
+    static SbomContribution toSbomContribution(List<Dependency> deps) {
+        // Build components and index by Maven artifact key for dependency resolution
+        final List<ComponentDescriptor> components = new ArrayList<>(deps.size());
+        final Map<ArtifactKey, String> mavenKeyToBomRef = new HashMap<>(deps.size());
+        for (Dependency dep : deps) {
+            final ResolvedDependency rd = dep.resolvedDependency();
+            final ComponentDescriptor descriptor = ComponentDescriptor.builder()
+                    .setPurl(toNpmPurl(rd.getGroupId(), rd.getArtifactId(), rd.getVersion()))
+                    .setTopLevel(rd.isDirect())
+                    .build();
+            components.add(descriptor);
+            mavenKeyToBomRef.put(rd.getKey(), descriptor.getBomRef());
+        }
+
+        // Resolve dependency relationships from the Maven model
+        final List<ComponentDependencies> dependencies = new ArrayList<>();
+        for (Dependency dep : deps) {
+            final ResolvedDependency rd = dep.resolvedDependency();
+            final String parentBomRef = mavenKeyToBomRef.get(rd.getKey());
+            List<String> dependsOn = null;
+            for (ArtifactCoords child : rd.getDependencies()) {
+                final String childBomRef = mavenKeyToBomRef.get(child.getKey());
+                if (childBomRef != null) {
+                    if (dependsOn == null) {
+                        dependsOn = new ArrayList<>();
+                    }
+                    dependsOn.add(childBomRef);
+                }
+            }
+            if (dependsOn != null) {
+                dependencies.add(ComponentDependencies.of(parentBomRef, dependsOn));
+            }
+        }
+
+        return SbomContribution.of(components, dependencies);
+    }
+
+    static Purl toNpmPurl(String groupId, String artifactId, String version) {
+        String npmNamespace = null;
+        String npmName = artifactId;
+        if (groupId.startsWith(ORG_MVNPM_AT)) {
+            npmNamespace = "@" + groupId.substring(ORG_MVNPM_AT.length());
+        } else if ("org.webjars.npm".equals(groupId)) {
+            int scopeSep = artifactId.indexOf("__");
+            if (scopeSep > 0) {
+                npmNamespace = "@" + artifactId.substring(0, scopeSep);
+                npmName = artifactId.substring(scopeSep + 2);
+            }
+        }
+        return Purl.npm(npmNamespace, npmName, version);
     }
 
     private static Dependency toWebDep(ResolvedDependency d) {
