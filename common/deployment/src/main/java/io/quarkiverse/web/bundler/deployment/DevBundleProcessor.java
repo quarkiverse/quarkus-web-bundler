@@ -80,11 +80,20 @@ public class DevBundleProcessor {
                 } catch (IOException e) {
                     shutdownDevService();
                     throw new UncheckedIOException(e);
+                } catch (RuntimeException e) {
+                    if (isInterruptedException(e)) {
+                        LOGGER.debug("Web Bundling watch interrupted (shutdown in progress), closing service");
+                        shutdownDevService();
+                        return;
+                    }
+                    shutdownDevService();
+                    throw e;
                 } catch (Exception e) {
                     shutdownDevService();
                     throw e;
                 }
                 return;
+
             } else {
                 // Dist dir needs to be cleaned
                 try {
@@ -118,6 +127,14 @@ public class DevBundleProcessor {
         } catch (IOException e) {
             shutdownDevService();
             throw new UncheckedIOException(e);
+        } catch (RuntimeException e) {
+            if (isInterruptedException(e)) {
+                LOGGER.debug("Web Bundling watch interrupted (shutdown in progress), closing service");
+                shutdownDevService();
+                return;
+            }
+            shutdownDevService();
+            throw e;
         } catch (Exception e) {
             shutdownDevService();
             throw e;
@@ -140,6 +157,13 @@ public class DevBundleProcessor {
                 callNoRestartChangesConsumers(false);
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            } catch (RuntimeException e) {
+                if (isInterruptedException(e)) {
+                    LOGGER.debug("Web Bundling interrupted during incremental build, closing service");
+                    shutdownDevService();
+                    return;
+                }
+                throw e;
             }
         } else {
             LOGGER.warn("Web Bundling Dev Service needs to be restarted");
@@ -162,6 +186,16 @@ public class DevBundleProcessor {
         if (RuntimeUpdatesProcessor.INSTANCE.getCompileProblem() instanceof WebBundlingException) {
             RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(null);
         }
+    }
+
+    private static boolean isInterruptedException(Throwable e) {
+        while (e != null) {
+            if (e instanceof InterruptedException) {
+                return true;
+            }
+            e = e.getCause();
+        }
+        return false;
     }
 
     private static void shutdownDevService() {
