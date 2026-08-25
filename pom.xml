@@ -34,7 +34,7 @@
         <esbuild-java.version>2.1.5</esbuild-java.version>
         <quarkus.version>3.29.4</quarkus.version>
         <assertj-core.version>3.27.7</assertj-core.version>
-        <quarkus-playwright.version>2.3.7</quarkus-playwright.version>
+        <quarkus-playwright.version>2.3.8</quarkus-playwright.version>
     </properties>
     <dependencyManagement>
         <dependencies>
