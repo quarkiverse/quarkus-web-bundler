@@ -70,11 +70,10 @@ public interface WebBundlerConfig {
     @ConfigDocDefault("if not overridden, by default, 'app' directory will be bundled.")
     Map<String, EntryPointConfig> bundle();
 
-    default Map<String, EntryPointConfig> bundleWithDefault(boolean appDir) {
+    default Map<String, EntryPointConfig> bundleWithDefault() {
         Map<String, EntryPointConfig> conf = new HashMap<>(bundle());
         if (!conf.containsKey(DEFAULT_ENTRY_POINT_KEY)) {
-            // When the config is not empty, default app entrypoint can only be in web/app/ dir
-            conf.put(DEFAULT_ENTRY_POINT_KEY, new ConfiguredEntryPoint(!appDir && conf.isEmpty() ? "" : DEFAULT_ENTRY_POINT_KEY,
+            conf.put(DEFAULT_ENTRY_POINT_KEY, new ConfiguredEntryPoint(DEFAULT_ENTRY_POINT_KEY,
                     DEFAULT_ENTRY_POINT_KEY, DEFAULT_ENTRY_POINT_KEY, true));
         }
         return conf;

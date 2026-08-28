@@ -125,12 +125,17 @@ quarkus.web-bundler.bundle.baz.key=foo
 <1> Bundle `src/main/resources/web/foo/...` and `src/main/resources/web/baz/...` together into `/static/bundle/foo-[hash].[ext]`
 <2> Bundle `src/main/resources/web/my-dir/...` into `/static/bundle/my-key-[hash].[ext]`
 
+[NOTE]
+====
+Scripts and styles located at the root of the web directory (e.g. `src/main/resources/web/style.css`) are automatically bundled as part of the default `app` entry point, as if they were in `web/app/`. This makes it easy to get started without creating the `web/app/` subdirectory.
+====
+
 [IMPORTANT]
 ====
-As soon as one or more entry-points are configured:
+As soon as one or more custom entry-points are configured:
 
-* Scripts and styles located at the root of the web directory will not be bundled. To keep things organized, move them to the web/app directory (or remove them if unnecessary).
-* When multiple output entry points exist, shared code and web dependencies are extracted into a separate file which is auto-imported in `{#bundle /}`. This ensures that if a user navigates from one page to another, they don’t need to download all the JavaScript for the second page again—shared parts are already cached by the browser.
+* Scripts and styles located at the root of the web directory will not be bundled. To keep things organized, move them to the `web/app/` directory (or remove them if unnecessary).
+* When multiple output entry points exist, shared code and web dependencies are extracted into a separate file which is auto-imported in `{#bundle /}`. This ensures that if a user navigates from one page to another, they don’t need to download all the JavaScript for the second page again, as shared parts are already cached by the browser.
 ====
 
 
