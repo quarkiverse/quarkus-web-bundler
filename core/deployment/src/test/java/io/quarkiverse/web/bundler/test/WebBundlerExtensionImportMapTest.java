@@ -62,4 +62,15 @@ public class WebBundlerExtensionImportMapTest {
         Assertions.assertEquals("/_static/acme-greeter/", imports.getString("@acme/greeter/"));
         Assertions.assertEquals(bundle.script("app"), imports.getString("app"));
     }
+
+    @Test
+    void importMapTagInBuildTimeHtmlTemplate() {
+        RestAssured.given()
+                .get("/")
+                .then()
+                .statusCode(200)
+                .body(Matchers.containsString("<script type=\"importmap\">"))
+                .body(Matchers.containsString("\"@acme/greeter\":\"/_static/acme-greeter/greeter.js\""))
+                .body(Matchers.containsString("\"app\":\"" + bundle.script("app") + "\""));
+    }
 }

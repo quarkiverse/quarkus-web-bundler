@@ -41,6 +41,7 @@ import io.quarkus.qute.Results;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateLocator;
 import io.quarkus.qute.UserTagSectionHelper;
+import io.quarkus.qute.ValueResolvers;
 import io.quarkus.qute.Variant;
 
 public class QuteTemplateWebAssetsProcessor {
@@ -73,14 +74,12 @@ public class QuteTemplateWebAssetsProcessor {
                 return webDependencyImportMappings.importMappings();
             }
         };
+        final Bundle bundleBean = new Bundle(mapping);
         final Engine engine = Engine.builder()
                 .addDefaults()
-                .addNamespaceResolver(NamespaceResolver.builder("inject")
-                        .resolve((c) -> switch (c.getName()) {
-                            case "bundle" -> new Bundle(mapping);
-                            default -> null;
-                        })
-                        .build())
+                // the tags use both namespaces to reference the Bundle bean
+                .addNamespaceResolver(bundleResolver("inject", bundleBean))
+                .addNamespaceResolver(bundleResolver("cdi", bundleBean))
                 .addNamespaceResolver(NamespaceResolver.builder("build")
                         .resolve((c) -> c.getName().equals("launchMode") ? launchMode.getLaunchMode().toString() : null)
                         .build())
@@ -89,7 +88,9 @@ public class QuteTemplateWebAssetsProcessor {
                         .build())
                 .addLocator(new WebBundlerTagsLocator())
                 .addSectionHelper(new UserTagSectionHelper.Factory("bundle", "web-bundler/bundle.html"))
+                .addSectionHelper(new UserTagSectionHelper.Factory("bundleImportMap", "web-bundler/bundleImportMap.html"))
                 .addValueResolver(new ReflectionValueResolver())
+                .addValueResolver(ValueResolvers.rawResolver())
                 .addParserHook(new Qute.IndexedArgumentsParserHook())
                 .addResultMapper(new HtmlEscaper(ImmutableList.of("text/html", "text/xml")))
                 .build();
@@ -101,6 +102,15 @@ public class QuteTemplateWebAssetsProcessor {
             staticResourceProducer.produce(GeneratedWebResourceBuildItem.fromContent(prefixWithSlash(servePath),
                     content.getBytes(), SourceType.BUILD_TIME_TEMPLATE));
         }
+    }
+
+    private static NamespaceResolver bundleResolver(String namespace, Bundle bundle) {
+        return NamespaceResolver.builder(namespace)
+                .resolve((c) -> switch (c.getName()) {
+                    case "bundle" -> bundle;
+                    default -> null;
+                })
+                .build();
     }
 
     private CompletionStage<Object> resolveConfig(EvalContext ctx) {
