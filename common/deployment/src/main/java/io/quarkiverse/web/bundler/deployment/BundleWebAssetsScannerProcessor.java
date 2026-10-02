@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
@@ -107,9 +108,9 @@ class BundleWebAssetsScannerProcessor {
                         .list();
 
                 // When only the default "app" entry point exists, also collect loose root-level
-                // files and bundle them as part of "app". The size == 1 guard ensures we don't
-                // accidentally pull files from other configured entry-point directories, since
-                // only "glob:app/**" is excluded from the root scan.
+                // files (direct children of web/) and bundle them as part of "app".
+                // Known: if a root file has the same name as an app file, it will collide at the
+                // destination path (both map to web/app/<name>). The last one written wins.
                 final List<ProjectFile> allAssets;
                 if (DEFAULT_ENTRY_POINT_KEY.equals(entryPointKey) && DEFAULT_ENTRY_POINT_KEY.equals(e.getKey())
                         && entryPointConfigs.size() == 1) {
@@ -117,11 +118,9 @@ class BundleWebAssetsScannerProcessor {
                             .scopeDirs(config.webRoot())
                             .addExcluded(config.ignoredFilesOrEmpty())
                             .addExcluded(List.of("glob:templates/**", "glob:public/**", "glob:static/**",
-                                    "glob:**.html", "glob:tsconfig.json",
-                                    "glob:" + DEFAULT_ENTRY_POINT_KEY + "/**"))
+                                    "glob:" + dir + "/**",
+                                    "glob:**.html", "glob:tsconfig.json"))
                             .list();
-                    // Root assets are added after app assets so that user root files
-                    // (ROOT_APPLICATION_RESOURCE) override theme app files (DEPENDENCY_RESOURCE)
                     allAssets = new ArrayList<>(assets.size() + rootAssets.size());
                     allAssets.addAll(assets);
                     allAssets.addAll(rootAssets);
@@ -129,12 +128,11 @@ class BundleWebAssetsScannerProcessor {
                     allAssets = assets;
                 }
 
-                // Prefer index.* from the entry point dir, fall back to root
                 final Optional<ProjectFile> entryPoint = assets.stream()
-                        .filter(w -> w.scopedPath().startsWith("index."))
+                        .filter(w -> isEntryPointCandidate(w.scopedPath()))
                         .findAny()
                         .or(() -> allAssets.stream()
-                                .filter(w -> w.scopedPath().startsWith("index."))
+                                .filter(w -> isEntryPointCandidate(w.scopedPath()))
                                 .findAny());
 
                 for (ProjectFile webAsset : allAssets) {
@@ -171,6 +169,19 @@ class BundleWebAssetsScannerProcessor {
                 bundleConfigWebAssets);
         produceWebAssets(bundles, bundleConfigAssets, context);
         LOGGER.debugf("Web Bundler scan - Bundles: %d entrypoints found", entryPoints.size());
+    }
+
+    private static final Set<String> ENTRY_POINT_EXTENSIONS = Set.of(
+            ".js", ".cjs", ".mjs", ".jsx",
+            ".ts", ".cts", ".mts", ".tsx",
+            ".css", ".scss", ".sass");
+
+    private static boolean isEntryPointCandidate(String scopedPath) {
+        if (!scopedPath.startsWith("index.")) {
+            return false;
+        }
+        String ext = scopedPath.substring("index".length()).toLowerCase();
+        return ENTRY_POINT_EXTENSIONS.contains(ext);
     }
 
     private static boolean isImportSassFile(String resourceName) {
