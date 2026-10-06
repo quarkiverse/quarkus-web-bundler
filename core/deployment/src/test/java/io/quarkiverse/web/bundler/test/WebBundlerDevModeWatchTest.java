@@ -1,6 +1,10 @@
 package io.quarkiverse.web.bundler.test;
 
-import org.hamcrest.Matchers;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.containsString;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -11,8 +15,6 @@ import io.restassured.RestAssured;
 
 public class WebBundlerDevModeWatchTest {
 
-    // Start hot reload (DevMode) test with your extension loaded
-
     @RegisterExtension
     static final QuarkusDevModeTest test = new QuarkusDevModeTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
@@ -20,55 +22,53 @@ public class WebBundlerDevModeWatchTest {
                     .addAsResource("application.properties"));
 
     @Test
-    public void test() throws InterruptedException {
-        // Reset basePath since QuarkusDevModeTest may set it from quarkus.http.root-path
+    public void test() {
         RestAssured.basePath = "";
         RestAssured.given()
                 .get("/foo/bar/")
                 .then()
                 .statusCode(200)
-                .body(Matchers.containsString("Hello Qute Static!"));
+                .body(containsString("Hello Qute Static!"));
         test.modifyResourceFile("web/index.html", s -> s.replace("Hello Qute Static!", "Hello Qute Static! Modified!"));
         RestAssured.given()
                 .get("/foo/bar/")
                 .then()
                 .statusCode(200)
-                .body(Matchers.containsString("Hello Qute Static! Modified!"));
+                .body(containsString("Hello Qute Static! Modified!"));
         RestAssured.given()
                 .get("/foo/bar/static/bundle/app.js")
                 .then()
                 .statusCode(200)
-                .body(Matchers.containsString("console.log(\"Hello World!\");"));
+                .body(containsString("console.log(\"Hello World!\");"));
         test.modifyResourceFile("web/app.js", s -> s.replace("Hello World!", "Hello World! Modified!"));
-        Thread.sleep(2000);
-        RestAssured.given()
-                .get("/foo/bar/static/bundle/app.js")
-                .then()
-                .statusCode(200)
-                .body(Matchers.containsString("console.log(\"Hello World! Modified!\");"));
+        awaitContent("/foo/bar/static/bundle/app.js", "console.log(\"Hello World! Modified!\");");
         // Test public/static resource change
         RestAssured.given()
                 .get("/foo/bar/static/hello.txt")
                 .then()
                 .statusCode(200)
-                .body(Matchers.containsString("Hello World!"));
+                .body(containsString("Hello World!"));
         test.modifyResourceFile("web/static/hello.txt", s -> s.replace("Hello World!", "Hello Static Modified!"));
-        Thread.sleep(2000);
-        RestAssured.given()
-                .get("/foo/bar/static/hello.txt")
-                .then()
-                .statusCode(200)
-                .body(Matchers.containsString("Hello Static Modified!"));
+        awaitContent("/foo/bar/static/hello.txt", "Hello Static Modified!");
 
         test.modifyResourceFile("web/app.css", s -> s.replace("background-color: #6b6bf5;", "background-color: #123456;"));
         test.modifyResourceFile("web/other.scss", s -> s.replace("color: #AAAAAA;", "color: #567890;"));
-        Thread.sleep(2000);
+        awaitContent("/foo/bar/static/bundle/app.css", "background-color: #123456;");
         RestAssured.given()
                 .get("/foo/bar/static/bundle/app.css")
                 .then()
                 .statusCode(200)
-                .body(Matchers.containsString("background-color: #123456;"))
-                .body(Matchers.containsString("color: #567890;"));
+                .body(containsString("color: #567890;"));
+    }
+
+    private static void awaitContent(String path, String expected) {
+        await().pollInterval(300, MILLISECONDS)
+                .atMost(10, SECONDS)
+                .untilAsserted(() -> RestAssured.given()
+                        .get(path)
+                        .then()
+                        .statusCode(200)
+                        .body(containsString(expected)));
     }
 
 }
