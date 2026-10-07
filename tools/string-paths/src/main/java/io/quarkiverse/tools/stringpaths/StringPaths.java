@@ -64,7 +64,8 @@ public final class StringPaths {
      */
     public static String addTrailingSlashIfNoExt(String path) {
         Objects.requireNonNull(path, "path is required");
-        if (path.contains(".")) {
+        int lastSlash = path.lastIndexOf('/');
+        if (path.indexOf('.', lastSlash + 1) >= 0) {
             return path;
         }
         return path.endsWith("/") ? path : path + "/";

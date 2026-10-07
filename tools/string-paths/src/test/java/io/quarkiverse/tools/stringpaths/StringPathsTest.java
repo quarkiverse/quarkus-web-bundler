@@ -52,6 +52,14 @@ class StringPathsTest {
         assertThat(StringPaths.addTrailingSlashIfNoExt("foo/")).isEqualTo("foo/");
         assertThat(StringPaths.addTrailingSlashIfNoExt("foo.html")).isEqualTo("foo.html");
         assertThat(StringPaths.addTrailingSlashIfNoExt("dir/foo.js")).isEqualTo("dir/foo.js");
+        // dot in directory component should not prevent trailing slash
+        assertThat(StringPaths.addTrailingSlashIfNoExt("dir.name/foo")).isEqualTo("dir.name/foo/");
+        assertThat(StringPaths.addTrailingSlashIfNoExt("v3.27/guide")).isEqualTo("v3.27/guide/");
+        assertThat(StringPaths.addTrailingSlashIfNoExt("a.b/c.d/bar")).isEqualTo("a.b/c.d/bar/");
+        // dot in directory but file has extension
+        assertThat(StringPaths.addTrailingSlashIfNoExt("v3.27/index.html")).isEqualTo("v3.27/index.html");
+        // already has trailing slash with dotted dir
+        assertThat(StringPaths.addTrailingSlashIfNoExt("dir.name/foo/")).isEqualTo("dir.name/foo/");
     }
 
     @Test

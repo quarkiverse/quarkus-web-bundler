@@ -148,7 +148,7 @@ public class DevWatcherProcessor {
                     changes.stream().map(c -> c.getType() + " " + c.getFile()).toList());
 
             if (web) {
-                if (detectedAddOrRemoveChanges(changes)) {
+                if (detectedAddOrRemoveChanges(changes) && RuntimeUpdatesProcessor.INSTANCE != null) {
                     // This makes sure we build even if there was an error in a previous build
                     RuntimeUpdatesProcessor.INSTANCE.setRemoteProblem(null);
                     doScan(true);
@@ -186,8 +186,12 @@ public class DevWatcherProcessor {
 
         private void doScan(boolean forceRestart) {
             BUILD_EXECUTOR.executeIfNotRunning(() -> {
-                LOG.infof("Checking for Quarkus build (forceRestart: %s)", forceRestart);
-                RuntimeUpdatesProcessor.INSTANCE.doScan(false, forceRestart);
+                if (RuntimeUpdatesProcessor.INSTANCE != null) {
+                    LOG.infof("Checking for Quarkus build (forceRestart: %s)", forceRestart);
+                    RuntimeUpdatesProcessor.INSTANCE.doScan(false, forceRestart);
+                } else {
+                    LOG.warn("Runtime updates processor is null, not scanning!");
+                }
             });
         }
 

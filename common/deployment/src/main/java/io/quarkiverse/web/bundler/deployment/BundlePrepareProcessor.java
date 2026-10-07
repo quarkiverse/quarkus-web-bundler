@@ -185,9 +185,14 @@ public class BundlePrepareProcessor {
                     .valueOf(config.dependencies().autoImport().mode().toString());
             for (EntryPointBuildItem entryPoint : entryPoints) {
                 final List<String> scripts = new ArrayList<>();
+                final String entryPointFullDir = config.prefixWithWebRoot(entryPoint.dir());
 
                 for (BundleWebAsset webAsset : entryPoint.assets()) {
-                    String destination = webAsset.indexPath();
+                    // For the default entry point, root-scoped assets use scopedPath to
+                    // place them under web/app/ alongside the app-scoped assets
+                    String destination = DEFAULT_ENTRY_POINT_KEY.equals(entryPoint.key())
+                            ? join(entryPointFullDir, webAsset.scopedPath())
+                            : webAsset.indexPath();
                     final Path scriptPath = targetDir.webBundler().resolve(destination);
                     createAsset(launchMode, browserLiveReload, watchedLinks, watchedFiles, webAsset, scriptPath);
                     // Manual assets are supposed to be imported by the entry point
