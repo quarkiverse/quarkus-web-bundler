@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.tools</groupId>
         <artifactId>quarkiverse-tools-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>3.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>string-paths</artifactId>
