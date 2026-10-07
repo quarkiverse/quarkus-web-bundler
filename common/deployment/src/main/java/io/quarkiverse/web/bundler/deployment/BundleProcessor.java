@@ -27,6 +27,7 @@ import io.quarkiverse.web.bundler.deployment.items.GeneratedEntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.GeneratedWebResourceBuildItem.SourceType;
 import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
+import io.quarkiverse.web.bundler.deployment.items.WebDependencyImportMappingsBuildItem;
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkiverse.web.bundler.runtime.BundleRedirectHandlerRecorder;
 import io.quarkiverse.web.bundler.runtime.WebBundlerBuildRecorder;
@@ -146,10 +147,12 @@ class BundleProcessor {
             BuildProducer<AdditionalBeanBuildItem> additionalBeans,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
             GeneratedBundleBuildItem generatedBundle,
+            WebDependencyImportMappingsBuildItem webDependencyImportMappings,
             WebBundlerBuildRecorder recorder) {
         final Map<String, String> bundle = generatedBundle != null ? generatedBundle.getBundle() : Map.of();
         syntheticBeans.produce(SyntheticBeanBuildItem.configure(Bundle.Mapping.class)
-                .supplier(recorder.createContext(bundle))
+                .supplier(recorder.createContext(bundle,
+                        new HashMap<>(webDependencyImportMappings.importMappings())))
                 .done());
         additionalBeans.produce(new AdditionalBeanBuildItem(Bundle.class));
     }

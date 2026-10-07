@@ -49,6 +49,7 @@ import io.quarkiverse.web.bundler.deployment.items.ReadyForBundlingBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerEsbuildPluginBuiltItem;
 import io.quarkiverse.web.bundler.deployment.items.WebBundlerTargetDirBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
+import io.quarkiverse.web.bundler.deployment.items.WebDependencyImportMappingsBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
@@ -91,6 +92,7 @@ public class BundlePrepareProcessor {
     ReadyForBundlingBuildItem prepareForBundling(WebBundlerConfig config,
             ProjectRootBuildItem projectRoot,
             InstalledWebDependenciesBuildItem installedWebDependencies,
+            WebDependencyImportMappingsBuildItem webDependencyImportMappings,
             List<WebBundlerEsbuildPluginBuiltItem> plugins,
             List<EntryPointBuildItem> entryPoints,
             WebBundlerTargetDirBuildItem targetDir,
@@ -155,6 +157,10 @@ public class BundlePrepareProcessor {
                 }
             } else {
                 esBuildConfigBuilder.addExternal(join(config.httpRootPath(), "static/*"));
+            }
+            // Modules declared by other extensions are served by Quarkus and resolved through the import map
+            for (String e : webDependencyImportMappings.externals()) {
+                esBuildConfigBuilder.addExternal(e);
             }
             final BundleOptionsBuilder optionsBuilder = BundleOptions.builder()
                     .debugBuild(config.debug())
