@@ -16,6 +16,16 @@ Create full-stack web apps and components with this Quarkus extension. It offers
 
 [User Documentation](https://docs.quarkiverse.io/quarkus-web-bundler/dev/).
 
+## Versioning
+
+There are multiple versions available, please check which one matches your Quarkus release version.
+
+| Extension Version | Quarkus Version |
+| --- | --- |
+| ![1.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=1.&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.12+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.12.0) |
+| ![2.3.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=2.3&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.29+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.29.0) |
+| ![latest](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.40+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.40.1) |
+
 **Is it the same as [Quinoa](https://github.com/quarkiverse/quarkus-quinoa/)?** It is very close but:
 
 - It is already integrated with a bundler (esbuild, which is very similar to Webpack or Rollup)
