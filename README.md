@@ -24,7 +24,7 @@ There are multiple versions available, please check which one matches your Quark
 | --- | --- |
 | ![1.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=1.&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.12+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.12.0) |
 | ![2.3.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=2.3&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.29+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.29.0) |
-| ![latest](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.40+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.40.1) |
+| ![3.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=3.&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.40+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.40.1) |
 
 **Is it the same as [Quinoa](https://github.com/quarkiverse/quarkus-quinoa/)?** It is very close but:
 
