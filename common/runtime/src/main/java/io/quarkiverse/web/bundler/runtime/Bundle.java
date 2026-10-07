@@ -1,5 +1,6 @@
 package io.quarkiverse.web.bundler.runtime;
 
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.inject.Inject;
@@ -29,6 +30,9 @@ public class Bundle {
 
     public String importMap() {
         final JsonObject imports = new JsonObject();
+
+        // Modules provided by other extensions (served by Quarkus, not bundled)
+        mapping.importMappings().forEach(imports::put);
 
         for (String name : mapping.names()) {
             if (name.endsWith(".js") && !name.contains("chunk")) {
@@ -68,5 +72,12 @@ public class Bundle {
         String get(String name);
 
         Set<String> names();
+
+        /**
+         * @return the import mappings declared by other extensions for the modules they serve
+         */
+        default Map<String, String> importMappings() {
+            return Map.of();
+        }
     }
 }

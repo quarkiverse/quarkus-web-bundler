@@ -20,7 +20,7 @@ There are 2 ways to add static files (fonts, images, music, video, ...) to your 
 
 The Web-Bundler is natively integrated with https://quarkus.io/guides/qute-reference[Qute Template Engine] to render html templates at build-time (this won't affect runtime). This way you may create SPA out of the box.  For this, just provide an `index.html` file (or any other `.html` file) in the `src/main/resources/web` directory.
 
-Combined with the <<bundle-tag>>, this file will be rendered with the scripts and styles tags to include in your html template. This file will be served as the default index file (e.g. http://localhost:8080/).
+Combined with the <<bundle-tag>>, this file will be rendered with the scripts and styles tags to include in your html template. The <<bundle-import-map>> tag is also available. This file will be served as the default index file (e.g. http://localhost:8080/).
 
 NOTE: You can use the Qute `config:` https://quarkus.io/guides/qute-reference#config[namespace], it will be evaluated a build-time (runtime config will be ignored).
 
@@ -135,7 +135,7 @@ Scripts and styles located at the root of the web directory (e.g. `src/main/reso
 As soon as one or more custom entry-points are configured:
 
 * Scripts and styles located at the root of the web directory will not be bundled. To keep things organized, move them to the `web/app/` directory (or remove them if unnecessary).
-* When multiple output entry points exist, shared code and web dependencies are extracted into a separate file which is auto-imported in `{#bundle /}`. This ensures that if a user navigates from one page to another, they don’t need to download all the JavaScript for the second page again, as shared parts are already cached by the browser.
+* When multiple output entry points exist, shared code and web dependencies are extracted into a separate file which is auto-imported in `{#bundle /}`. This ensures that if a user navigates from one page to another, they don't need to download all the JavaScript for the second page again, as shared parts are already cached by the browser.
 ====
 
 
@@ -326,6 +326,58 @@ Scoped npm packages (e.g., `@hotwired/stimulus` declared as `org.mvnpm.at.hotwir
 
 No additional configuration is required.
 
+[#extension-web-dependencies]
+=== Web Dependencies provided by Quarkus extensions
+
+Some Quarkus extensions ship JavaScript modules for the browser (for example the https://github.com/quarkiverse/quarkus-json-rpc[JSON-RPC] extension client). They are not `org.mvnpm` or `org.webjars` dependencies, so they declare them by producing a `WebDependencyJarBuildItem` (from `quarkus-vertx-http-deployment-spi`, Quarkus 3.40 LTS+). The Web Bundler picks them up the same way as the https://quarkus.io/guides/web-dependency-locator[Web Dependency Locator]; you don't have to configure anything:
+
+- If the extension provides import mappings (e.g. `@quarkiverse/json-rpc` -> `/_static/quarkus-json-rpc/jsonrpc-client.js`), the modules are served by the extension. They are excluded from the bundling (marked as external) and added to the <<bundle-import-map>>, so the browser resolves them at runtime. Prefix mappings (ending with `/`) exclude everything under them.
+- Otherwise, the extension JAR follows the mvnpm layout (with a `package.json`) and it is installed in the <<node_modules>> to be bundled like any other <<mvnpm>> dependency.
+
+For modules served by an extension, add the `{#bundleImportMap /}` tag to your page (in `src/main/resources/web/` or in a Qute template), *before* the `{#bundle /}` tag:
+
+.web/index.html
+[source,html]
+----
+<html>
+<head>
+{#bundleImportMap /}
+{#bundle /}
+</head>
+</html>
+----
+
+Then import them from your scripts as usual:
+
+.web/app/app.js
+[source,javascript]
+----
+import { JsonRPCClient } from '@quarkiverse/json-rpc';
+----
+
+==== Providing web modules from your extension
+
+Extension authors declare their web modules in a deployment `@BuildStep` (add the `io.quarkus:quarkus-vertx-http-deployment-spi` dependency to the deployment module):
+
+[source,java]
+----
+@BuildStep
+void webDependencies(CurateOutcomeBuildItem curateOutcome, BuildProducer<WebDependencyJarBuildItem> webDependencies) {
+    curateOutcome.getApplicationModel().getDependencies().stream()
+            .filter(dep -> dep.getGroupId().equals("org.acme") && dep.getArtifactId().equals("acme-greeter"))
+            .findFirst()
+            .ifPresent(dep -> webDependencies.produce(new WebDependencyJarBuildItem(
+                    dep.getKey(),
+                    dep.getResolvedPaths().getSinglePath(),
+                    Map.of( // <1>
+                            "@acme/greeter", "/_static/acme-greeter/greeter.js",
+                            "@acme/greeter/", "/_static/acme-greeter/"))));
+}
+----
+<1> The import mappings to the modules your extension serves (e.g. from `META-INF/resources/_static/` or a route). Use the two arguments constructor instead if the JAR follows the mvnpm layout, it will then be bundled.
+
+The same build item is used by the https://quarkus.io/guides/web-dependency-locator[Web Dependency Locator], so both extensions support your modules.
+
 [#bundle-paths]
 == Bundle Paths
 
@@ -368,12 +420,17 @@ Output:
 
 ----
 
+[#bundle-import-map]
 === Bundle Import Map
 
 The `{#bundleImportMap /}` tag generates an import map that allows you to import modules directly from your bundled application within HTML `<script type="module">` blocks.
 
 When used together with `{#bundle /}`, the `{#bundleImportMap /}` tag automatically creates an import map linking your bundle exports (e.g. 'app' -> `/static/bundle/app-3HNF28.js`) to the correct bundled file path which is changing on every build with a different hash.
 This makes it possible to use ES module imports in HTML.
+
+It also contains the import mappings of the modules served by Quarkus extensions (see <<extension-web-dependencies>>), which is required for your bundle to load them.
+
+NOTE: Place `{#bundleImportMap /}` before `{#bundle /}` and any other module script, browsers only apply an import map to modules loaded after it.
 
 ==== Example
 
@@ -389,8 +446,8 @@ export const name = "import!";
 <html>
 <head>
 
-{#bundle /}
 {#bundleImportMap /}
+{#bundle /}
 
 <script type="module">
   import { name } from 'app';
@@ -425,4 +482,3 @@ or in a Qute template:
 {inject:bundle.script("app")}
 {inject:bundle.style("app")}
 ----
-

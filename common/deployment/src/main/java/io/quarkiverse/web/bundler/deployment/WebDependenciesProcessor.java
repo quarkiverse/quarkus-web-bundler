@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -27,6 +28,7 @@ import io.quarkiverse.web.bundler.deployment.items.EntryPointBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.InstalledWebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem;
 import io.quarkiverse.web.bundler.deployment.items.WebDependenciesBuildItem.Dependency;
+import io.quarkiverse.web.bundler.deployment.items.WebDependencyImportMappingsBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
@@ -43,6 +45,7 @@ import io.quarkus.sbom.ComponentDependencies;
 import io.quarkus.sbom.ComponentDescriptor;
 import io.quarkus.sbom.Purl;
 import io.quarkus.sbom.SbomContribution;
+import io.quarkus.vertx.http.deployment.spi.WebDependencyJarBuildItem;
 
 class WebDependenciesProcessor {
 
@@ -53,6 +56,7 @@ class WebDependenciesProcessor {
     WebDependenciesBuildItem collectDependencies(LaunchModeBuildItem launchMode,
             CurateOutcomeBuildItem curateOutcome,
             List<EntryPointBuildItem> entryPoints,
+            List<WebDependencyJarBuildItem> webDependencyJars,
             WebBundlerConfig config) {
         if (entryPoints.isEmpty() && !config.dependencies().autoImport().isEnabled()) {
             return new WebDependenciesBuildItem(List.of());
@@ -73,9 +77,17 @@ class WebDependenciesProcessor {
                 .map(WebDependenciesProcessor::toWebDep)
                 .filter(Objects::nonNull)
                 .toList();
-        final List<Dependency> dependencies = new ArrayList<>(buildDependencies.size() + runtimeDependencies.size());
+        final List<Dependency> extensionDependencies = toExtensionWebDeps(curateOutcome, webDependencyJars);
+        if (!extensionDependencies.isEmpty()) {
+            LOGGER.debugf("Discovered %d extension web dependencies: %s",
+                    extensionDependencies.size(),
+                    extensionDependencies.stream().map(Dependency::id).collect(Collectors.joining(", ")));
+        }
+        final List<Dependency> dependencies = new ArrayList<>(
+                buildDependencies.size() + runtimeDependencies.size() + extensionDependencies.size());
         dependencies.addAll(buildDependencies);
         dependencies.addAll(runtimeDependencies);
+        dependencies.addAll(extensionDependencies);
         return new WebDependenciesBuildItem(dependencies);
     }
 
@@ -204,6 +216,47 @@ class WebDependenciesProcessor {
                 .map(j -> new Dependency(d, d.toCompactCoords(), j, resolveType(d.toCompactCoords()).orElseThrow(),
                         d.isDirect()))
                 .orElse(null);
+    }
+
+    @BuildStep
+    WebDependencyImportMappingsBuildItem collectImportMappings(List<WebDependencyJarBuildItem> webDependencyJars) {
+        // Same as the web-dependency-locator: mappings provided directly are used as-is (no JAR inspection)
+        final Map<String, String> importMappings = new HashMap<>();
+        for (WebDependencyJarBuildItem item : webDependencyJars) {
+            importMappings.putAll(item.getImportMappings());
+        }
+        if (!importMappings.isEmpty()) {
+            LOGGER.debugf("Extension web dependency import mappings (served by Quarkus, not bundled): %s", importMappings);
+        }
+        return new WebDependencyImportMappingsBuildItem(importMappings);
+    }
+
+    private static List<Dependency> toExtensionWebDeps(CurateOutcomeBuildItem curateOutcome,
+            List<WebDependencyJarBuildItem> webDependencyJars) {
+        // Items providing import mappings are served by Quarkus at runtime (see collectImportMappings),
+        // the others follow the mvnpm layout and are installed in node_modules for bundling.
+        final List<WebDependencyJarBuildItem> jarsToInstall = webDependencyJars.stream()
+                .filter(item -> item.getImportMappings().isEmpty())
+                .toList();
+        if (jarsToInstall.isEmpty()) {
+            return List.of();
+        }
+        final Map<ArtifactKey, ResolvedDependency> depsByKey = curateOutcome.getApplicationModel()
+                .getDependencies().stream()
+                .collect(Collectors.toMap(ResolvedDependency::getKey, Function.identity(), (a, b) -> a));
+        return jarsToInstall.stream()
+                .map(item -> {
+                    ResolvedDependency resolved = depsByKey.get(item.getArtifactKey());
+                    if (resolved == null) {
+                        LOGGER.debugf("WebDependencyJarBuildItem for %s has no matching resolved dependency",
+                                item.getArtifactKey());
+                        return null;
+                    }
+                    return new Dependency(resolved, resolved.toCompactCoords(), item.getJarPath(),
+                            WebDependencyType.MVNPM, resolved.isDirect());
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private static Path resolveNodeModulesDir(WebBundlerConfig config, OutputTargetBuildItem outputTarget,
