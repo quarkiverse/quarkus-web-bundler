@@ -28,11 +28,10 @@
     </scm>
     <properties>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
-        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <esbuild-java.version>2.1.5</esbuild-java.version>
-        <quarkus.version>3.40.1</quarkus.version>
+        <quarkus.version>4.0.0.Beta1</quarkus.version>
         <assertj-core.version>3.27.7</assertj-core.version>
         <quarkus-playwright.version>2.3.10</quarkus-playwright.version>
     </properties>

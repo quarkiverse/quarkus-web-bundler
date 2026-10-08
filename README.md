@@ -25,6 +25,9 @@ There are multiple versions available, please check which one matches your Quark
 | ![1.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=1.&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.12+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.12.0) |
 | ![2.3.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=2.3&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.29+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.29.0) |
 | ![3.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=3.&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-3.40+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/3.40.1) |
+| ![4.x](https://img.shields.io/maven-central/v/io.quarkiverse.web-bundler/quarkus-web-bundler?versionPrefix=4.&color=cyan) | [![Quarkus](https://img.shields.io/badge/Quarkus-4.0+-purple.svg)](https://github.com/quarkusio/quarkus/releases/tag/4.0.0.Beta1) |
+
+4.x targets Quarkus 4 and requires JDK 21. If you are still on Quarkus 3, stay on 3.x, which is maintained from the `3.x` branch.
 
 **Is it the same as [Quinoa](https://github.com/quarkiverse/quarkus-quinoa/)?** It is very close but:
 

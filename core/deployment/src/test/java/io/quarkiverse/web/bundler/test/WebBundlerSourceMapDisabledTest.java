@@ -12,12 +12,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.maven.dependency.ArtifactDependency;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class WebBundlerSourceMapDisabledTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withConfigurationResource("application.properties")
             .overrideConfigKey("quarkus.web-bundler.bundling.source-map", "false")
             .setForcedDependencies(
