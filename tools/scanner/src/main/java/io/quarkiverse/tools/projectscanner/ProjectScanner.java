@@ -241,7 +241,7 @@ public final class ProjectScanner {
         List<PathMatcher> ignoredMatchers = compilePatterns(defaultIgnoredFiles);
 
         // Build app archive keys to skip extension artifacts that are also app archives (same as Qute core)
-        final Set<ApplicationArchive> allApplicationArchives = applicationArchives.getAllApplicationArchives();
+        final List<ApplicationArchive> allApplicationArchives = applicationArchives.getAllArchives();
         final Set<ArtifactKey> appArtifactKeys = new HashSet<>(allApplicationArchives.size());
         for (var archive : allApplicationArchives) {
             appArtifactKeys.add(archive.getKey());
@@ -262,7 +262,7 @@ public final class ProjectScanner {
         }
 
         // Index non-root application archives as DEPENDENCY_RESOURCE
-        for (ApplicationArchive archive : applicationArchives.getApplicationArchives()) {
+        for (ApplicationArchive archive : applicationArchives.getArchives()) {
             archive.accept(tree -> {
                 for (Path rootDir : tree.getRoots()) {
                     try {
