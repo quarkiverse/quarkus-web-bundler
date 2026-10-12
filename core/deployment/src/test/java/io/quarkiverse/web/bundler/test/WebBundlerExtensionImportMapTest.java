@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.maven.dependency.ArtifactKey;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.vertx.http.deployment.spi.WebDependencyJarBuildItem;
 import io.restassured.RestAssured;
 import io.vertx.core.json.JsonObject;
@@ -26,7 +26,7 @@ import io.vertx.core.json.JsonObject;
 public class WebBundlerExtensionImportMapTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withConfigurationResource("application-mixed.properties")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("extension-import-map", "web"))

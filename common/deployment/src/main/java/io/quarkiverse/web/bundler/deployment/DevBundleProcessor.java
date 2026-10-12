@@ -7,7 +7,7 @@ import static io.quarkiverse.web.bundler.deployment.BundleProcessor.processGener
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.logging.Logger;
@@ -39,7 +39,6 @@ public class DevBundleProcessor {
     private static final Logger LOGGER = Logger.getLogger(DevBundleProcessor.class);
 
     private static final String DEV_SERVICE_NAME = "web-bundler-dev";
-    private static volatile DevServicesResultBuildItem.RunningDevService devService;
     private static volatile DevResult dev;
 
     @BuildStep(onlyIf = IsDevelopment.class)
@@ -105,9 +104,12 @@ public class DevBundleProcessor {
 
         try {
             dev = Bundler.dev(readyForBundling.bundleOptions(), false);
-            devService = new DevServicesResultBuildItem.RunningDevService(
-                    DEV_SERVICE_NAME, null, dev, new HashMap<>());
-            devServices.produce(devService.toBuildItem());
+            // Reported as discovered rather than owned: the bundling process is not a Startable and
+            // its lifecycle is managed here, via shutdownDevService
+            devServices.produce(DevServicesResultBuildItem.discovered()
+                    .feature(DEV_SERVICE_NAME)
+                    .config(Map.of())
+                    .build());
             resetRemoteProblem();
             dev.process().build();
             handleBundleDistDir(config, generatedBundleProducer, staticResourceProducer, dev.process().dist(),
@@ -178,13 +180,9 @@ public class DevBundleProcessor {
             if (dev != null) {
                 dev.close();
             }
-            if (devService != null) {
-                devService.close();
-            }
         } catch (Throwable e) {
             LOGGER.error("Failed to stop Web Bundler Bundling process", e);
         } finally {
-            devService = null;
             dev = null;
         }
     }

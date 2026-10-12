@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.web.bundler.runtime.Bundle;
 import io.quarkus.maven.dependency.ArtifactDependency;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.restassured.RestAssured;
 
 public class WebBundlerAutoImportTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withConfigurationResource("application-auto.properties")
             .setForcedDependencies(
                     List.of(
