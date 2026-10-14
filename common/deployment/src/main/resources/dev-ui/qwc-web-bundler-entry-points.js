@@ -7,6 +7,7 @@ import '@vaadin/grid/vaadin-grid-column.js';
 import '@vaadin/split-layout';
 import '@vaadin/progress-bar';
 import '@quarkus-webcomponents/codeblock';
+import 'qui-ide-link';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 
 
@@ -91,6 +92,13 @@ export class QwcWebBundlerEntryPoints extends LitElement {
     }
 
     _renderPath(entryPoint) {
+        if (entryPoint.source) {
+            return html`
+                <qui-ide-link .noCheck=${true} fileName="${entryPoint.source}" lineNumber="0">
+                    <code>${entryPoint.path}</code>
+                </qui-ide-link>
+            `;
+        }
         return html`
             <code>${entryPoint.path}</code>
         `;

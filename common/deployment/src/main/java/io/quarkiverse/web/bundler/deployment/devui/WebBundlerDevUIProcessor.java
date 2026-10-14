@@ -50,7 +50,7 @@ public class WebBundlerDevUIProcessor {
                 .collect(
                         Collectors.toMap(GeneratedEntryPointBuildItem::key,
                                 e -> new EntryPointItem(e.publicPath(),
-                                        GENERATED_ENTRY_POINT.label()),
+                                        GENERATED_ENTRY_POINT.label(), null),
                                 (a, b) -> b));
 
         if (!entryPoints.isEmpty()) {
@@ -96,7 +96,8 @@ public class WebBundlerDevUIProcessor {
         list.addAll(e.assets().stream()
                 .map(a -> new EntryPointItem(
                         a.scopedPath(),
-                        a.bundleType().label()))
+                        a.bundleType().label(),
+                        a.hasSource() ? "file://" + a.source().toAbsolutePath() : null))
                 .toList());
         return list;
     }
@@ -107,7 +108,7 @@ public class WebBundlerDevUIProcessor {
     record EntryPoint(String key, List<EntryPointItem> items) {
     }
 
-    record EntryPointItem(String path, String type) {
+    record EntryPointItem(String path, String type, String source) {
     }
 
 }
